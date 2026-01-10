@@ -213,10 +213,10 @@ export default async function ModelPage({ params }: PageProps) {
         
         {/* Profile Info Block - order-2 on Mobile, order-1 (Left) on Desktop */}
         <div className="order-2 lg:order-1 lg:col-span-3 lg:sticky lg:top-0 lg:self-start lg:h-screen lg:overflow-hidden lg:flex lg:flex-col">
-          {/* Desktop Brand Header - Fixed glass bar on top of info pane */}
-          <div className="hidden lg:block bg-gradient-to-b from-black/80 to-transparent backdrop-blur-[2px] flex-shrink-0 z-10">
-            <div className="flex items-center justify-center p-3">
-              <Link href="/" className="flex items-center">
+          {/* Desktop Brand Header - iOS Glass bar on top of info pane */}
+          <div className="hidden lg:block bg-background/60 backdrop-blur-2xl border-b border-white/10 flex-shrink-0 z-10 shadow-lg shadow-black/10">
+            <div className="flex items-center justify-center p-4">
+              <Link href="/" className="flex items-center px-4 py-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all duration-300">
                 <span className="text-white font-bold tracking-tighter">
                   Tran<span className="text-[#00FF85]">Spot</span>
                 </span>
@@ -245,7 +245,7 @@ export default async function ModelPage({ params }: PageProps) {
                     <Badge 
                       key={index} 
                       variant="secondary" 
-                      className={`flex-shrink-0 ${index === translatedTags.length - 1 ? "mr-4" : ""}`}
+                      className={`flex-shrink-0 bg-[#7A27FF] text-[#F0F4F8] hover:bg-[#7A27FF]/80 ${index === translatedTags.length - 1 ? "mr-4" : ""}`}
                     >
                       {tag}
                     </Badge>

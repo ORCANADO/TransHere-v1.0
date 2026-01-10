@@ -92,10 +92,10 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
 
   return (
     <>
-      {/* Mobile: Horizontal scrollable row */}
+      {/* Mobile: Horizontal scrollable row - Glass panel wrapper */}
       {/* -mx-4 breaks out of parent's px-4 padding, w-[calc(100%+2rem)] compensates for full width */}
-      <div className="lg:hidden w-[calc(100%+2rem)] overflow-x-auto scrollbar-hide -mx-4">
-        <div className="flex gap-3 py-3">
+      <div className="lg:hidden w-[calc(100%+2rem)] overflow-x-auto scrollbar-hide -mx-4 bg-background/30 backdrop-blur-xl border-y border-white/10">
+        <div className="flex gap-3 py-4 px-1">
           {groups.map((group, index) => (
             <div 
               key={group.id} 
@@ -110,8 +110,8 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
         </div>
       </div>
 
-      {/* Desktop: Vertical list */}
-      <div className="hidden lg:block lg:p-4">
+      {/* Desktop: Vertical list - Glass panel */}
+      <div className="hidden lg:block lg:p-4 bg-background/30 backdrop-blur-xl rounded-2xl border border-white/10 mt-4">
         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
           Stories
         </h3>

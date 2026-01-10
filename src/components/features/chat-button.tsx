@@ -51,7 +51,7 @@ export function ChatButton({ href, modelId, modelName, variant = 'fixed', label 
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-xl border-t border-primary/10 z-50">
+    <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/60 backdrop-blur-2xl border-t border-white/15 shadow-[0_-4px_20px_rgba(0,0,0,0.3)] z-50">
       <a
         id="chat-button"
         href={href}

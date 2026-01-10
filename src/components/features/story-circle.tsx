@@ -25,38 +25,38 @@ export function StoryCircle({ group, onClick }: StoryCircleProps) {
   return (
     <button
       onClick={handleClick}
-      className="flex flex-col items-center gap-1 hover:scale-105 transition-transform"
+      className="flex flex-col items-center gap-1.5 hover:scale-105 active:scale-95 transition-all duration-300"
       aria-label={`View ${displayTitle} stories`}
     >
-      {/* Ring Container - Visual Memory: Gray for viewed, Gradient for unviewed */}
+      {/* Ring Container - iOS Glass style with Visual Memory */}
       <div
         className={cn(
-          "w-[72px] h-[72px] rounded-full p-[2px] transition-all duration-300",
-          // Viewed stories: Gray ring (already seen)
-          viewed && "bg-muted-foreground/40",
-          // Unviewed + Recent (not pinned): Electric Emerald to Rich Gold gradient
-          !viewed && !group.is_pinned && "bg-gradient-to-tr from-[#00FF85] via-[#D4AF37] to-[#7A27FF]",
-          // Unviewed + Pinned: Muted ring
-          !viewed && group.is_pinned && "bg-muted-foreground/40"
+          "w-[76px] h-[76px] rounded-full p-[2.5px] transition-all duration-300 shadow-lg",
+          // Viewed stories: Glass gray ring
+          viewed && "bg-white/20 shadow-black/20",
+          // Unviewed + Recent (not pinned): Electric Emerald to Rich Gold gradient with glow
+          !viewed && !group.is_pinned && "bg-gradient-to-tr from-[#00FF85] via-[#D4AF37] to-[#7A27FF] shadow-[0_0_15px_rgba(0,255,133,0.4)]",
+          // Unviewed + Pinned: Glass muted ring
+          !viewed && group.is_pinned && "bg-white/20 shadow-black/20"
         )}
       >
-        {/* Border container with background bleed-through */}
-        <div className="w-full h-full rounded-full p-[2px] bg-background">
-          {/* Image Circle */}
-          <div className="relative w-full h-full rounded-full overflow-hidden bg-muted">
+        {/* Glass border container */}
+        <div className="w-full h-full rounded-full p-[2px] bg-background/90 backdrop-blur-sm">
+          {/* Image Circle with glass overlay */}
+          <div className="relative w-full h-full rounded-full overflow-hidden bg-white/5 backdrop-blur-sm border border-white/10">
             {coverUrl ? (
               <Image
                 src={coverUrl}
                 alt={displayTitle}
                 fill
                 className="w-full h-full object-cover rounded-full"
-                sizes="72px"
+                sizes="76px"
                 unoptimized
               />
             ) : (
-              // Fallback gradient: Cyber Violet to Electric Emerald
+              // Fallback gradient: Cyber Violet to Electric Emerald with glass effect
               <div className="w-full h-full bg-gradient-to-br from-[#7A27FF] to-[#00FF85] flex items-center justify-center rounded-full">
-                <span className="text-white text-xl font-bold">
+                <span className="text-white text-xl font-bold drop-shadow-lg">
                   {displayTitle.charAt(0).toUpperCase()}
                 </span>
               </div>
@@ -65,8 +65,8 @@ export function StoryCircle({ group, onClick }: StoryCircleProps) {
         </div>
       </div>
 
-      {/* Title Text */}
-      <span className="text-xs text-center w-20 truncate text-muted-foreground">
+      {/* Title Text - Glass pill */}
+      <span className="text-xs text-center w-20 truncate text-foreground/80 px-2 py-0.5 rounded-full bg-white/5 backdrop-blur-sm">
         {displayTitle}
       </span>
     </button>

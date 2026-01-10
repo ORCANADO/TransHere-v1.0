@@ -145,9 +145,9 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
 
   return (
     <>
-      {/* Horizontal Scrollable Container - no left padding for edge-to-edge */}
-      <div className="w-full overflow-x-auto scrollbar-hide">
-        <div className="flex gap-3 py-3">
+      {/* Horizontal Scrollable Container - Glass panel wrapper */}
+      <div className="w-full overflow-x-auto scrollbar-hide bg-background/40 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/10">
+        <div className="flex gap-3 py-4 px-1">
           {modelsWithRecentGroups.map(({ model, recentGroup, displayGroup }, index) => (
             <div
               key={model.id}

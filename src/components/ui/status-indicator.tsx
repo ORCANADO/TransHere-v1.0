@@ -23,26 +23,28 @@ export function StatusIndicator({ isOnline, className }: StatusIndicatorProps) {
 
   if (status === null) {
     return (
-      <span className="relative flex h-3 w-3">
-        <span className="relative inline-flex h-3 w-3 rounded-full bg-transparent" />
+      <span className="relative flex h-4 w-4 p-0.5 rounded-full bg-black/30 backdrop-blur-sm">
+        <span className="relative inline-flex h-full w-full rounded-full bg-transparent" />
       </span>
     );
   }
 
   return (
-    <span className="relative flex h-3 w-3">
+    <span className="relative flex h-4 w-4 p-0.5 rounded-full bg-black/30 backdrop-blur-sm border border-white/10">
       {status === "online" && (
         <span
           className={cn(
-            "absolute inline-flex h-full w-full rounded-full opacity-75",
-            "bg-green-500 animate-ping"
+            "absolute inset-0.5 inline-flex rounded-full opacity-75",
+            "bg-[#00FF85] animate-ping"
           )}
         />
       )}
       <span
         className={cn(
-          "relative inline-flex h-3 w-3 rounded-full",
-          status === "online" ? "bg-green-500" : "bg-gray-400",
+          "relative inline-flex h-full w-full rounded-full",
+          status === "online" 
+            ? "bg-[#00FF85] shadow-[0_0_8px_rgba(0,255,133,0.6)]" 
+            : "bg-white/40",
           className
         )}
       />

@@ -77,94 +77,96 @@
 :root {
   --radius: 0.625rem;
   /* Light mode (fallback) - rarely used, app defaults to dark */
-  --background: oklch(97% 0.01 250);
-  --foreground: oklch(6% 0.025 265);
-  --card: oklch(100% 0 0);
-  --card-foreground: oklch(6% 0.025 265);
-  --popover: oklch(100% 0 0);
-  --popover-foreground: oklch(6% 0.025 265);
-  --primary: oklch(85% 0.24 155);
-  --primary-foreground: oklch(6% 0.025 265);
-  --secondary: oklch(48% 0.30 295);
-  --secondary-foreground: oklch(100% 0 0);
-  --muted: oklch(94% 0.01 250);
-  --muted-foreground: oklch(50% 0.02 250);
-  --accent: oklch(78% 0.13 85);
-  --accent-foreground: oklch(6% 0.025 265);
-  --destructive: oklch(55% 0.25 25);
-  --border: oklch(0% 0 0 / 10%);
-  --input: oklch(0% 0 0 / 8%);
-  --ring: oklch(78% 0.13 85);
-  --chart-1: oklch(85% 0.24 155);
-  --chart-2: oklch(78% 0.13 85);
-  --chart-3: oklch(48% 0.30 295);
-  --chart-4: oklch(70% 0.15 200);
-  --chart-5: oklch(60% 0.20 30);
-  --sidebar: oklch(96% 0.005 250);
-  --sidebar-foreground: oklch(6% 0.025 265);
-  --sidebar-primary: oklch(85% 0.24 155);
-  --sidebar-primary-foreground: oklch(6% 0.025 265);
-  --sidebar-accent: oklch(92% 0.01 250);
-  --sidebar-accent-foreground: oklch(20% 0.02 265);
-  --sidebar-border: oklch(0% 0 0 / 10%);
-  --sidebar-ring: oklch(78% 0.13 85);
+  --background: #F0F4F8;
+  --foreground: #050A14;
+  --card: #FFFFFF;
+  --card-foreground: #050A14;
+  --popover: #FFFFFF;
+  --popover-foreground: #050A14;
+  --primary: #00FF85;
+  --primary-foreground: #050A14;
+  --secondary: #7A27FF;
+  --secondary-foreground: #FFFFFF;
+  --muted: #E5E7EB;
+  --muted-foreground: #6B7280;
+  --accent: #D4AF37;
+  --accent-foreground: #050A14;
+  --destructive: #EF4444;
+  --border: rgba(0, 0, 0, 0.10);
+  --input: rgba(0, 0, 0, 0.08);
+  --ring: #D4AF37;
+  --chart-1: #00FF85;
+  --chart-2: #D4AF37;
+  --chart-3: #7A27FF;
+  --chart-4: #00C9A7;
+  --chart-5: #F59E0B;
+  --sidebar: #F3F4F6;
+  --sidebar-foreground: #050A14;
+  --sidebar-primary: #00FF85;
+  --sidebar-primary-foreground: #050A14;
+  --sidebar-accent: #E5E7EB;
+  --sidebar-accent-foreground: #1F2937;
+  --sidebar-border: rgba(0, 0, 0, 0.10);
+  --sidebar-ring: #D4AF37;
 }
 
 .dark {
   /* ========== BACKGROUND LAYERS ========== */
-  /* #050A14 - Obsidian Navy: The deepest dark for immersive experience */
-  --background: oklch(6% 0.025 265);
+  /* #050A14 - Obsidian Navy: Deep, atmospheric background that suggests "The Night"
+     Rationale: Pure black (#000000) can be harsh. Obsidian Navy offers a cinematic 
+     backdrop that makes user photos pop, mimicking the experience of watching a movie. */
+  --background: #050A14;
   
   /* #F0F4F8 - Titanium White: High contrast text */
-  --foreground: oklch(96% 0.01 250);
+  --foreground: #F0F4F8;
   
   /* #0A1221 - Deep Charcoal Navy: Elevated surfaces */
-  --card: oklch(10% 0.025 265);
-  --card-foreground: oklch(96% 0.01 250);
+  --card: #0A1221;
+  --card-foreground: #F0F4F8;
   
   /* Popover - Same as card for consistency */
-  --popover: oklch(10% 0.025 265);
-  --popover-foreground: oklch(96% 0.01 250);
+  --popover: #0A1221;
+  --popover-foreground: #F0F4F8;
   
   /* ========== PRIMARY ACTION: ELECTRIC EMERALD ========== */
   /* #00FF85 - Electric Emerald: High-energy CTA color */
-  --primary: oklch(85% 0.24 155);
-  --primary-foreground: oklch(6% 0.025 265);
+  --primary: #00FF85;
+  --primary-foreground: #050A14;
   
   /* ========== SECONDARY: CYBER VIOLET ========== */
   /* #7A27FF - Cyber Violet: Interactive accents, gradients */
-  --secondary: oklch(48% 0.30 295);
-  --secondary-foreground: oklch(96% 0.01 250);
+  --secondary: #7A27FF;
+  --secondary-foreground: #F0F4F8;
   
   /* ========== MUTED STATES ========== */
   /* Subtle surfaces for disabled/inactive elements */
-  --muted: oklch(14% 0.02 265);
+  --muted: #0D1520;
   /* #94A3B8 - Slate: Secondary text, captions */
-  --muted-foreground: oklch(72% 0.025 250);
+  --muted-foreground: #94A3B8;
   
   /* ========== ACCENT: RICH GOLD ========== */
   /* #D4AF37 - Rich Gold: Premium badges, special highlights */
-  --accent: oklch(78% 0.13 85);
-  --accent-foreground: oklch(6% 0.025 265);
+  --accent: #D4AF37;
+  --accent-foreground: #050A14;
   
   /* ========== UTILITY COLORS ========== */
   /* Destructive - Error states */
-  --destructive: oklch(60% 0.22 25);
+  --destructive: #EF4444;
   
-  /* Border - Subtle separation with emerald tint */
-  --border: oklch(100% 0 0 / 8%);
+  /* Border - Subtle separation */
+  --border: rgba(255, 255, 255, 0.08);
   
   /* Input - Slightly more visible */
-  --input: oklch(100% 0 0 / 10%);
+  --input: rgba(255, 255, 255, 0.10);
   
   /* #D4AF37 - Rich Gold: Focus ring for accessibility */
-  --ring: oklch(78% 0.13 85);
+  --ring: #D4AF37;
   
   /* ========== CHART COLORS - NOCTURNAL PALETTE ========== */
-  --chart-1: oklch(85% 0.24 155);  /* Electric Emerald */
-  --chart-2: oklch(78% 0.13 85);   /* Rich Gold */
-  --chart-3: oklch(48% 0.30 295);  /* Cyber Violet */
-  --chart-4: oklch(65% 0.15 200);  /* Teal accent */
+  --chart-1: #00FF85;  /* Electric Emerald */
+  --chart-2: #D4AF37;  /* Rich Gold */
+  --chart-3: #7A27FF;  /* Cyber Violet */
+  --chart-4: #00C9A7;  /* Teal accent */
   --chart-5: oklch(60% 0.20 30);   /* Warm coral */
   
   /* ========== SIDEBAR ========== */
@@ -248,20 +250,50 @@
      TranSpot Brand Identity v2.0
      ========================================================================== */
 
-  /* Glass Panel: Frosted glass effect for elevated surfaces */
+  /* Glass Panel: iOS 26 frosted glass effect for elevated surfaces */
   .glass-panel {
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    background-color: oklch(100% 0 0 / 5%);
-    border: 1px solid oklch(100% 0 0 / 10%);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   }
 
-  /* Glass Panel Dark: Slightly more opaque for better contrast */
+  /* Glass Panel Dark: More opaque variant for better contrast on dark backgrounds */
   .glass-panel-dark {
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    background-color: oklch(0% 0 0 / 40%);
-    border: 1px solid oklch(100% 0 0 / 8%);
+    backdrop-filter: blur(40px) saturate(150%);
+    -webkit-backdrop-filter: blur(40px) saturate(150%);
+    background-color: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Glass Panel Light: Subtle variant for overlays */
+  .glass-panel-light {
+    backdrop-filter: blur(30px) saturate(120%);
+    -webkit-backdrop-filter: blur(30px) saturate(120%);
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Glass Button: iOS-style interactive glass buttons */
+  .glass-button {
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    transition: all 0.3s ease;
+  }
+
+  .glass-button:hover {
+    background-color: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.28);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .glass-button:active {
+    transform: scale(0.98);
+    background-color: rgba(255, 255, 255, 0.12);
   }
 
   /* Gold Glow: Subtle outer shadow for premium/featured badges */

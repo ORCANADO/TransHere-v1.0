@@ -32,7 +32,7 @@ export function FixedHeader({ userCity, nav, header }: FixedHeaderProps) {
   const isYou = userCity.toLowerCase() === 'you' || userCity === 'Unknown';
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex flex-col bg-background/85 backdrop-blur-xl border-b border-primary/15">
+    <div className="fixed top-0 left-0 right-0 z-50 flex flex-col bg-background/60 backdrop-blur-2xl border-b border-white/10 shadow-lg shadow-black/10">
       {/* Top Row: Brand Name */}
       <div className="flex items-center justify-between px-4 py-3">
         <h1 className="text-xl font-bold tracking-tighter text-foreground">
@@ -82,8 +82,10 @@ function NavButton({ active, onClick, icon: Icon, label }: NavButtonProps) {
     <button
       onClick={onClick}
       className={cn(
-        'flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all',
-        active ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground'
+        'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all duration-300',
+        active 
+          ? 'bg-white/15 backdrop-blur-sm border border-white/20 text-[#00FF85] shadow-[0_0_12px_rgba(0,255,133,0.2)]' 
+          : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
       )}
     >
       <Icon size={16} className={active ? 'fill-current' : ''} />

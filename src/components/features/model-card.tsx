@@ -87,12 +87,12 @@ export function ModelCard({ name, image, tags, slug, priority, isOnline, is_veri
               background: "radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.86) 100%)"
             }}
           />
-          {/* Midnight Luxury gradient - subtle tint */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/30 to-transparent pointer-events-none" />
-          {/* New Badge - Top Left (Electric Emerald accent) */}
+          {/* Subtle gradient overlay - clean fade for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
+          {/* New Badge - Top Left (Cyber Violet accent) */}
           {is_new && (
             <div className="absolute top-3 left-3 z-10">
-              <Badge variant="default" className="bg-primary text-primary-foreground border-0 font-semibold shadow-lg shadow-primary/20">
+              <Badge variant="secondary" className="border-0 font-semibold shadow-lg shadow-[#7A27FF]/20">
                 New
               </Badge>
             </div>
@@ -101,17 +101,17 @@ export function ModelCard({ name, image, tags, slug, priority, isOnline, is_veri
           <div className="absolute top-3 right-3 z-10">
             <StatusIndicator isOnline={isOnline} />
           </div>
-          {/* Heart Button - Top Right (below status) */}
+          {/* Heart Button - Top Right (below status) - iOS Glass style */}
           <button
             onClick={handleFavoriteClick}
-            className="absolute top-12 right-3 z-10 p-2 rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60 active:scale-95 transition-all"
+            className="absolute top-12 right-3 z-10 p-2.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/15 hover:bg-white/20 hover:border-white/30 active:scale-95 transition-all duration-300 shadow-lg shadow-black/20"
             aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
           >
             <Heart
-              size={20}
+              size={18}
               className={cn(
-                "transition-colors",
-                favorite ? "fill-white text-white" : "fill-transparent text-white"
+                "transition-all duration-300",
+                favorite ? "fill-[#D4AF37] text-[#D4AF37] drop-shadow-[0_0_6px_rgba(212,175,55,0.6)]" : "fill-transparent text-white/90"
               )}
             />
           </button>
@@ -147,17 +147,23 @@ export function ModelCard({ name, image, tags, slug, priority, isOnline, is_veri
 
 export function ModelCardSkeleton() {
   return (
-    <Card className="relative overflow-hidden p-0">
-      <div className="relative aspect-[3/4] bg-muted animate-pulse">
+    <Card className="relative overflow-hidden p-0 border border-white/10">
+      <div className="relative aspect-[3/4] bg-white/5 backdrop-blur-sm animate-pulse">
+        {/* Glass status indicator skeleton */}
         <div className="absolute top-3 right-3">
-          <div className="h-3 w-3 rounded-full bg-muted-foreground/20" />
+          <div className="h-4 w-4 rounded-full bg-white/10 backdrop-blur-sm border border-white/10" />
         </div>
-        <div className="absolute bottom-0 left-0 right-0 p-4">
-          <div className="h-6 w-32 bg-muted-foreground/20 rounded mb-2" />
+        {/* Glass heart button skeleton */}
+        <div className="absolute top-12 right-3">
+          <div className="h-10 w-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/10" />
+        </div>
+        {/* Frosted bottom info skeleton */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/40 to-transparent backdrop-blur-[2px]">
+          <div className="h-6 w-32 bg-white/15 rounded-lg mb-2 backdrop-blur-sm" />
           <div className="flex flex-wrap gap-2">
-            <div className="h-4 w-16 bg-muted-foreground/20 rounded" />
-            <div className="h-4 w-20 bg-muted-foreground/20 rounded" />
-            <div className="h-4 w-14 bg-muted-foreground/20 rounded" />
+            <div className="h-4 w-16 bg-white/10 rounded-full backdrop-blur-sm" />
+            <div className="h-4 w-20 bg-white/10 rounded-full backdrop-blur-sm" />
+            <div className="h-4 w-14 bg-white/10 rounded-full backdrop-blur-sm" />
           </div>
         </div>
       </div>

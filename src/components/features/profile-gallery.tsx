@@ -252,12 +252,14 @@ export function ProfileGallery({ items, name, socialLink, modelId, redirectUrl }
               
               {/* Content */}
               <div className="relative z-10 flex flex-col items-center">
-                <div className="rounded-full bg-primary/15 border border-primary/30 p-4 backdrop-blur-sm mb-4 shadow-lg shadow-primary/10">
-                  <Lock className="h-7 w-7 text-primary" strokeWidth={1.5} />
+                {/* Lock icon with Rich Gold accent */}
+                <div className="rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 p-4 backdrop-blur-sm mb-4 shadow-lg shadow-[#D4AF37]/20">
+                  <Lock className="h-7 w-7 text-[#D4AF37]" strokeWidth={1.5} />
                 </div>
                 <h3 className="text-2xl font-serif font-semibold text-foreground mb-2">Want to see more?</h3>
                 <p className="text-muted-foreground text-sm mb-5">Unlock exclusive content</p>
-                <div className="px-7 py-3.5 rounded-full bg-gradient-to-r from-primary via-primary/90 to-background text-primary-foreground font-semibold shadow-xl shadow-primary/25 border border-primary/20 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/35 hover:scale-[1.02]">
+                {/* VIP Button with Rich Gold gradient - Premium feel */}
+                <div className="px-7 py-3.5 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#C9A227] to-[#B8960F] text-[#050A14] font-semibold shadow-xl shadow-[#D4AF37]/30 border border-[#D4AF37]/40 transition-all duration-300 hover:shadow-2xl hover:shadow-[#D4AF37]/50 hover:scale-[1.02]">
                   Unlock VIP Content
                 </div>
               </div>
@@ -289,12 +291,14 @@ export function ProfileGallery({ items, name, socialLink, modelId, redirectUrl }
               
               {/* Content */}
               <div className="relative z-10 flex flex-col items-center">
-                <div className="rounded-full bg-primary/15 border border-primary/30 p-4 backdrop-blur-sm mb-4 shadow-lg shadow-primary/10">
-                  <Lock className="h-7 w-7 text-primary" strokeWidth={1.5} />
+                {/* Lock icon with Rich Gold accent */}
+                <div className="rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 p-4 backdrop-blur-sm mb-4 shadow-lg shadow-[#D4AF37]/20">
+                  <Lock className="h-7 w-7 text-[#D4AF37]" strokeWidth={1.5} />
                 </div>
                 <h3 className="text-2xl font-serif font-semibold text-foreground mb-2">Want to see more?</h3>
                 <p className="text-muted-foreground text-sm mb-5">Unlock exclusive content</p>
-                <div className="px-7 py-3.5 rounded-full bg-gradient-to-r from-primary via-primary/90 to-background text-primary-foreground font-semibold shadow-xl shadow-primary/25 border border-primary/20 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/35 hover:scale-[1.02]">
+                {/* VIP Button with Rich Gold gradient - Premium feel */}
+                <div className="px-7 py-3.5 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#C9A227] to-[#B8960F] text-[#050A14] font-semibold shadow-xl shadow-[#D4AF37]/30 border border-[#D4AF37]/40 transition-all duration-300 hover:shadow-2xl hover:shadow-[#D4AF37]/50 hover:scale-[1.02]">
                   Unlock VIP Content
                 </div>
               </div>

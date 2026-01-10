@@ -18,14 +18,14 @@ export function ProfileHeader() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent pointer-events-none lg:hidden">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/70 backdrop-blur-2xl border-b border-white/10 pointer-events-none lg:hidden">
       <div className="flex items-center justify-between p-4 pointer-events-auto">
-        {/* Back Button */}
+        {/* Back Button - Glassmorphism pill */}
         <Link href="/">
           <Button
             variant="ghost"
             size="sm"
-            className="text-white/90 hover:text-white hover:bg-white/10"
+            className="text-white/90 hover:text-white bg-white/5 hover:bg-white/15 backdrop-blur-sm border border-white/10 rounded-full"
           >
             <ChevronLeft size={20} />
             Back
@@ -39,12 +39,12 @@ export function ProfileHeader() {
           </span>
         </Link>
 
-        {/* Share Button */}
+        {/* Share Button - Glassmorphism pill */}
         <Button
           variant="ghost"
           size="sm"
           onClick={handleShare}
-          className="text-white/90 hover:text-white hover:bg-white/10 w-[72px] flex items-center justify-center"
+          className="text-white/90 hover:text-white bg-white/5 hover:bg-white/15 backdrop-blur-sm border border-white/10 rounded-full w-[72px] flex items-center justify-center"
           aria-label="Share profile"
         >
           {isCopied ? (
