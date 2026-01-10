@@ -65,14 +65,27 @@ export function ModelCard({ name, image, tags, slug, priority, isOnline, is_veri
               "object-cover",
               // Smooth transition for grayscale fade-in (500ms)
               "transition-[filter] duration-500 ease-out",
-              // Visual Memory: Viewed models show full color, unviewed are muted (85% grayscale)
+              // Visual Memory: Viewed models show full color, unviewed are muted (80% grayscale)
               // Hover/focus also unveils color for unviewed cards
               viewed 
                 ? "grayscale-0 contrast-100" 
-                : "grayscale-[0.85] contrast-[1.1] group-hover:grayscale-0 group-hover:contrast-100 group-focus-within:grayscale-0 group-focus-within:contrast-100"
+                : "grayscale-[0.80] contrast-[1.1] group-hover:grayscale-0 group-hover:contrast-100 group-focus-within:grayscale-0 group-focus-within:contrast-100"
             )}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             priority={priority}
+          />
+          {/* Vignette overlay for unviewed profiles - dark edges to signal "unseen" */}
+          <div 
+            className={cn(
+              "absolute inset-0 pointer-events-none transition-opacity duration-500 ease-out",
+              // Radial gradient: transparent center, dark edges (vignette effect)
+              viewed 
+                ? "opacity-0" 
+                : "opacity-100 group-hover:opacity-0 group-focus-within:opacity-0"
+            )}
+            style={{
+              background: "radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.86) 100%)"
+            }}
           />
           {/* Midnight Luxury gradient - subtle tint */}
           <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/30 to-transparent pointer-events-none" />
