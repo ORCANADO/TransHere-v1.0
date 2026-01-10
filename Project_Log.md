@@ -293,3 +293,21 @@
   - Updated fallback logic to use only `gallery_items` → `image_url` (removed legacy `gallery_urls` step).
   - Removed `gallery_urls` from mock data in `src/data/mock-models.ts`.
   - **Status:** Codebase fully migrated to `gallery_items` table. Migration ready to apply.
+
+## [2026-01-10] - Phase 4.99: Locked VIP Teaser (Conversion Optimization)
+**Status:** Complete
+
+### Locked VIP Teaser Implementation:
+- **Feature:** Last gallery item transformed into a "Locked VIP Teaser" to improve conversion rates.
+- **Visual Design:**
+  - Blurred image/video background (reduced blur for images: 11px base, 19px hover; videos: 19px base, 13px hover).
+  - Gradient overlay (from-black/80 via-black/50 to-black/30) for text readability.
+  - Lock icon in glassmorphism circle with backdrop blur.
+  - "Want to see more?" headline and "Unlock exclusive content" subtitle.
+  - Pink gradient "Unlock VIP Content" button.
+- **Architecture:**
+  - Removed separate end-card; last gallery item IS the conversion card.
+  - Click handler redirects to model's social link (OnlyFans/Fansly) with analytics tracking.
+  - Works for both images and videos with appropriate blur effects.
+  - Added `redirectUrl` prop to `ProfileGallery` for flexible redirect targeting.
+- **UX Impact:** Creates urgency and curiosity while maintaining visual preview of locked content.

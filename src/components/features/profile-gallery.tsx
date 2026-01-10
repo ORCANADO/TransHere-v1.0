@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import { Lock } from "lucide-react";
 import { cn, getImageUrl } from "@/lib/utils";
 import { useAnalytics } from "@/hooks/use-analytics";
 import type { GalleryItem } from "@/types";
@@ -11,9 +12,10 @@ interface VideoPlayerProps {
   mp4Url: string;
   webmUrl: string;
   posterUrl: string | null;
+  isLocked?: boolean;
 }
 
-function VideoPlayer({ mp4Url, webmUrl, posterUrl }: VideoPlayerProps) {
+function VideoPlayer({ mp4Url, webmUrl, posterUrl, isLocked = false }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -59,7 +61,10 @@ function VideoPlayer({ mp4Url, webmUrl, posterUrl }: VideoPlayerProps) {
     <div ref={containerRef} className="relative w-full h-full bg-black">
       <video
         ref={videoRef}
-        className="w-full h-full object-cover"
+        className={cn(
+          "w-full h-full object-cover",
+          isLocked && "filter blur-[19px] scale-105 transition-all duration-500 group-hover:scale-110 group-hover:blur-[13px]"
+        )}
         poster={posterUrl || undefined}
         loop
         muted
@@ -81,9 +86,10 @@ interface ProfileGalleryProps {
   name: string;
   socialLink: string;
   modelId: string;
+  redirectUrl?: string; // Optional: specific redirect URL for locked VIP teaser (falls back to socialLink)
 }
 
-export function ProfileGallery({ items, name, socialLink, modelId }: ProfileGalleryProps) {
+export function ProfileGallery({ items, name, socialLink, modelId, redirectUrl }: ProfileGalleryProps) {
   const [current, setCurrent] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -147,6 +153,34 @@ export function ProfileGallery({ items, name, socialLink, modelId }: ProfileGall
     };
   }, [isMounted, validItems.length]);
 
+  // Helper: derive WebM URL from MP4 URL
+  const deriveWebmUrl = (mp4Url: string): string => {
+    // Replace .mp4 extension with .webm
+    if (mp4Url.endsWith('.mp4')) {
+      return mp4Url.replace(/\.mp4$/, '.webm');
+    }
+    // If not ending in .mp4, append .webm as fallback
+    return mp4Url + '.webm';
+  };
+
+  if (validItems.length === 0) {
+    return (
+      <div className="relative w-full aspect-[3/4] lg:aspect-auto bg-muted flex items-center justify-center">
+        <p className="text-muted-foreground">No images available</p>
+      </div>
+    );
+  }
+
+  // Build slides array from gallery items (no separate end-card - last item becomes the locked VIP teaser)
+  const allSlides = [
+    ...validItems.map((item, index) => ({
+      type: item.media_type as 'image' | 'video',
+      url: getImageUrl(item.media_url),
+      posterUrl: item.poster_url ? getImageUrl(item.poster_url) : null,
+      key: `${item.media_type}-${item.id || index}`,
+    })),
+  ];
+
   // Scroll to specific slide
   const scrollToSlide = (index: number) => {
     const container = scrollContainerRef.current;
@@ -172,69 +206,89 @@ export function ProfileGallery({ items, name, socialLink, modelId }: ProfileGall
     }
   };
 
-  // Helper: derive WebM URL from MP4 URL
-  const deriveWebmUrl = (mp4Url: string): string => {
-    // Replace .mp4 extension with .webm
-    if (mp4Url.endsWith('.mp4')) {
-      return mp4Url.replace(/\.mp4$/, '.webm');
-    }
-    // If not ending in .mp4, append .webm as fallback
-    return mp4Url + '.webm';
-  };
-
-  if (validItems.length === 0) {
-    return (
-      <div className="relative w-full aspect-[3/4] lg:aspect-auto bg-muted flex items-center justify-center">
-        <p className="text-muted-foreground">No images available</p>
-      </div>
-    );
-  }
-
-  // Build slides array from gallery items + end card
-  const allSlides = [
-    ...validItems.map((item, index) => ({
-      type: item.media_type as 'image' | 'video',
-      url: getImageUrl(item.media_url),
-      posterUrl: item.poster_url ? getImageUrl(item.poster_url) : null,
-      key: `${item.media_type}-${item.id || index}`,
-    })),
-    {
-      type: "end-card" as const,
-      url: null,
-      posterUrl: null,
-      key: "end-card",
-    },
-  ];
-
   // Render media element (image or video)
   const renderMedia = (
-    slide: { type: 'image' | 'video' | 'end-card'; url: string | null; posterUrl: string | null },
+    slide: { type: 'image' | 'video'; url: string | null; posterUrl: string | null },
     index: number,
     isDesktop: boolean
   ) => {
-    if (slide.type === 'end-card') {
-      return (
-        <div className="relative w-full h-full flex flex-col items-center justify-center p-8 bg-gradient-to-br from-black/90 via-purple-900/80 to-pink-900/80 backdrop-blur-sm">
-          <div className="text-center space-y-6 z-10 max-w-md">
-            <h2 className="text-3xl font-bold text-white">Want to see more of {name}?</h2>
-            <p className="text-white/90">Unlock exclusive content and personalized interactions</p>
-            {socialLink && socialLink.trim() !== '' && socialLink !== '#' ? (
-              <a
-                href={socialLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={handleUnlockClick}
-                className="h-16 px-8 text-lg font-bold rounded-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-lg shadow-pink-500/50 transition-all transform hover:scale-105 animate-pulse flex items-center justify-center"
-              >
-                Unlock Exclusive Content
-              </a>
-            ) : null}
+    // Check if this is the last gallery item (becomes the locked VIP teaser)
+    const isLastItem = index === validItems.length - 1;
+
+    // Handle click for locked item
+    const handleLockedClick = async (e: React.MouseEvent) => {
+      e.preventDefault();
+      // Use redirectUrl if provided, otherwise fall back to socialLink
+      const url = redirectUrl || socialLink;
+      if (url && url.trim() !== '' && url !== '#') {
+        await handleUnlockClick();
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    };
+
+    // Render locked VIP teaser for last item (merged conversion card)
+    if (isLastItem) {
+      if (slide.type === 'video' && slide.url) {
+        const mp4Url = slide.url;
+        const webmUrl = deriveWebmUrl(mp4Url);
+        
+        return (
+          <div 
+            className="relative w-full h-full overflow-hidden group cursor-pointer"
+            onClick={handleLockedClick}
+          >
+            <VideoPlayer
+              mp4Url={mp4Url}
+              webmUrl={webmUrl}
+              posterUrl={slide.posterUrl}
+              isLocked={true}
+            />
+            {/* Conversion overlay */}
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-t from-black/80 via-black/50 to-black/30 p-6 text-center">
+              <div className="rounded-full bg-white/20 p-4 backdrop-blur-md mb-4">
+                <Lock className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Want to see more?</h3>
+              <p className="text-white/80 text-sm mb-4">Unlock exclusive content</p>
+              <div className="px-6 py-3 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold shadow-lg shadow-pink-500/30">
+                Unlock VIP Content
+              </div>
+            </div>
           </div>
-          <div className="absolute inset-0 bg-black/20 backdrop-blur-md" />
-        </div>
-      );
+        );
+      }
+
+      // Default: Image (locked VIP teaser)
+      if (slide.url) {
+        return (
+          <div 
+            className="relative w-full h-full overflow-hidden group cursor-pointer"
+            onClick={handleLockedClick}
+          >
+            <Image
+              src={slide.url}
+              alt={`${name} - Exclusive content`}
+              fill
+              className="object-cover filter blur-[11px] scale-110 transition-all duration-500 group-hover:scale-115 group-hover:blur-[19px]"
+              sizes={isDesktop ? "(min-width: 1024px) 66vw, 100vw" : "100vw"}
+            />
+            {/* Conversion overlay */}
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-t from-black/80 via-black/50 to-black/30 p-6 text-center">
+              <div className="rounded-full bg-white/20 p-4 backdrop-blur-md mb-4">
+                <Lock className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Want to see more?</h3>
+              <p className="text-white/80 text-sm mb-4">Unlock exclusive content</p>
+              <div className="px-6 py-3 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold shadow-lg shadow-pink-500/30">
+                Unlock VIP Content
+              </div>
+            </div>
+          </div>
+        );
+      }
     }
 
+    // Regular (non-locked) items
     if (slide.type === 'video' && slide.url) {
       const mp4Url = slide.url;
       const webmUrl = deriveWebmUrl(mp4Url);

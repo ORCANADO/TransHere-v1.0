@@ -304,6 +304,7 @@ export default async function ModelPage({ params }: PageProps) {
             name={model.name}
             socialLink={socialLink}
             modelId={model.id}
+            redirectUrl={socialLink}
           />
         </div>
       </div>

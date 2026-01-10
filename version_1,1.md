@@ -250,6 +250,13 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
     - [x] Loop infinitely, muted, no controls (TikTok/Instagram UX).
     - [x] Fallback chain: `gallery_items` → `image_url` (legacy `gallery_urls` removed in migration 012).
 
+- [x] **Locked VIP Teaser (Conversion Optimization)**
+    - [x] Last gallery item transformed into locked conversion card (removed separate end-card).
+    - [x] Blurred preview with gradient overlay and lock icon.
+    - [x] "Want to see more?" CTA with redirect to model's social link.
+    - [x] Optimized blur levels: Images (11px/19px), Videos (19px/13px).
+    - [x] Click tracking and analytics integration.
+
 - [x] **Admin Dashboard Gallery Manager**
     - [x] Added "Gallery Manager" tab for video/image uploads.
     - [x] Toggle between Image Mode and Video Mode.

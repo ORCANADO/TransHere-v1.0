@@ -150,6 +150,13 @@ Do not use `useRouter().push` for external links.
   - Loop infinitely, muted, no controls, `playsInline`.
   - Always include `poster` attribute for video thumbnail.
 - **Fallback Logic:** If `gallery_items` is empty, fall back to `image_url` (legacy `gallery_urls` column has been removed in migration 012).
+- **Locked VIP Teaser:**
+  - The LAST gallery item (index === validItems.length - 1) must be rendered as a "Locked VIP Teaser".
+  - NO separate end-card; the last item IS the conversion card.
+  - Visual: Blurred media background (images: blur-[11px] base, blur-[19px] hover; videos: blur-[19px] base, blur-[13px] hover).
+  - Overlay: Gradient from-black/80 via-black/50 to-black/30 with Lock icon, headline, and CTA button.
+  - Click action: Redirects to `redirectUrl` or `socialLink` prop with analytics tracking.
+  - Must work for both `media_type === 'image'` and `media_type === 'video'`.
 
 ## 3. Coding Standards & Style
 
