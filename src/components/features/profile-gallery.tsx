@@ -63,7 +63,7 @@ function VideoPlayer({ mp4Url, webmUrl, posterUrl, isLocked = false }: VideoPlay
         ref={videoRef}
         className={cn(
           "w-full h-full object-cover",
-          isLocked && "filter blur-[19px] scale-105 transition-all duration-500 group-hover:scale-110 group-hover:blur-[13px]"
+          isLocked && "scale-105 transition-all duration-500 group-hover:scale-110"
         )}
         poster={posterUrl || undefined}
         loop
@@ -243,15 +243,23 @@ export function ProfileGallery({ items, name, socialLink, modelId, redirectUrl }
               posterUrl={slide.posterUrl}
               isLocked={true}
             />
-            {/* Conversion overlay */}
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-t from-black/80 via-black/50 to-black/30 p-6 text-center">
-              <div className="rounded-full bg-white/20 p-4 backdrop-blur-md mb-4">
-                <Lock className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Want to see more?</h3>
-              <p className="text-white/80 text-sm mb-4">Unlock exclusive content</p>
-              <div className="px-6 py-3 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold shadow-lg shadow-pink-500/30">
-                Unlock VIP Content
+            {/* Frosted Glass Midnight Overlay */}
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center">
+              {/* Frosted backdrop layer */}
+              <div className="absolute inset-0 bg-background/70 backdrop-blur-xl" />
+              {/* Gradient vignette */}
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+              
+              {/* Content */}
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="rounded-full bg-primary/15 border border-primary/30 p-4 backdrop-blur-sm mb-4 shadow-lg shadow-primary/10">
+                  <Lock className="h-7 w-7 text-primary" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-2xl font-serif font-semibold text-foreground mb-2">Want to see more?</h3>
+                <p className="text-muted-foreground text-sm mb-5">Unlock exclusive content</p>
+                <div className="px-7 py-3.5 rounded-full bg-gradient-to-r from-primary via-primary/90 to-background text-primary-foreground font-semibold shadow-xl shadow-primary/25 border border-primary/20 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/35 hover:scale-[1.02]">
+                  Unlock VIP Content
+                </div>
               </div>
             </div>
           </div>
@@ -269,18 +277,26 @@ export function ProfileGallery({ items, name, socialLink, modelId, redirectUrl }
               src={slide.url}
               alt={`${name} - Exclusive content`}
               fill
-              className="object-cover filter blur-[11px] scale-110 transition-all duration-500 group-hover:scale-115 group-hover:blur-[19px]"
+              className="object-cover scale-105 transition-all duration-500 group-hover:scale-110"
               sizes={isDesktop ? "(min-width: 1024px) 66vw, 100vw" : "100vw"}
             />
-            {/* Conversion overlay */}
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-t from-black/80 via-black/50 to-black/30 p-6 text-center">
-              <div className="rounded-full bg-white/20 p-4 backdrop-blur-md mb-4">
-                <Lock className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Want to see more?</h3>
-              <p className="text-white/80 text-sm mb-4">Unlock exclusive content</p>
-              <div className="px-6 py-3 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold shadow-lg shadow-pink-500/30">
-                Unlock VIP Content
+            {/* Frosted Glass Midnight Overlay */}
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center">
+              {/* Frosted backdrop layer */}
+              <div className="absolute inset-0 bg-background/70 backdrop-blur-xl" />
+              {/* Gradient vignette */}
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+              
+              {/* Content */}
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="rounded-full bg-primary/15 border border-primary/30 p-4 backdrop-blur-sm mb-4 shadow-lg shadow-primary/10">
+                  <Lock className="h-7 w-7 text-primary" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-2xl font-serif font-semibold text-foreground mb-2">Want to see more?</h3>
+                <p className="text-muted-foreground text-sm mb-5">Unlock exclusive content</p>
+                <div className="px-7 py-3.5 rounded-full bg-gradient-to-r from-primary via-primary/90 to-background text-primary-foreground font-semibold shadow-xl shadow-primary/25 border border-primary/20 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/35 hover:scale-[1.02]">
+                  Unlock VIP Content
+                </div>
               </div>
             </div>
           </div>

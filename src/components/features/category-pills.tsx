@@ -25,10 +25,10 @@ export function CategoryPills({ tags, selectedTag, onSelectTag }: CategoryPillsP
               <button
                 key={tag}
                 onClick={() => handleTagClick(tag)}
-                className={`snap-start flex-shrink-0 px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
+                className={`snap-start flex-shrink-0 px-3 py-1 rounded-full text-sm font-medium border transition-all ${
                   isActive
-                    ? "bg-pink-500 text-white border-pink-500"
-                    : "bg-white/10 hover:bg-white/20 border-white/20"
+                    ? "bg-[#00FF85] text-black border-[#00FF85] shadow-[0_0_10px_rgba(0,255,133,0.3)]"
+                    : "bg-white/5 hover:bg-white/10 border-white/10 hover:border-[#D4AF37]/30"
                 }`}
                 type="button"
               >

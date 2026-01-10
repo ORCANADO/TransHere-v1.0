@@ -218,7 +218,7 @@ export default async function ModelPage({ params }: PageProps) {
             <div className="flex items-center justify-center p-3">
               <Link href="/" className="flex items-center">
                 <span className="text-white font-bold tracking-tighter">
-                  Tran<span className="text-pink-500">Spot</span>
+                  Tran<span className="text-[#00FF85]">Spot</span>
                 </span>
               </Link>
             </div>
@@ -231,7 +231,7 @@ export default async function ModelPage({ params }: PageProps) {
                 {model.is_verified && (
                   <BadgeCheck
                     size={24}
-                    className="text-blue-500 flex-shrink-0"
+                    className="text-[#D4AF37] drop-shadow-[0_0_8px_rgba(212,175,55,0.5)] flex-shrink-0"
                     strokeWidth={2.5}
                   />
                 )}

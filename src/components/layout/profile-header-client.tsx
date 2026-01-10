@@ -67,10 +67,10 @@ function ProfileHeaderInner() {
           </Button>
         </Link>
 
-        {/* Brand Name */}
+        {/* Brand Name - Electric Emerald accent */}
         <Link href="/" className="flex items-center">
           <span className="text-white font-bold tracking-tighter">
-            Tran<span className="text-pink-500">Spot</span>
+            Tran<span className="text-[#00FF85]">Spot</span>
           </span>
         </Link>
 
@@ -83,7 +83,7 @@ function ProfileHeaderInner() {
           aria-label="Share profile"
         >
           {isCopied ? (
-            <Check size={20} className="text-green-400" />
+            <Check size={20} className="text-[#00FF85]" />
           ) : (
             <Share2 size={20} />
           )}

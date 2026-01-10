@@ -22,7 +22,17 @@ export function ChatButton({ href, modelId, modelName, variant = 'fixed', label 
   // Fallback to constructed text only if label is not provided
   const buttonText = label ?? `Chat with ${modelName}`;
 
-  const buttonClasses = "w-full h-14 text-lg font-bold rounded-full bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-90 transition-all animate-pulse flex items-center justify-center";
+  // Glass-Gold Luxury Style: Midnight solid with gold accent border and subtle glow animation
+  const buttonClasses = `
+    w-full h-14 text-lg font-semibold rounded-full 
+    bg-primary text-primary-foreground
+    border border-primary/40
+    animate-glow
+    hover:bg-primary/90
+    active:scale-[0.98]
+    transition-all duration-200 ease-out
+    flex items-center justify-center
+  `.trim().replace(/\s+/g, ' ');
 
   if (variant === 'inline') {
     return (
@@ -41,7 +51,7 @@ export function ChatButton({ href, modelId, modelName, variant = 'fixed', label 
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t z-50">
+    <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-xl border-t border-primary/10 z-50">
       <a
         id="chat-button"
         href={href}

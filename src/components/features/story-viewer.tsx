@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { X, BadgeCheck, Share2, Check, Link2 } from "lucide-react";
 import { StoryGroup } from "@/types";
@@ -181,6 +182,17 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
       if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    };
+  }, []);
+
+  // Add blur effect to page content when story viewer opens
+  useEffect(() => {
+    // Add class to body to blur background content
+    document.body.classList.add('story-open');
+    
+    // Cleanup: remove class when component unmounts
+    return () => {
+      document.body.classList.remove('story-open');
     };
   }, []);
 
@@ -403,12 +415,24 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
   // Calculate opacity based on drag distance
   const dragOpacity = Math.max(0, 1 - dragY / 400);
 
-  return (
+  // Get portal container - render outside main content to avoid blur
+  const portalContainer = typeof document !== 'undefined' 
+    ? document.getElementById('story-portal') || document.body 
+    : null;
+
+  // If no portal container (SSR), don't render
+  if (!portalContainer) {
+    return null;
+  }
+
+  // Render via portal to #story-portal (outside #main-content blur scope)
+  return createPortal(
     <div
       ref={containerRef}
+      data-story-viewer="true"
       // Fix pull-to-refresh: touch-none prevents browser gestures, overscroll-y-none prevents overscroll
       // select-none prevents text selection, cursor-pointer for tap feedback
-      className="fixed inset-0 z-[100] bg-black touch-none overscroll-y-none select-none"
+      className="fixed inset-0 z-[100] touch-none overscroll-y-none select-none"
       // Block context menu and apply iOS-specific styles
       onContextMenu={handleContextMenu}
       // Touch handlers on outermost container to catch all events
@@ -425,6 +449,12 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
         transition: isClosing ? 'opacity 0.2s ease-out' : 'none',
       }}
     >
+      {/* Dark overlay - the page content behind is already blurred via CSS */}
+      <div 
+        className="absolute inset-0 bg-[#050A14]/40"
+        aria-hidden="true"
+      />
+
       {/* Progress Bars - CSS Transition Based */}
       <div className="absolute top-0 left-0 right-0 z-[102] flex gap-1 p-2 safe-area-top">
         {stories.map((story, index) => (
@@ -458,8 +488,8 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
             className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
             aria-label={`View ${modelName || group.title || "model"} profile`}
           >
-            {/* Group thumbnail */}
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-white/20 ring-2 ring-white/30">
+            {/* Group thumbnail - Gold ring accent */}
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 ring-2 ring-[#D4AF37]/40">
               {avatarUrl && (
                 <Image
                   src={getImageUrl(avatarUrl)}
@@ -476,7 +506,7 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
               <span className="text-white font-semibold text-sm">
                 {modelName || group.title || "Recent"}
               </span>
-              {isVerified && <BadgeCheck className="w-4 h-4 text-blue-500 flex-shrink-0" />}
+              {isVerified && <BadgeCheck className="w-4 h-4 text-[#D4AF37] drop-shadow-[0_0_8px_rgba(212,175,55,0.5)] flex-shrink-0" />}
               {/* Date Display - Relative for Recent, Absolute for Pinned */}
               {currentStory?.posted_date && (
                 <span className="text-white/50 text-xs">
@@ -487,8 +517,8 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
           </button>
         ) : (
           <div className="flex items-center gap-3">
-            {/* Group thumbnail */}
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-white/20 ring-2 ring-white/30">
+            {/* Group thumbnail - Gold ring accent */}
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 ring-2 ring-[#D4AF37]/40">
               {avatarUrl && (
                 <Image
                   src={getImageUrl(avatarUrl)}
@@ -505,7 +535,7 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
               <span className="text-white font-semibold text-sm">
                 {modelName || group.title || "Recent"}
               </span>
-              {isVerified && <BadgeCheck className="w-4 h-4 text-blue-500 flex-shrink-0" />}
+              {isVerified && <BadgeCheck className="w-4 h-4 text-[#D4AF37] drop-shadow-[0_0_8px_rgba(212,175,55,0.5)] flex-shrink-0" />}
               {/* Date Display - Relative for Recent, Absolute for Pinned */}
               {currentStory?.posted_date && (
                 <span className="text-white/50 text-xs">
@@ -516,10 +546,10 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
           </div>
         )}
 
-        {/* Close button */}
+        {/* Close button - Glassmorphism with Gold hover */}
         <button
           onClick={handleClose}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors active:scale-95"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/10 hover:bg-white/15 hover:border-[#D4AF37]/30 transition-all active:scale-95"
           aria-label="Close stories"
         >
           <X className="w-6 h-6 text-white" />
@@ -590,12 +620,12 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
         )}
       </div>
 
-      {/* Pause Indicator */}
+      {/* Pause Indicator - Glassmorphism */}
       {isPaused && !isDragging && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[102]">
-          <div className="bg-black/50 rounded-full p-4 animate-pulse">
+          <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-full p-4">
             <svg
-              className="w-12 h-12 text-white"
+              className="w-12 h-12 text-white/90"
               fill="currentColor"
               viewBox="0 0 24 24"
             >
@@ -606,22 +636,22 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
         </div>
       )}
 
-      {/* Swipe indicator when dragging */}
+      {/* Swipe indicator when dragging - Glassmorphism */}
       {isDragging && dragY > 50 && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[102]">
-          <div className="bg-black/70 backdrop-blur-sm rounded-full px-4 py-2">
-            <span className="text-white text-sm font-medium">
+          <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-full px-5 py-2.5">
+            <span className="text-white/90 text-sm font-medium">
               {dragY > 100 ? '↓ Release to close' : '↓ Swipe down to close'}
             </span>
           </div>
         </div>
       )}
 
-      {/* Micro-Toast - Link Copied Confirmation */}
+      {/* Micro-Toast - Link Copied Confirmation (Electric Emerald) */}
       {isCopiedAndGo && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[200] pointer-events-none animate-in fade-in zoom-in-95 duration-200">
-          <div className="flex items-center gap-2 px-4 py-3 bg-black/80 backdrop-blur-md rounded-xl shadow-lg">
-            <Link2 className="w-5 h-5 text-green-400" />
+          <div className="flex items-center gap-2 px-4 py-3 bg-black/70 backdrop-blur-xl border border-[#00FF85]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,133,0.2)]">
+            <Link2 className="w-5 h-5 text-[#00FF85]" />
             <span className="text-white font-medium text-sm">Link Copied! Opening...</span>
           </div>
         </div>
@@ -630,28 +660,29 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
       {/* Action Bar - Share + Respond to Story */}
       {socialLink && socialLink !== "#" && (
         <div className="absolute bottom-8 left-0 right-0 z-[102] flex items-center justify-center gap-3 px-4 safe-area-bottom">
-          {/* Share Button - Round Glassmorphism */}
+          {/* Share Button - Round Glassmorphism with Gold accent */}
           <button
             onClick={handleShare}
-            className="flex items-center justify-center w-12 h-12 bg-white/15 backdrop-blur-md border border-white/20 rounded-full text-white transition-all hover:bg-white/25 hover:scale-105 active:scale-95"
+            className="flex items-center justify-center w-12 h-12 bg-white/10 backdrop-blur-md border border-[#D4AF37]/30 rounded-full text-white transition-all hover:bg-white/20 hover:border-[#D4AF37]/50 hover:scale-105 active:scale-95"
             aria-label="Share story"
           >
             {isCopied ? (
-              <Check className="w-5 h-5 text-green-400" />
+              <Check className="w-5 h-5 text-[#00FF85]" />
             ) : (
               <Share2 className="w-5 h-5" />
             )}
           </button>
 
-          {/* Respond to Story Button - Pill CTA */}
+          {/* Respond to Story Button - Electric Emerald CTA */}
           <button
             onClick={handleRespondToStory}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 rounded-full text-white font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-pink-500/25"
+            className="flex items-center gap-2 px-6 py-3 bg-[#00FF85] hover:bg-[#00E077] rounded-full text-black font-bold transition-all hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(0,255,133,0.4)] hover:shadow-[0_0_25px_rgba(0,255,133,0.6)]"
           >
             <span>Respond to Story</span>
           </button>
         </div>
       )}
-    </div>
+    </div>,
+    portalContainer
   );
 }

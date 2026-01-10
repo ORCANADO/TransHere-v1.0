@@ -45,7 +45,7 @@ export function ScarcityBlock({ city, scarcity }: ScarcityBlockProps) {
                 Searching for verified profiles...
               </p>
               <div className="mt-3 h-1 w-24 bg-neutral-800 rounded-full overflow-hidden">
-                <div className="h-full w-1/2 bg-pink-500 animate-pulse" />
+                <div className="h-full w-1/2 bg-[#00FF85] animate-pulse shadow-[0_0_8px_rgba(0,255,133,0.5)]" />
               </div>
             </>
           ) : (

@@ -38,22 +38,40 @@ export function ModelCard({ name, image, tags, slug, priority, isOnline, is_veri
   };
 
   return (
-    <Link href={`/model/${slug}`} className="block">
-      <Card className="relative overflow-hidden p-0 cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]">
+    <Link href={`/model/${slug}`} className="block group">
+      <Card className={cn(
+        "relative overflow-hidden p-0 cursor-pointer",
+        "transition-all duration-300 ease-out",
+        "hover:scale-[1.02] active:scale-[0.98]",
+        // Gold Spark border-top on hover (Rich Gold #D4AF37)
+        "border-t-2 border-t-transparent",
+        "group-hover:border-t-[oklch(78%_0.13_85)]"
+      )}>
         <div className="relative aspect-[3/4]">
+          {/* Profile Image: Monochrome-First aesthetic */}
           <Image
             src={imageUrl}
             alt={name}
             fill
-            className="object-cover"
+            className={cn(
+              "object-cover",
+              // Default: Grayscale + slight contrast boost for "Private Gallery" feel
+              "grayscale contrast-[1.1]",
+              // Transition: Unveil color on hover (500ms)
+              "transition-[filter] duration-500 ease-out",
+              "group-hover:grayscale-0 group-hover:contrast-100",
+              // Mobile: Also unveil on focus-within (for tap states)
+              "group-focus-within:grayscale-0 group-focus-within:contrast-100"
+            )}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             priority={priority}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-          {/* New Badge - Top Left */}
+          {/* Midnight Luxury gradient - subtle tint */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/30 to-transparent pointer-events-none" />
+          {/* New Badge - Top Left (Electric Emerald accent) */}
           {is_new && (
             <div className="absolute top-3 left-3 z-10">
-              <Badge variant="default" className="bg-pink-500 text-white border-0">
+              <Badge variant="default" className="bg-primary text-primary-foreground border-0 font-semibold shadow-lg shadow-primary/20">
                 New
               </Badge>
             </div>
@@ -80,11 +98,11 @@ export function ModelCard({ name, image, tags, slug, priority, isOnline, is_veri
           <div className="absolute bottom-0 left-0 right-0 p-4">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="text-lg font-bold text-white">{name}</h3>
-              {/* Verified Checkmark */}
+              {/* Verified Checkmark - Gold for luxury branding */}
               {is_verified && (
                 <BadgeCheck
                   size={18}
-                  className="text-blue-500 flex-shrink-0"
+                  className="text-[oklch(78%_0.13_85)] flex-shrink-0"
                   strokeWidth={2.5}
                 />
               )}
@@ -93,7 +111,7 @@ export function ModelCard({ name, image, tags, slug, priority, isOnline, is_veri
               {tags.map((tag: string, index: number) => (
                 <span
                   key={index}
-                  className="text-xs text-gray-300"
+                  className="text-xs text-muted-foreground"
                 >
                   {tag}
                 </span>

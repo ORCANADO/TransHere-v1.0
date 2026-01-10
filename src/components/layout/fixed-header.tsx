@@ -32,14 +32,14 @@ export function FixedHeader({ userCity, nav, header }: FixedHeaderProps) {
   const isYou = userCity.toLowerCase() === 'you' || userCity === 'Unknown';
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex flex-col bg-black/80 backdrop-blur-md border-b border-white/10">
+    <div className="fixed top-0 left-0 right-0 z-50 flex flex-col bg-background/85 backdrop-blur-xl border-b border-primary/15">
       {/* Top Row: Brand Name */}
       <div className="flex items-center justify-between px-4 py-3">
-        <h1 className="text-xl font-bold tracking-tighter text-white">
-          Tran<span className="text-pink-500">Spot</span>
+        <h1 className="text-xl font-bold tracking-tighter text-foreground">
+          Tran<span className="text-primary">Spot</span>
         </h1>
         {feed === 'near' && (
-          <span className="text-xs font-medium text-neutral-400 flex items-center gap-1">
+          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
             <MapPin size={12} />
             {isYou ? (
               `${header.modelsNear} ${header.unknownCity}`
@@ -83,7 +83,7 @@ function NavButton({ active, onClick, icon: Icon, label }: NavButtonProps) {
       onClick={onClick}
       className={cn(
         'flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all',
-        active ? 'bg-white/10 text-white' : 'text-neutral-500 hover:text-white'
+        active ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground'
       )}
     >
       <Icon size={16} className={active ? 'fill-current' : ''} />
