@@ -164,7 +164,7 @@ export default async function ModelPage({ params }: PageProps) {
   const galleryItems: GalleryItem[] = sortedGalleryItems.length > 0
     ? sortedGalleryItems
     : model.gallery_urls && model.gallery_urls.length > 0
-    ? model.gallery_urls.map((url, index) => ({
+    ? model.gallery_urls.map((url: string, index: number) => ({
         id: `legacy-${index}`,
         model_id: model.id,
         media_url: url,
