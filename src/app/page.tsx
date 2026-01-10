@@ -44,7 +44,7 @@ export default async function Home({ searchParams }: HomeProps) {
   
   let query = supabase
     .from('models')
-    .select('id, created_at, name, image_url, tags, is_pinned, is_verified, is_new, gallery_urls, slug');
+    .select('id, created_at, name, image_url, tags, is_pinned, is_verified, is_new, slug');
 
   // 4. Apply sorting based on feed type
   if (feed === 'new') {
@@ -106,7 +106,6 @@ export default async function Home({ searchParams }: HomeProps) {
     image_url: string | null;
     tags: string[] | null;
     slug: string | null;
-    gallery_urls: string[] | null;
     is_verified: boolean | null;
     is_new: boolean | null;
     is_pinned: boolean | null;
@@ -116,7 +115,6 @@ export default async function Home({ searchParams }: HomeProps) {
     image_url: model.image_url || '',
     tags: model.tags || [],
     slug: model.slug || '',
-    gallery_urls: model.gallery_urls || [],
     is_verified: model.is_verified || false,
     is_new: model.is_new || false,
     is_pinned: model.is_pinned || false,
@@ -135,7 +133,6 @@ export default async function Home({ searchParams }: HomeProps) {
     image_url: model.image_url || '',
     tags: model.tags || [],
     slug: model.slug || '',
-    gallery_urls: model.gallery_urls || [],
     is_verified: model.is_verified || false,
     is_new: model.is_new || false,
     is_pinned: model.is_pinned || false,

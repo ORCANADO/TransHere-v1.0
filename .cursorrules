@@ -51,6 +51,7 @@ Client Components for filtering.
   - Derive WebM URL by replacing `.mp4` extension in `media_url`.
   - Always include `poster_url` for video thumbnails.
 - **Optimization:** Use `sharp` scripts locally; do not rely on on-the-fly server optimization.
+- **Caching:** All R2 uploads MUST include `Cache-Control: public, max-age=31536000, immutable` header (files are timestamped and never change).
 
 ### 2.5 Geolocation Handling
 - Always use request.headers.get('x-user-city') in Server Components.
@@ -69,6 +70,7 @@ Client Components for filtering.
 - **Nuqs Integration:** ALWAYS ensure `<NuqsAdapter>` wraps children in `src/app/layout.tsx`.
 - **Async Headers:** `headers()` and `cookies()` are async functions in Next.js 15. Await them before use.
 - **Edge Runtime:** ALL API routes interacting with AWS SDK or R2 (`src/app/api/...`) MUST export `const runtime = 'edge'` to function on Cloudflare Pages.
+- **Image Optimization:** Next.js Image component is configured with AVIF/WebP formats and 1-year cache TTL. Use `next/dynamic` for heavy components (modals, below-the-fold content) to reduce initial bundle size.
 
 ### 2.8 Server Actions & Mutations
 - **Security:** ALL database writes must happen in `src/app/actions/` files marked with `"use server"`.
@@ -147,7 +149,7 @@ Do not use `useRouter().push` for external links.
   - Pause and reset when not visible (resource optimization).
   - Loop infinitely, muted, no controls, `playsInline`.
   - Always include `poster` attribute for video thumbnail.
-- **Fallback Logic:** If `gallery_items` is empty, fall back to `gallery_urls`, then `image_url`.
+- **Fallback Logic:** If `gallery_items` is empty, fall back to `image_url` (legacy `gallery_urls` column has been removed in migration 012).
 
 ## 3. Coding Standards & Style
 

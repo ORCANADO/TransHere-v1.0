@@ -39,9 +39,7 @@ export interface Model {
   image_url: string;
   tags: string[];
   slug: string;
-  /** @deprecated Use gallery_items instead */
-  gallery_urls?: string[];
-  gallery_items?: GalleryItem[]; // New: Hybrid video gallery support
+  gallery_items?: GalleryItem[]; // Hybrid video gallery support
   is_verified: boolean;
   is_new: boolean;
   is_pinned: boolean;

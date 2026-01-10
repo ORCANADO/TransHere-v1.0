@@ -1,10 +1,15 @@
 "use client";
 
 import { useQueryState } from "nuqs";
+import dynamic from "next/dynamic";
 import { Model, StoryGroup } from "@/types";
 import { StoryCircle } from "./story-circle";
-import { StoryViewer } from "./story-viewer";
 import { cn } from "@/lib/utils";
+
+// Lazy load StoryViewer - modal that is hidden by default, should NOT be in initial bundle
+const StoryViewer = dynamic(() => import("./story-viewer").then(mod => ({ default: mod.StoryViewer })), {
+  ssr: false
+});
 
 interface HomeStoriesBarProps {
   models: Model[];

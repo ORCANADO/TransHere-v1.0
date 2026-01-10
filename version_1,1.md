@@ -248,7 +248,7 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
     - [x] Intersection Observer for visibility-based playback.
     - [x] Auto-play when 50% visible, pause/reset when hidden.
     - [x] Loop infinitely, muted, no controls (TikTok/Instagram UX).
-    - [x] Fallback chain: `gallery_items` → `gallery_urls` → `image_url`.
+    - [x] Fallback chain: `gallery_items` → `image_url` (legacy `gallery_urls` removed in migration 012).
 
 - [x] **Admin Dashboard Gallery Manager**
     - [x] Added "Gallery Manager" tab for video/image uploads.

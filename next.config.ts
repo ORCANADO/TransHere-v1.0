@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
+    // Optimize image formats: AVIF is smaller than WebP, WebP is fallback
+    formats: ['image/avif', 'image/webp'],
+    // 1-year cache TTL to align with R2 aggressive caching strategy
+    minimumCacheTTL: 31536000,
     remotePatterns: [
       {
         protocol: "https",

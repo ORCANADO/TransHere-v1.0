@@ -2,7 +2,7 @@ import { BadgeCheck } from "lucide-react";
 import { StatusIndicator } from "@/components/ui/status-indicator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ProfileGallery } from "@/components/features/profile-gallery";
+import dynamic from "next/dynamic";
 import { ProfileHeaderClient } from "@/components/layout/profile-header-client";
 import { ModelViewTracker } from "@/components/features/model-view-tracker";
 import { ChatButton } from "@/components/features/chat-button";
@@ -12,6 +12,11 @@ import { headers } from "next/headers";
 import { DICTIONARY, getLanguage, translateTags } from "@/lib/i18n";
 import Link from "next/link";
 import type { GalleryItem } from "@/types";
+
+// Lazy load ProfileGallery - below the fold content
+const ProfileGallery = dynamic(() => import("@/components/features/profile-gallery").then(mod => ({ default: mod.ProfileGallery })), {
+  loading: () => <p className="text-center text-muted-foreground p-8">Loading Gallery...</p>
+});
 
 // Edge runtime required for Cloudflare Pages
 export const runtime = 'edge';
@@ -39,7 +44,6 @@ export default async function ModelPage({ params }: PageProps) {
       image_url,
       tags,
       is_verified,
-      gallery_urls,
       social_link,
       bio,
       bio_es,
@@ -159,22 +163,10 @@ export default async function ModelPage({ params }: PageProps) {
     ? [...model.gallery_items].sort((a, b) => a.sort_order - b.sort_order)
     : [];
 
-  // Use gallery_items if available, fallback to legacy gallery_urls, then image_url
+  // Use gallery_items if available, fallback to image_url
   // Convert to GalleryItem[] format for ProfileGallery
   const galleryItems: GalleryItem[] = sortedGalleryItems.length > 0
     ? sortedGalleryItems
-    : model.gallery_urls && model.gallery_urls.length > 0
-    ? model.gallery_urls.map((url: string, index: number) => ({
-        id: `legacy-${index}`,
-        model_id: model.id,
-        media_url: url,
-        media_type: 'image' as const,
-        poster_url: null,
-        width: null,
-        height: null,
-        sort_order: index,
-        created_at: new Date().toISOString(),
-      }))
     : model.image_url
     ? [{
         id: 'fallback-0',

@@ -176,10 +176,14 @@ export default function AdminDashboardContent() {
     const { uploadUrl, key } = await presignResponse.json();
 
     // Upload to R2 with explicit Content-Type header for proper browser streaming
+    // Cache-Control: Aggressive caching (1 year) since files are timestamped and immutable
     const uploadResponse = await fetch(uploadUrl, {
       method: "PUT",
       body: file,
-      headers: { "Content-Type": mimeType },
+      headers: { 
+        "Content-Type": mimeType,
+        "Cache-Control": "public, max-age=31536000, immutable"
+      },
     });
 
     if (!uploadResponse.ok) {

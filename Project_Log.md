@@ -265,3 +265,31 @@
 - **URL Helper:** Centralized URL construction via `getImageUrl()` to prevent double `https://` errors.
 - **next.config.ts:** Added `*.pages.dev` to `remotePatterns` for Cloudflare Pages domains.
 - **Multi-Bucket R2:** Verified separate domains for models (`NEXT_PUBLIC_R2_DOMAIN`) and stories (`NEXT_PUBLIC_STORIES_DOMAIN`).
+
+## [2026-01-10] - Phase 4.98: Performance Optimization & Gallery Migration Finalization
+**Status:** Complete
+
+### Performance Optimizations:
+- **Lazy Loading Implementation:**
+  - Lazy loaded `StoryViewer` component with `ssr: false` (modal hidden by default, not in initial bundle).
+  - Lazy loaded `ProfileGallery` component with loading state (below-the-fold content).
+  - Applied to both `StoriesContainer` and `HomeStoriesBar` for consistency.
+  - **Impact:** Reduced initial JavaScript bundle size, faster page load times, improved Core Web Vitals.
+
+- **Image Configuration Optimization:**
+  - Added `formats: ['image/avif', 'image/webp']` to `next.config.ts` for automatic format optimization.
+  - Added `minimumCacheTTL: 31536000` (1 year) to align with R2 caching strategy.
+  - **Impact:** AVIF format can be 50% smaller than WebP, reducing bandwidth and improving LCP scores.
+
+- **R2 Upload Caching:**
+  - Added `Cache-Control: public, max-age=31536000, immutable` header to all R2 PUT requests in admin dashboard.
+  - **Rationale:** Files are timestamped and never change, enabling aggressive CDN/browser caching for instant repeat views.
+
+### Gallery Migration Finalization:
+- **Database Migration:** Created `012_drop_legacy_gallery.sql` to remove `gallery_urls` column from `models` table.
+- **Code Cleanup:**
+  - Removed `gallery_urls` from `Model` interface in `src/types/index.ts`.
+  - Removed `gallery_urls` from all Supabase queries in `page.tsx` and `model/[slug]/page.tsx`.
+  - Updated fallback logic to use only `gallery_items` → `image_url` (removed legacy `gallery_urls` step).
+  - Removed `gallery_urls` from mock data in `src/data/mock-models.ts`.
+  - **Status:** Codebase fully migrated to `gallery_items` table. Migration ready to apply.
