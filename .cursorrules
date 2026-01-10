@@ -122,6 +122,12 @@ Do not use `useRouter().push` for external links.
     - **Story transitions:** `animate-in fade-in zoom-in-95 duration-300`
     - **Model transitions:** `animate-in slide-in-from-right-full duration-500 ease-out`
 - **Navigation Isolation:** Pinned and Feed story groups MUST have separate neighbor calculations. Swiping on a pinned story navigates only to other pinned stories.
+- **Blur Effect Architecture (React Portal):**
+  - StoryViewer MUST render via `createPortal` to `#story-portal` (defined in `layout.tsx`)
+  - Layout structure: `#main-content` (gets blurred) + `#story-portal` (StoryViewer, outside blur scope)
+  - CSS targets `body.story-open #main-content` for targeted blur effect
+  - StoryViewer adds `story-open` class to body on mount, removes on unmount
+  - Result: Instagram-style frosted glass with blurred background, clear story overlay
 
 ### 2.15 Category Pills & Filtering
 - **Frequency Algorithm:** Display top 15 most-used tags (calculated server-side).
@@ -157,6 +163,75 @@ Do not use `useRouter().push` for external links.
   - Overlay: Gradient from-black/80 via-black/50 to-black/30 with Lock icon, headline, and CTA button.
   - Click action: Redirects to `redirectUrl` or `socialLink` prop with analytics tracking.
   - Must work for both `media_type === 'image'` and `media_type === 'video'`.
+
+### 2.17 Dark Mode Luxury Branding (Midnight Spectrum)
+- **Color Palette (Immutable):**
+  - Background: `#050A14` (Obsidian Navy) - `--background`
+  - Primary: `#00FF85` (Electric Emerald) - `--primary`
+  - Accent/Gold: `#D4AF37` (Rich Gold) - Used for verified badges, premium accents
+  - Secondary: `#7A27FF` (Cyber Violet) - Gradient overlays, interactive states
+  - Card/Surface: `#0A1221` (Deep Charcoal Navy) - `--card`
+  - Muted/Foreground: `#94A3B8` - `--muted-foreground`
+- **Typography System:**
+  - Headlines (h1-h4): `var(--font-serif)` (Playfair Display) with `font-weight: 500` and `letter-spacing: -0.025em`
+  - Body: `var(--font-sans)` (Montserrat)
+  - Global styles defined in `globals.css` `@layer base`
+- **Custom Utility Classes (globals.css):**
+  - `.glass-panel`: `backdrop-blur-xl bg-white/5 border border-white/10`
+  - `.gold-glow`: Subtle shadow using Rich Gold (`oklch(78% 0.13 85 / 0.3)`)
+  - `.emerald-button`: `bg-primary text-primary-foreground` with Electric Emerald glow
+  - `.emerald-glow`: Neon glow effect for primary actions
+- **Component Styling Rules:**
+  - All CTAs use Electric Emerald (`#00FF85`) with black text for high contrast
+  - Verified badges use Rich Gold (`#D4AF37`) with drop shadow
+  - Glassmorphism effects use `backdrop-blur-xl` with subtle white/black overlays
+  - NO pink/rose/blue accents from previous iteration (replaced with Midnight Spectrum)
+
+### 2.18 Visual Memory System (Viewed Profiles)
+- **Hook:** `useViewedModels` in `src/hooks/use-viewed-models.ts`
+  - Storage key: `'transpot-viewed-models'`
+  - Hydration-safe: Loads from localStorage only after client mount
+  - Functions: `markAsViewed(id)`, `isViewed(id)`, `viewedIds` array
+- **ModelCard Visual States:**
+  - **Unviewed:** `grayscale-[0.80]` (80% grayscale) + vignette overlay (86% opacity dark edges)
+  - **Viewed:** `grayscale-0` (full color) + no vignette
+  - **Hover on Unviewed:** Smooth 500ms transition to `grayscale-0`
+  - **Vignette:** Radial gradient `transparent 35% → rgba(0,0,0,0.86) 100%` for "unseen" signal
+- **Implementation:**
+  - ModelCard calls `markAsViewed(slug)` on click (profile visit)
+  - Conditional classes based on `isViewed(slug)` state
+  - Vignette overlay fades out on hover/viewed with `transition-opacity duration-500`
+
+### 2.19 Story Visual Memory System
+- **Hook:** `useViewedStories` in `src/hooks/use-viewed-stories.ts`
+  - Storage key: `'transpot-viewed-stories'`
+  - Hydration-safe: Loads from localStorage only after client mount
+  - Functions: `markAsViewed(id)`, `isViewed(id)`, `viewedIds` array
+  - **Real-Time Sync:** Custom events (`viewedStoriesUpdated`) + storage events for cross-component/cross-tab sync
+- **StoryCircle Visual States:**
+  - **Unviewed:** Electric Emerald → Gold → Violet gradient ring (`bg-gradient-to-tr from-[#00FF85] via-[#D4AF37] to-[#7A27FF]`)
+  - **Viewed:** Gray ring (`bg-muted-foreground/40`)
+  - **Transition:** 300ms for smooth visual feedback
+- **Story Sorting (Instagram-Style):**
+  - **Primary:** Unviewed stories appear first (left side of `HomeStoriesBar`)
+  - **Secondary:** Within each group (viewed/unviewed), newest stories first
+  - **Auto-Update:** Viewed stories automatically move to end when viewed (no page reload needed)
+- **Implementation:**
+  - StoryCircle calls `markAsViewed(groupId)` on click
+  - HomeStoriesBar uses `isViewed(groupId)` for sorting logic
+  - Real-time sync ensures all components update instantly
+
+### 2.20 Real-Time Synchronization (localStorage Hooks)
+- **Pattern:** All localStorage-based hooks (`useFavorites`, `useViewedStories`, `useViewedModels`) support real-time sync
+- **Mechanism:**
+  - Custom events for same-window sync (`favoritesUpdated`, `viewedStoriesUpdated`)
+  - Native `storage` events for cross-tab/window sync
+  - All hook instances automatically update when any instance changes state
+- **Benefits:**
+  - Favorites appear in Favorites feed immediately without page reload
+  - Story positions update automatically when viewed
+  - Works across multiple browser tabs/windows
+  - No manual refresh required for state consistency
 
 ## 3. Coding Standards & Style
 
@@ -202,7 +277,7 @@ Do not use `useRouter().push` for external links.
 - `/src/components/ui`: Shadcn primitives.
 - `/src/components/features`: Feature-specific components (e.g., `ModelCard`).
 - `/src/lib/supabase`: Supabase client configuration.
-- `/src/hooks`: Custom hooks (`useFavorites`, `useOnlineStatus`).
+- `/src/hooks`: Custom hooks (`useFavorites`, `useViewedModels`, `useViewedStories`, `useShare`, `useAnalytics`).
 - `/src/app/admin`: Internal Dashboard (Authentication via `?key=` param).
 
 

@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { Model, StoryGroup } from "@/types";
 import { StoryCircle } from "./story-circle";
 import { cn } from "@/lib/utils";
+import { useViewedStories } from "@/hooks/use-viewed-stories";
 
 // Lazy load StoryViewer - modal that is hidden by default, should NOT be in initial bundle
 const StoryViewer = dynamic(() => import("./story-viewer").then(mod => ({ default: mod.StoryViewer })), {
@@ -18,6 +19,9 @@ interface HomeStoriesBarProps {
 export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
   // Read current feed from URL - only show on 'near' feed
   const [feed] = useQueryState("feed", { defaultValue: "near" });
+  
+  // Visual Memory: Track which stories have been viewed
+  const { isViewed } = useViewedStories();
   
   // URL state management with nuqs - syncs with browser history
   const [storyId, setStoryId] = useQueryState("story", {
@@ -91,11 +95,21 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
         cover_url: latestStoryMedia || recentGroup.cover_url || model.image_url || '',
       };
 
-      return { model, recentGroup, displayGroup, latestStoryDate };
+      // Check if this story group has been viewed (Visual Memory)
+      const viewed = isViewed(recentGroup.id);
+
+      return { model, recentGroup, displayGroup, latestStoryDate, viewed };
     })
-    .filter((item): item is { model: Model; recentGroup: StoryGroup; displayGroup: StoryGroup; latestStoryDate: Date } => item !== null)
-    // Sort by most recent story date (newest first = leftmost)
-    .sort((a, b) => b.latestStoryDate.getTime() - a.latestStoryDate.getTime());
+    .filter((item): item is { model: Model; recentGroup: StoryGroup; displayGroup: StoryGroup; latestStoryDate: Date; viewed: boolean } => item !== null)
+    // Instagram-style sorting: Unviewed first, then viewed. Within each group, sort by newest first
+    .sort((a, b) => {
+      // Primary sort: Unviewed stories first (false < true in boolean, so !viewed gives priority)
+      if (a.viewed !== b.viewed) {
+        return a.viewed ? 1 : -1; // Unviewed (false) comes before viewed (true)
+      }
+      // Secondary sort: Newest first within same viewed status
+      return b.latestStoryDate.getTime() - a.latestStoryDate.getTime();
+    });
 
   // Don't render if no models with recent groups
   if (modelsWithRecentGroups.length === 0) {

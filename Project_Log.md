@@ -311,3 +311,83 @@
   - Works for both images and videos with appropriate blur effects.
   - Added `redirectUrl` prop to `ProfileGallery` for flexible redirect targeting.
 - **UX Impact:** Creates urgency and curiosity while maintaining visual preview of locked content.
+
+## [2026-01-10] - Phase 5: Dark Mode Luxury Rebranding
+**Status:** Complete
+
+### Brand Identity Implementation:
+- **Color Palette Overhaul:**
+  - Background: `#050A14` (Obsidian Navy)
+  - Primary: `#00FF85` (Electric Emerald)
+  - Accent/Gold: `#D4AF37` (Rich Gold)
+  - Secondary: `#7A27FF` (Cyber Violet)
+  - Card/Surface: `#0A1221` (Deep Charcoal Navy)
+  - Muted/Foreground: `#94A3B8`
+- **Typography System:**
+  - Headlines: Playfair Display (serif) - Editorial luxury feel
+  - Body: Montserrat (sans-serif) - Modern, legible
+  - Global heading styles (h1-h4) default to serif with `tracking-tight` and `font-weight: 500`
+- **Custom Utility Classes:**
+  - `.glass-panel`: Backdrop blur with subtle white overlay
+  - `.gold-glow`: Subtle shadow using Rich Gold
+  - `.emerald-button`: High-contrast CTA with Electric Emerald background
+  - `.emerald-glow`: Neon glow effect for primary actions
+- **Component Refactoring:**
+  - `ModelCard`: Monochrome-first aesthetic (85% → 80% grayscale for unviewed)
+  - `ChatButton`: Glass-Gold style with Electric Emerald primary
+  - `FixedHeader`: Enhanced backdrop blur (xl) with metallic border
+  - `StoryViewer`: Dark Mode Luxury with Electric Emerald CTAs and Rich Gold accents
+  - `CategoryPills`: Electric Emerald active state
+  - `ProfileGallery`: Frosted glass overlay for locked VIP teaser
+
+### Story Viewer Blur Effect Fix:
+- **Problem:** Background blur was not working correctly; story content was being blurred.
+- **Solution:** Implemented React Portal architecture:
+  - Added `#main-content` wrapper in `layout.tsx` (gets blurred)
+  - Added `#story-portal` sibling (StoryViewer renders here via portal)
+  - StoryViewer uses `createPortal` to render outside blur scope
+  - CSS targets `body.story-open #main-content` for targeted blur
+- **Result:** Instagram-style frosted glass effect with blurred background and clear story overlay.
+
+## [2026-01-10] - Phase 5.1: Visual Memory Feature
+**Status:** Complete
+
+### Visual Memory Implementation:
+- **New Hook:** Created `useViewedModels` hook (`src/hooks/use-viewed-models.ts`):
+  - Tracks viewed profiles in localStorage (`transpot-viewed-models` key)
+  - Hydration-safe: Loads from localStorage only after client mount
+  - Functions: `markAsViewed(id)`, `isViewed(id)`, `viewedIds` array
+- **ModelCard Visual Memory:**
+  - Unviewed cards: 80% grayscale + vignette overlay (86% opacity dark edges)
+  - Viewed cards: Full color (grayscale-0) + no vignette
+  - Hover on unviewed: Smooth 500ms transition to full color
+  - Vignette: Radial gradient (transparent center → 86% black edges) for "unseen" signal
+- **UX Impact:** Users can visually distinguish between profiles they've already explored and new discoveries, creating a "memory" system without authentication.
+
+## [2026-01-10] - Phase 5.2: Story Visual Memory & Real-Time Sync
+**Status:** Complete
+
+### Story Visual Memory:
+- **New Hook:** Created `useViewedStories` hook (`src/hooks/use-viewed-stories.ts`):
+  - Tracks viewed story groups in localStorage (`transpot-viewed-stories` key)
+  - Hydration-safe: Loads from localStorage only after client mount
+  - Functions: `markAsViewed(id)`, `isViewed(id)`, `viewedIds` array
+- **StoryCircle Visual States:**
+  - Unviewed stories: Electric Emerald → Gold → Violet gradient ring
+  - Viewed stories: Gray ring (`bg-muted-foreground/40`)
+  - 300ms transition for smooth visual feedback
+- **Instagram-Style Story Sorting:**
+  - Primary sort: Unviewed stories appear first (left side of bar)
+  - Secondary sort: Within each group, newest stories first
+  - Viewed stories automatically move to end when viewed
+  - Implemented in `HomeStoriesBar` component
+
+### Real-Time Synchronization:
+- **Cross-Component Sync:** Both `useFavorites` and `useViewedStories` hooks now support real-time synchronization:
+  - Custom event system for same-window sync (`favoritesUpdated`, `viewedStoriesUpdated`)
+  - Native `storage` event listener for cross-tab/window sync
+  - All hook instances automatically update when any instance changes state
+- **UX Impact:**
+  - Favorites appear in Favorites feed immediately without page reload
+  - Story positions update automatically when viewed (moves to end)
+  - Works across multiple browser tabs/windows

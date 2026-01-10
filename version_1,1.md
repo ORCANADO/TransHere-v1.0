@@ -262,10 +262,36 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
     - [x] Toggle between Image Mode and Video Mode.
     - [x] Video uploads: MP4 + WebM + Poster (all required).
 
-* ** Phase 5: Aesthetic Rebranding (Next Up)**
- *Deep research into Trans Model consumer psychology required.* - [ ] Define Color Palette (beyond standard pink/purple). 
-- [ ] Select Typography (High-end vs. Accessible). 
-- [ ] Refine "Page Branding" to move away from generic template look.
+* **[x] Phase 5: Aesthetic Rebranding (Dark Mode Luxury)**
+- [x] **Color Palette:** Implemented "Midnight Spectrum" (Obsidian Navy, Electric Emerald, Rich Gold, Cyber Violet).
+- [x] **Typography:** Editorial/Tech Hybrid (Playfair Display for headlines, Montserrat for body).
+- [x] **Component Refactoring:** Updated all components to use new luxury palette and glassmorphism effects.
+- [x] **Story Viewer:** Fixed blur effect using React Portal architecture for Instagram-style frosted glass.
+- [x] **Custom Utilities:** Added `.glass-panel`, `.gold-glow`, `.emerald-button` utility classes.
+
+* **[x] Phase 5.1: Visual Memory Feature**
+- [x] **useViewedModels Hook:** Created hydration-safe localStorage hook to track viewed profiles.
+- [x] **ModelCard Visual Memory:** 
+  - Unviewed: 80% grayscale + 86% opacity vignette overlay
+  - Viewed: Full color (grayscale-0) + no vignette
+  - Smooth 500ms transitions on hover
+- [x] **UX Impact:** Users can visually distinguish explored vs. new profiles without authentication.
+
+* **[x] Phase 5.2: Story Visual Memory & Real-Time Sync**
+- [x] **useViewedStories Hook:** Created hydration-safe localStorage hook to track viewed story groups.
+- [x] **StoryCircle Visual Memory:**
+  - Unviewed: Electric Emerald → Gold → Violet gradient ring
+  - Viewed: Gray ring (muted)
+  - 300ms transition for smooth feedback
+- [x] **Instagram-Style Story Sorting:**
+  - Unviewed stories appear first (left side)
+  - Viewed stories automatically move to end
+  - Within each group, newest first
+- [x] **Real-Time Synchronization:**
+  - Both `useFavorites` and `useViewedStories` support cross-component sync
+  - Custom events for same-window updates
+  - Storage events for cross-tab/window sync
+  - Favorites and stories update instantly without page reload
 
 ---
 

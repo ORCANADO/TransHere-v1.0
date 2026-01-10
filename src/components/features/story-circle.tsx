@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { StoryGroup } from "@/types";
 import { cn, getImageUrl } from "@/lib/utils";
+import { useViewedStories } from "@/hooks/use-viewed-stories";
 
 interface StoryCircleProps {
   group: StoryGroup;
@@ -10,23 +11,33 @@ interface StoryCircleProps {
 }
 
 export function StoryCircle({ group, onClick }: StoryCircleProps) {
+  const { isViewed, markAsViewed } = useViewedStories();
   const coverUrl = getImageUrl(group.cover_url);
   const displayTitle = group.title || "Recent";
+  const viewed = isViewed(group.id);
+
+  // Handle click: mark as viewed and trigger parent onClick
+  const handleClick = () => {
+    markAsViewed(group.id);
+    onClick();
+  };
 
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       className="flex flex-col items-center gap-1 hover:scale-105 transition-transform"
       aria-label={`View ${displayTitle} stories`}
     >
-      {/* Ring Container - Nocturnal Palette */}
+      {/* Ring Container - Visual Memory: Gray for viewed, Gradient for unviewed */}
       <div
         className={cn(
-          "w-[72px] h-[72px] rounded-full p-[2px]",
-          // Gradient ring for Recent (not pinned): Electric Emerald to Rich Gold
-          !group.is_pinned && "bg-gradient-to-tr from-[#00FF85] via-[#D4AF37] to-[#7A27FF]",
-          // Muted ring for Pinned stories
-          group.is_pinned && "bg-muted-foreground/40"
+          "w-[72px] h-[72px] rounded-full p-[2px] transition-all duration-300",
+          // Viewed stories: Gray ring (already seen)
+          viewed && "bg-muted-foreground/40",
+          // Unviewed + Recent (not pinned): Electric Emerald to Rich Gold gradient
+          !viewed && !group.is_pinned && "bg-gradient-to-tr from-[#00FF85] via-[#D4AF37] to-[#7A27FF]",
+          // Unviewed + Pinned: Muted ring
+          !viewed && group.is_pinned && "bg-muted-foreground/40"
         )}
       >
         {/* Border container with background bleed-through */}
