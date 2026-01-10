@@ -1,0 +1,657 @@
+"use client";
+
+import { useState, useEffect, useCallback, useRef } from "react";
+import Image from "next/image";
+import { X, BadgeCheck, Share2, Check, Link2 } from "lucide-react";
+import { StoryGroup } from "@/types";
+import { getImageUrl } from "@/lib/utils";
+import { useShare } from "@/hooks/use-share";
+
+interface StoryViewerProps {
+  group: StoryGroup;
+  onClose: () => void;
+  socialLink?: string;
+  modelName?: string;
+  modelImage?: string;
+  modelSlug?: string;
+  isVerified?: boolean;
+  // Playlist navigation props
+  nextGroupId?: string;
+  prevGroupId?: string;
+  onNavigate?: (groupId: string) => void;
+}
+
+// Date formatting helper - no external dependency
+function formatStoryDate(dateString: string, isPinned: boolean): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  // Pinned stories: Show absolute date (e.g., "Oct 24")
+  if (isPinned) {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  // Recent stories: Show relative time
+  if (diffMinutes < 1) return 'now';
+  if (diffMinutes < 60) return `${diffMinutes}m`;
+  if (diffHours < 24) return `${diffHours}h`;
+  if (diffDays < 7) return `${diffDays}d`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+export function StoryViewer({ group, onClose, socialLink, modelName, modelImage, modelSlug, isVerified, nextGroupId, prevGroupId, onNavigate }: StoryViewerProps) {
+  // Share hook
+  const { share, copyAndGo, isCopied, isCopiedAndGo } = useShare();
+
+  // Local state
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isLongPress, setIsLongPress] = useState(false);
+  const [animationType, setAnimationType] = useState<'story' | 'model'>('story');
+  
+  // Swipe physics state
+  const [dragY, setDragY] = useState(0);
+  const [dragX, setDragX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const touchStartY = useRef<number | null>(null);
+  const touchStartX = useRef<number | null>(null);
+
+  // Refs
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Sort stories chronologically (oldest first) so they play in order
+  // Most recent story should be at the END of the sequence
+  const stories = [...(group.stories || [])].sort((a, b) => {
+    const dateA = new Date(a.posted_date || a.created_at);
+    const dateB = new Date(b.posted_date || b.created_at);
+    return dateA.getTime() - dateB.getTime(); // Ascending: oldest first, newest last
+  });
+  const currentStory = stories[currentStoryIndex];
+  const duration = currentStory?.duration || 5;
+
+  // Close the viewer with animation
+  const handleClose = useCallback(() => {
+    // Clean up all timers
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    
+    // Animate out then close
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+    }, 200);
+  }, [onClose]);
+
+  // Navigation helpers - Model transitions
+  const handleNextModel = useCallback(() => {
+    if (nextGroupId && onNavigate) {
+      setAnimationType('model');
+      onNavigate(nextGroupId);
+    } else {
+      handleClose();
+    }
+  }, [nextGroupId, onNavigate, handleClose]);
+
+  const handlePrevModel = useCallback(() => {
+    if (prevGroupId && onNavigate) {
+      setAnimationType('model');
+      onNavigate(prevGroupId);
+    }
+    // If no prevGroupId, do nothing (stay on current)
+  }, [prevGroupId, onNavigate]);
+
+  // Navigation helpers - Story transitions
+  const handleNextStory = useCallback(() => {
+    if (currentStoryIndex < stories.length - 1) {
+      setAnimationType('story');
+      setIsAnimating(false);
+      setCurrentStoryIndex((prev) => prev + 1);
+      return true;
+    }
+    return false;
+  }, [currentStoryIndex, stories.length]);
+
+  const handlePrevStory = useCallback(() => {
+    if (currentStoryIndex > 0) {
+      setAnimationType('story');
+      setIsAnimating(false);
+      setCurrentStoryIndex((prev) => prev - 1);
+      return true;
+    }
+    return false;
+  }, [currentStoryIndex]);
+
+  // Tap navigation - tries story first, then model
+  const goToNext = useCallback(() => {
+    if (!handleNextStory()) {
+      handleNextModel();
+    }
+  }, [handleNextStory, handleNextModel]);
+
+  const goToPrev = useCallback(() => {
+    if (!handlePrevStory()) {
+      handlePrevModel();
+    }
+  }, [handlePrevStory, handlePrevModel]);
+
+  // CSS Transition Progress Bar - Start animation after story changes
+  useEffect(() => {
+    if (!currentStory || isPaused) return;
+
+    // Reset animation state
+    setIsAnimating(false);
+    
+    // Use requestAnimationFrame to ensure DOM has updated before starting animation
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setIsAnimating(true);
+      });
+    });
+
+    // Set timer to advance to next story
+    timerRef.current = setTimeout(() => {
+      goToNext();
+    }, duration * 1000);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [currentStoryIndex, currentStory, isPaused, duration, goToNext]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    };
+  }, []);
+
+  // Reset state when group changes
+  useEffect(() => {
+    setCurrentStoryIndex(0);
+    setIsAnimating(false);
+    setIsPaused(false);
+    setDragY(0);
+    setIsClosing(false);
+    // Note: animationType is set before navigation, so we keep it for the incoming animation
+    // Reset to 'story' after the animation completes
+    const resetTimer = setTimeout(() => {
+      setAnimationType('story');
+    }, 500);
+    return () => clearTimeout(resetTimer);
+  }, [group.id]);
+
+  // Handle screen tap navigation
+  const handleTap = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isLongPress || isDragging) {
+      setIsLongPress(false);
+      return;
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const width = rect.width;
+    const percentage = x / width;
+
+    if (percentage < 0.3) {
+      goToPrev();
+    } else if (percentage > 0.7) {
+      goToNext();
+    }
+  };
+
+  // Long press handlers for pause
+  const handleMouseDown = () => {
+    longPressTimerRef.current = setTimeout(() => {
+      setIsPaused(true);
+      setIsLongPress(true);
+    }, 200);
+  };
+
+  const handleMouseUp = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+    }
+    setIsPaused(false);
+  };
+
+  // Touch handlers with swipe physics - Applied to outermost container
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+    touchStartX.current = e.touches[0].clientX;
+    setIsDragging(false);
+    setDragX(0);
+    setDragY(0);
+    
+    // Start long press timer
+    longPressTimerRef.current = setTimeout(() => {
+      setIsPaused(true);
+      setIsLongPress(true);
+    }, 200);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    // Prevent browser default to avoid pull-to-refresh
+    e.preventDefault();
+    
+    // Cancel long press if moving
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+    }
+
+    if (touchStartY.current === null || touchStartX.current === null) return;
+
+    const currentY = e.touches[0].clientY;
+    const currentX = e.touches[0].clientX;
+    const deltaY = currentY - touchStartY.current;
+    const deltaX = currentX - touchStartX.current;
+
+    // Determine dominant swipe direction
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    // If horizontal swipe is dominant, track it
+    if (absX > absY && absX > 10) {
+      setIsDragging(true);
+      setDragX(deltaX);
+      setIsPaused(true);
+    }
+    // If vertical downward swipe is dominant, track it
+    else if (deltaY > 10 && absY > absX) {
+      setIsDragging(true);
+      setDragY(deltaY);
+      setIsPaused(true);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+    }
+
+    const swipeThreshold = 50; // Minimum distance for a swipe
+
+    // Check for horizontal swipe (model navigation - skips remaining stories)
+    if (Math.abs(dragX) > swipeThreshold) {
+      if (dragX < 0) {
+        // Swiped LEFT -> jump to next model immediately
+        handleNextModel();
+      } else {
+        // Swiped RIGHT -> jump to previous model immediately
+        handlePrevModel();
+      }
+    }
+    // Check for vertical swipe down (close)
+    else if (dragY > 100) {
+      handleClose();
+    }
+
+    // Reset all swipe state
+    touchStartY.current = null;
+    touchStartX.current = null;
+    setDragX(0);
+    setDragY(0);
+    setIsDragging(false);
+    setIsPaused(false);
+  };
+
+  // Block context menu (long press menu on mobile)
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+  };
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case "ArrowLeft":
+          goToPrev();
+          break;
+        case "ArrowRight":
+          goToNext();
+          break;
+        case "Escape":
+          e.preventDefault();
+          handleClose();
+          break;
+        case " ":
+          e.preventDefault();
+          setIsPaused((prev) => !prev);
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [goToPrev, goToNext, handleClose]);
+
+  // Get current story URL for sharing/deep linking
+  // Always use group.id (not story.id) since HomeStoriesBar looks for group IDs
+  // Always point to model's profile page for consistent deep linking
+  const getCurrentStoryUrl = useCallback(() => {
+    if (typeof window === 'undefined') return '';
+    const baseUrl = window.location.origin;
+    // If we have modelSlug, always use the model's profile page for deep linking
+    // This ensures the link works regardless of where the story was opened from
+    if (modelSlug) {
+      return `${baseUrl}/model/${modelSlug}?story=${group.id}`;
+    }
+    // Fallback to current URL if no slug (shouldn't happen in practice)
+    const url = new URL(window.location.href);
+    url.searchParams.set('story', group.id);
+    return url.toString();
+  }, [group.id, modelSlug]);
+
+  // Handle Share button click
+  const handleShare = async () => {
+    const storyUrl = getCurrentStoryUrl();
+    await share({
+      url: storyUrl,
+      title: modelName ? `Check out ${modelName}'s story on TranSpot` : 'Check out this story on TranSpot',
+    });
+  };
+
+  // Handle "Respond to Story" CTA click - Copy & Go
+  const handleRespondToStory = () => {
+    if (socialLink && socialLink !== "#") {
+      // Use current page URL for deep linking
+      copyAndGo(window.location.href, socialLink, { delay: 800 });
+    }
+  };
+
+  // Handle profile redirect - navigate to model profile page
+  const handleProfileClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering tap navigation
+    if (modelSlug) {
+      // Use window.location.href for full page refresh (cleans up modal state)
+      window.location.href = `/model/${modelSlug}`;
+    }
+  };
+
+  // Don't render if no stories
+  if (stories.length === 0) {
+    return null;
+  }
+
+  const mediaUrl = getImageUrl(currentStory?.media_url);
+  
+  // Avatar logic: modelImage for Recent (non-pinned), cover_url for pinned
+  const avatarUrl = !group.is_pinned && modelImage 
+    ? modelImage 
+    : group.cover_url;
+
+  // Calculate scale based on drag distance (subtle shrink effect)
+  const dragScale = Math.max(0.9, 1 - dragY / 1000);
+  // Calculate opacity based on drag distance
+  const dragOpacity = Math.max(0, 1 - dragY / 400);
+
+  return (
+    <div
+      ref={containerRef}
+      // Fix pull-to-refresh: touch-none prevents browser gestures, overscroll-y-none prevents overscroll
+      // select-none prevents text selection, cursor-pointer for tap feedback
+      className="fixed inset-0 z-[100] bg-black touch-none overscroll-y-none select-none"
+      // Block context menu and apply iOS-specific styles
+      onContextMenu={handleContextMenu}
+      // Touch handlers on outermost container to catch all events
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{
+        // Critical for iOS Safari - prevents long-press callout
+        WebkitTouchCallout: 'none',
+        // Prevent any user selection
+        WebkitUserSelect: 'none',
+        // Background fades on drag
+        opacity: isClosing ? 0 : dragOpacity,
+        transition: isClosing ? 'opacity 0.2s ease-out' : 'none',
+      }}
+    >
+      {/* Progress Bars - CSS Transition Based */}
+      <div className="absolute top-0 left-0 right-0 z-[102] flex gap-1 p-2 safe-area-top">
+        {stories.map((story, index) => (
+          <div
+            key={story.id}
+            className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden"
+          >
+            <div
+              className="h-full bg-white rounded-full"
+              style={{
+                width: index < currentStoryIndex 
+                  ? '100%' 
+                  : index === currentStoryIndex 
+                    ? (isAnimating && !isPaused ? '100%' : '0%')
+                    : '0%',
+                transition: index === currentStoryIndex && isAnimating && !isPaused
+                  ? `width ${duration}s linear`
+                  : 'none',
+              }}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Header - Group info and close button */}
+      <div className="absolute top-4 left-0 right-0 z-[102] flex items-center justify-between px-4 mt-2">
+        {/* Profile Link - Avatar and Name (clickable) */}
+        {modelSlug ? (
+          <button
+            onClick={handleProfileClick}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+            aria-label={`View ${modelName || group.title || "model"} profile`}
+          >
+            {/* Group thumbnail */}
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-white/20 ring-2 ring-white/30">
+              {avatarUrl && (
+                <Image
+                  src={getImageUrl(avatarUrl)}
+                  alt={group.title || "Story"}
+                  width={40}
+                  height={40}
+                  className="object-cover w-full h-full pointer-events-none"
+                  draggable={false}
+                  unoptimized
+                />
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-white font-semibold text-sm">
+                {modelName || group.title || "Recent"}
+              </span>
+              {isVerified && <BadgeCheck className="w-4 h-4 text-blue-500 flex-shrink-0" />}
+              {/* Date Display - Relative for Recent, Absolute for Pinned */}
+              {currentStory?.posted_date && (
+                <span className="text-white/50 text-xs">
+                  {formatStoryDate(currentStory.posted_date, group.is_pinned)}
+                </span>
+              )}
+            </div>
+          </button>
+        ) : (
+          <div className="flex items-center gap-3">
+            {/* Group thumbnail */}
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-white/20 ring-2 ring-white/30">
+              {avatarUrl && (
+                <Image
+                  src={getImageUrl(avatarUrl)}
+                  alt={group.title || "Story"}
+                  width={40}
+                  height={40}
+                  className="object-cover w-full h-full pointer-events-none"
+                  draggable={false}
+                  unoptimized
+                />
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-white font-semibold text-sm">
+                {modelName || group.title || "Recent"}
+              </span>
+              {isVerified && <BadgeCheck className="w-4 h-4 text-blue-500 flex-shrink-0" />}
+              {/* Date Display - Relative for Recent, Absolute for Pinned */}
+              {currentStory?.posted_date && (
+                <span className="text-white/50 text-xs">
+                  {formatStoryDate(currentStory.posted_date, group.is_pinned)}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Close button */}
+        <button
+          onClick={handleClose}
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors active:scale-95"
+          aria-label="Close stories"
+        >
+          <X className="w-6 h-6 text-white" />
+        </button>
+      </div>
+
+      {/* Story Content Wrapper - Transforms on drag (not the background) */}
+      <div
+        key={`${group.id}-${currentStoryIndex}`}
+        className={`relative w-full h-full max-w-lg mx-auto cursor-pointer flex items-center justify-center ${
+          animationType === 'story'
+            ? 'animate-in fade-in zoom-in-95 duration-300'
+            : 'animate-in slide-in-from-right-full duration-500 ease-out'
+        }`}
+        onClick={handleTap}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        style={{
+          // Transform only the content, not the black background
+          transform: `translate3d(0, ${dragY}px, 0) scale(${dragScale})`,
+          transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+        }}
+      >
+        {currentStory?.media_type === "video" ? (
+          (() => {
+            // Hybrid video strategy: WebM for performance, MP4 as fallback
+            const mp4Url = getImageUrl(currentStory.media_url);
+            // Derive WebM URL by replacing .mp4 extension (safely handles edge cases)
+            const webmUrl = mp4Url.endsWith('.mp4') 
+              ? mp4Url.slice(0, -4) + '.webm' 
+              : mp4Url.replace(/\.mp4(\?|$)/, '.webm$1');
+            const posterUrl = getImageUrl(group.cover_url);
+            
+            return (
+              <video
+                key={currentStory.id}
+                className="w-full h-full object-contain pointer-events-none"
+                poster={posterUrl}
+                autoPlay
+                muted
+                playsInline
+                onEnded={goToNext}
+              >
+                {/* WebM first for better compression/performance on modern browsers */}
+                <source src={webmUrl} type="video/webm" />
+                {/* MP4 fallback for Safari and older browsers */}
+                <source src={mp4Url} type="video/mp4" />
+              </video>
+            );
+          })()
+        ) : (
+          <div className="relative w-full h-full">
+            {mediaUrl && (
+              <Image
+                key={currentStory?.id}
+                src={mediaUrl}
+                alt={`Story ${currentStoryIndex + 1}`}
+                fill
+                className="object-contain pointer-events-none"
+                draggable={false}
+                sizes="100vw"
+                priority
+                unoptimized
+              />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Pause Indicator */}
+      {isPaused && !isDragging && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[102]">
+          <div className="bg-black/50 rounded-full p-4 animate-pulse">
+            <svg
+              className="w-12 h-12 text-white"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <rect x="6" y="4" width="4" height="16" rx="1" />
+              <rect x="14" y="4" width="4" height="16" rx="1" />
+            </svg>
+          </div>
+        </div>
+      )}
+
+      {/* Swipe indicator when dragging */}
+      {isDragging && dragY > 50 && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[102]">
+          <div className="bg-black/70 backdrop-blur-sm rounded-full px-4 py-2">
+            <span className="text-white text-sm font-medium">
+              {dragY > 100 ? '↓ Release to close' : '↓ Swipe down to close'}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Micro-Toast - Link Copied Confirmation */}
+      {isCopiedAndGo && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[200] pointer-events-none animate-in fade-in zoom-in-95 duration-200">
+          <div className="flex items-center gap-2 px-4 py-3 bg-black/80 backdrop-blur-md rounded-xl shadow-lg">
+            <Link2 className="w-5 h-5 text-green-400" />
+            <span className="text-white font-medium text-sm">Link Copied! Opening...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Action Bar - Share + Respond to Story */}
+      {socialLink && socialLink !== "#" && (
+        <div className="absolute bottom-8 left-0 right-0 z-[102] flex items-center justify-center gap-3 px-4 safe-area-bottom">
+          {/* Share Button - Round Glassmorphism */}
+          <button
+            onClick={handleShare}
+            className="flex items-center justify-center w-12 h-12 bg-white/15 backdrop-blur-md border border-white/20 rounded-full text-white transition-all hover:bg-white/25 hover:scale-105 active:scale-95"
+            aria-label="Share story"
+          >
+            {isCopied ? (
+              <Check className="w-5 h-5 text-green-400" />
+            ) : (
+              <Share2 className="w-5 h-5" />
+            )}
+          </button>
+
+          {/* Respond to Story Button - Pill CTA */}
+          <button
+            onClick={handleRespondToStory}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 rounded-full text-white font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-pink-500/25"
+          >
+            <span>Respond to Story</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

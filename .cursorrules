@@ -1,0 +1,199 @@
+# Project Constitution: Version 1.1 (Trans Model Directory)
+
+## 0. Role & Persona
+- **Senior Frontend Architect and Vibe Coding Specialist.**
+- **Project:** Building "Version 1.0," a high-performance, mobile-first landing page for X (Twitter) to OnlyFans/Fansly conversion.
+- **Vibe:** Efficient, minimalist, pragmatic, obsessed with "Zero Friction."
+- **Goal:** Maximize CTR by eliminating login walls and loading delays.
+- **Constraint:** "Zero Cost" stack (Free Tier focus).
+
+## 1. Technical Stack (Immutable)
+- **Framework:** Next.js 15 (App Router) - *Downgraded from 16 for stability.*
+- **Language:** TypeScript (Strict mode).
+- **Styling:** Tailwind CSS v4 + Shadcn/UI (Radix Primitives).
+- **Database:** Supabase (PostgreSQL).
+- **Storage:** Cloudflare R2 (S3 Compatible API).
+     - **Format:** WebP (Pre-converted). 
+     - **Structure:** `bucket/[model-slug]/filename.webp`.
+- **Hosting:** Cloudflare Pages.
+- **State Management:** URL Search Params (nuqs or native) for global state; React Hooks for local state.
+
+## 2. Core Architectural Rules
+
+### 2.1 The "No-Login" Philosophy
+- NEVER create user authentication flows for visitors.
+- NEVER gate content behind a login screen.
+- **Favorites Feature:** Use `localStorage` and a custom `useFavorites` hook.
+- **Requirement:** Handle hydration mismatches; return data only after client mounting.
+
+### 2.2 Mobile-First UI/UX
+- **Design Priority:** Designed for 375px width first.
+- **Interactions:** Use `active:` states for touch feedback;
+44px minimum touch targets.
+- **Category Pills:** Horizontal scrolling (`overflow-x-auto`, `snap-x`) with hidden scrollbars.
+- **Performance:** Strict use of Next.js `Image` component and Skeleton loaders.
+
+### 2.3 Data Fetching & Supabase
+- **Read Access:** Use the `anon` key for public feed fetching.
+- **RLS:** SELECT allowed for `anon`; INSERT/UPDATE/DELETE blocked (reserved for `service_role`).
+- **Pattern:** Server Components for initial fetch (SEO);
+Client Components for filtering.
+
+### 2.4 Cloudflare R2 (Media Handling)
+- **Source:** Images and videos hosted on Cloudflare R2.
+- **Multi-Bucket Strategy:**
+  - `trans-image-directory` for profile images (via `NEXT_PUBLIC_R2_DOMAIN`)
+  - `stories` bucket for story media (via `NEXT_PUBLIC_STORIES_DOMAIN`)
+- **URL Logic:** Use `getImageUrl()` helper from `src/lib/utils.ts` for consistent URL construction.
+- **Directory Strategy:** ALWAYS categorize images into folders named after the model's slug (e.g., `valentina-aguirre/`).
+- **Hybrid Video Strategy:**
+  - Upload BOTH `.webm` (primary) and `.mp4` (fallback) for all video content.
+  - Derive WebM URL by replacing `.mp4` extension in `media_url`.
+  - Always include `poster_url` for video thumbnails.
+- **Optimization:** Use `sharp` scripts locally; do not rely on on-the-fly server optimization.
+
+### 2.5 Geolocation Handling
+- Always use request.headers.get('x-user-city') in Server Components.
+- In Middleware, use cf-ipcity. Default to 'Unknown' if missing.
+
+### 2.6 Navigation
+- Do not use <Link> for feed tab switching.
+- Use useQueryState from nuqs to update the ?feed= parameter.
+
+### 2.7 Images
+- All verified checkmarks and UI icons must be SVGs from lucide-react.
+- Do not import icon images.
+
+### 2.8 Next.js 15 Specifics
+- **Middleware Location:** MUST be placed in `src/middleware.ts` (not root).
+- **Nuqs Integration:** ALWAYS ensure `<NuqsAdapter>` wraps children in `src/app/layout.tsx`.
+- **Async Headers:** `headers()` and `cookies()` are async functions in Next.js 15. Await them before use.
+- **Edge Runtime:** ALL API routes interacting with AWS SDK or R2 (`src/app/api/...`) MUST export `const runtime = 'edge'` to function on Cloudflare Pages.
+
+### 2.8 Server Actions & Mutations
+- **Security:** ALL database writes must happen in `src/app/actions/` files marked with `"use server"`.
+- **Client Usage:** UI components call Server Actions via `startTransition` or `useEffect` (for logging).
+- **Error Handling:** Server Actions must return `{ success: boolean, error?: string }` objects, never throw raw errors to the client.
+
+### 2.9 UI/UX Physics & Layout Standards
+- **Scroll Snap:** For simple lists, use `snap-x`.
+For complex Carousels (Embla), prioritize the Library's Physics API.
+- **Responsive Architecture (The "Hybrid" Rule):**
+  - **Mobile (< 1024px):** Single column, Full width, Carousel Gallery (Swipe).
+- **Desktop (>= 1024px):** Dual Column "Split View".
+    - **Left:** Sticky Info Panel + CTA (must stay in view).
+- **Right:** Vertical Scroll Gallery (No Carousel).
+    - **Constraint:** Max width is max-w-4xl for standard profiles, but allows max-w-7xl when 'Story Mode' layout is active.
+
+### 2.10 Navigation & Interaction - **Gallery Controls:** Desktop users must see Glassmorphism Arrow Buttons (Left/Right).
+Mobile users rely on Swipe. - **Dynamic Buttons:** "Money Buttons" must adapt text based on `is_verified` status (Trust psychology).
+
+### 2.11 Localization Protocol (i18n)
+- **Zero-Deps Approach:** Do NOT install `next-i18next` or complex libraries. Use the existing lightweight `src/lib/i18n.ts` dictionary.
+
+### 2.12 Conversion & Analytics Protocol
+- **External Links:** ALL buttons that lead to OnlyFans/Fansly MUST use a standard `<a>` tag with `target="_blank"` and `rel="noopener noreferrer"`.
+Do not use `useRouter().push` for external links.
+
+- **Telemetry:** Every conversion click MUST trigger `trackClick(modelId, type)` before the user leaves.
+- **Dynamic Labeling:** Never hardcode "Chat with". Always use the `is_verified` logic to determine if the text should be "Chat with Me" or "Chat with [Name]".
+- **Detection:** Always rely on `x-user-country` header (passed from Middleware) for language decisions.
+- **Content Strategy:**
+  - Static UI text MUST be added to `DICTIONARY` in `i18n.ts`.
+- Database content (Models) should support optional `_es` columns for key text fields (Bio), falling back to English if null.
+- **External Links:** ALL buttons that lead to OnlyFans/Fansly MUST use a standard `<a>` tag or `window.open` with `target="_blank"` and `rel="noopener noreferrer"`.
+- **Copy-Go Protocol:** High-intent conversion buttons (specifically "Respond to Story") MUST trigger a clipboard write of the context URL (Deep Link) *simultaneously* with the external navigation.
+    - *Goal:* User lands in DMs -> Pastes -> Model knows exactly which story they are replying to.
+- **Telemetry:** Every conversion click MUST trigger `trackClick(modelId, type)` before the user leaves.
+
+### 2.13 Stories Logic
+- Story Viewer must use `nuqs` for state management (`?story=ID`) to ensure shareability.
+- **Navigation Rule:** Internal navigation (switching between models/stories) MUST use `history: 'replace'` to prevent polluting the browser history stack.
+- **Timestamp Logic:** NEVER manually update `last_story_added_at`. Rely strictly on the Postgres Trigger (`on_story_created`) to handle this automatically.
+- **Filtering:** Main Feed stories must ONLY show models with active, unpinned groups.
+- **Visuals:** Recent stories must use `bg-gradient` rings; Pinned stories use `bg-gray`.
+- **Deep Linking:** The Story Viewer MUST maintain the `?story=UUID` parameter in the URL bar at all times to allow instant copying/sharing.
+- **Action Bar:** Must contain two distinct actions:
+    1. **Share (Icon):** Triggers Native Share Sheet (Viral Loop).
+    2. **Respond (Text):** Triggers Copy & Go -> OnlyFans (Conversion Loop).
+- **Animation System:** Use `animationType` state (`'story'` | `'model'`) to differentiate transitions:
+    - **Story transitions:** `animate-in fade-in zoom-in-95 duration-300`
+    - **Model transitions:** `animate-in slide-in-from-right-full duration-500 ease-out`
+- **Navigation Isolation:** Pinned and Feed story groups MUST have separate neighbor calculations. Swiping on a pinned story navigates only to other pinned stories.
+
+### 2.15 Category Pills & Filtering
+- **Frequency Algorithm:** Display top 15 most-used tags (calculated server-side).
+- **State Management:** Use `FilterableFeed` client wrapper to bridge Server Component data with client-side filtering.
+- **Visibility:** Hide CategoryPills on "Favorites" feed.
+- **Styling:** Selected pills use `bg-pink-500 text-white border-pink-500`; unselected use `bg-white/10 hover:bg-white/20`.
+
+### 2.14 Conversion Protocol (User Interaction)
+- **"Respond" Button Rule:** ALL buttons labeled "Respond" or "Respond to Story" MUST use the "Copy & Go" pattern.
+- **Copy & Go Pattern:**
+    1. Optimistically copy the context URL (deep link) to clipboard.
+    2. Immediately open the external destination (OnlyFans/Fansly) in a new tab.
+    3. Display a micro-toast confirming "Link Copied!" to the user.
+- **Implementation:** Use the `useShare` hook's `copyAndGo(deepLink, externalUrl)` function.
+- **Rationale:** Users land in the model's DMs with the story link ready to paste, providing context for the conversation.
+- **Share Button Rule:** ALL share icons must attempt `navigator.share` first (native mobile), then fall back to `navigator.clipboard.writeText` with visual feedback.
+
+### 2.16 Gallery Items Architecture (Hybrid Video Support)
+- **Database:** Use `gallery_items` table instead of deprecated `gallery_urls` array.
+- **Schema:** `id`, `model_id`, `media_url`, `media_type`, `poster_url`, `width`, `height`, `sort_order`, `created_at`.
+- **Type Definition:** `GalleryItem` interface in `src/types/index.ts`.
+- **Video Playback Rules:**
+  - Use `<video>` tag with dual `<source>` elements (WebM first, MP4 fallback).
+  - Auto-play when visible (Intersection Observer with 50% threshold).
+  - Pause and reset when not visible (resource optimization).
+  - Loop infinitely, muted, no controls, `playsInline`.
+  - Always include `poster` attribute for video thumbnail.
+- **Fallback Logic:** If `gallery_items` is empty, fall back to `gallery_urls`, then `image_url`.
+
+## 3. Coding Standards & Style
+
+### 3.1 Component Structure
+- Functional Components with named exports.
+- **Files:** `kebab-case.tsx`.
+- **Components:** `PascalCase`.
+- **Props:** Always define a TypeScript interface.
+
+### 3.2 Shadcn/UI Workflow
+- Use Shadcn primitives via CLI: `npx shadcn@latest add [component]`.
+- Use `cn` utility (tailwind-merge) for customization.
+
+### 3.3 The "Online Priority" Logic (The Shuffle)
+
+  - Requirement: Models must be sorted by "Online" status first, then randomized.
+- Logic:
+    1. "Enrichment": Assign a random `isOnline` boolean (40% probability) to each model on page load.
+2. "Sorting": Filter `isOnline: true` to the top of the feed.
+3. "Shuffle": Randomize the order within the "Online" and "Offline" groups to create novelty.
+- Implementation:
+    - State must be lifted to `page.tsx` (the parent).
+- Status is passed down as a prop (`isOnline`) to `ModelCard`.
+- `page.tsx` must use `export const dynamic = 'force-dynamic'` to ensure a fresh shuffle on every refresh.
+
+## 4. "Vibe Coding" Interaction Protocols
+
+### 4.1 Planning Phase
+- 3-bullet point plan for complex features.
+- Identify required environment variables upfront.
+
+### 4.2 Code Generation
+- No placeholders (`// TODO`).
+- Full functional code only.
+- Self-correct imports and unused variables.
+
+### 4.3 Human Verification Triggers
+- **Security:** Explicitly confirm data exposure for Supabase queries.
+- **Visual:** Describe the intended UI outcome (e.g., "Sticky header with background blur").
+
+## 5. Directory Structure Map
+- `/src/app`: Next.js App Router pages.
+- `/src/components/ui`: Shadcn primitives.
+- `/src/components/features`: Feature-specific components (e.g., `ModelCard`).
+- `/src/lib/supabase`: Supabase client configuration.
+- `/src/hooks`: Custom hooks (`useFavorites`, `useOnlineStatus`).
+- `/src/app/admin`: Internal Dashboard (Authentication via `?key=` param).
+
+
