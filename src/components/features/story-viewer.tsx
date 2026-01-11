@@ -668,9 +668,9 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
           padding: '20px 5px', // Vertical and horizontal padding for rounded corners
         }}
       >
-        {/* Rounded Media Container - Instagram style with proper aspect ratio */}
+        {/* Story Media Container */}
         <div 
-          className="story-rounded-container relative w-full h-full" 
+          className="relative w-full h-full" 
           style={{ maxHeight: 'calc(85vh - 40px)' }}
         >
           {currentStory?.media_type === "video" ? (
@@ -701,7 +701,7 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
               );
             })()
           ) : (
-            <div className="story-rounded-container relative w-full h-full overflow-hidden">
+            <div className="relative w-full h-full">
               {mediaUrl && (
                 <Image
                   key={currentStory?.id}

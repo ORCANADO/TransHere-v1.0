@@ -468,7 +468,7 @@
 - **Horizontal Scrolling:** Maintained with `overflow-x-auto scrollbar-hide`
 - **Feed State Colors:** Dynamic active pill colors (Emerald for 'near', Violet for 'new')
 
-## [2026-01-10] - Phase 5.6: StoryViewer Instagram-Style Behavior & Rounded Corners
+## [2026-01-10] - Phase 5.6: StoryViewer Instagram-Style Behavior
 **Status:** Complete
 
 ### Instagram-Style StoryViewer Refactor:
@@ -485,15 +485,15 @@
 - **Share Integration:**
   - `handleShare` now pauses story while share sheet is open
   - Automatically resumes after share completes (success or cancel)
-- **Rounded Corners Implementation:**
-  - Added Instagram-style rounded corners with `borderRadius: 1.75rem` (28px)
-  - Applied rounded corners to container, video, and image elements using inline styles
-  - Optimized padding: `20px` vertical, `5px` horizontal for balanced rounded corner visibility
-  - Media container uses `max-h-[calc(85vh-40px)]` to account for padding
-  - Rounded corners start curving earlier horizontally for more visible effect
 - **Removed Elements:**
   - Removed pause icon overlay (glassmorphism pause indicator) for cleaner Instagram-style experience
 - **Touch & Keyboard Improvements:**
   - Updated drag handlers to use pause/resume helpers for consistent progress tracking
   - Keyboard spacebar handler uses pause/resume functions
   - Touch handlers properly restore UI on release
+
+### Deferred Features:
+- **Rounded Corners (Future Implementation):**
+  - Instagram-style rounded corners (`borderRadius: 1.75rem`) deferred to future version
+  - Implementation attempted but encountered cross-device/viewport compatibility issues
+  - Will be revisited with a more robust approach in a future update
