@@ -688,7 +688,7 @@ export function StoryViewer({
         {/* Current Story Card */}
         <div
           key={`${group.id}-${currentStoryIndex}`}
-          className="relative w-full h-full max-w-lg mx-auto flex items-center justify-center cursor-pointer"
+          className="relative w-full h-full flex items-center justify-center cursor-pointer"
           onPointerDown={(e) => {
             handleMouseDown();
             if (!isDesktop) handleSwipeStart(e);
@@ -704,12 +704,7 @@ export function StoryViewer({
           onClick={handleTap}
         >
           {/* Story content wrapper */}
-          <div
-            className="relative w-full h-full"
-            style={{ 
-              maxHeight: 'calc(85vh - 40px)',
-            }}
-          >
+          <div className="relative w-full h-full">
             {currentStory?.media_type === "video" ? (
               (() => {
                 const mp4Url = getImageUrl(currentStory.media_url);
