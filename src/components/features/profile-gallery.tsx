@@ -252,14 +252,14 @@ export function ProfileGallery({ items, name, socialLink, modelId, redirectUrl }
               
               {/* Content */}
               <div className="relative z-10 flex flex-col items-center">
-                {/* Lock icon with Rich Gold accent */}
-                <div className="rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 p-4 backdrop-blur-sm mb-4 shadow-lg shadow-[#D4AF37]/20">
-                  <Lock className="h-7 w-7 text-[#D4AF37]" strokeWidth={1.5} />
+                {/* Lock icon with Rich Gold Glassmorphism */}
+                <div className="rounded-full bg-black/50 backdrop-blur-xl p-4 mb-4 shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                  <Lock className="h-7 w-7 text-[#D4AF37] drop-shadow-[0_0_6px_rgba(212,175,55,0.6)]" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-2xl font-serif font-semibold text-foreground mb-2">Want to see more?</h3>
-                <p className="text-muted-foreground text-sm mb-5">Unlock exclusive content</p>
-                {/* VIP Button with Rich Gold gradient - Premium feel */}
-                <div className="px-7 py-3.5 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#C9A227] to-[#B8960F] text-[#050A14] font-semibold shadow-xl shadow-[#D4AF37]/30 border border-[#D4AF37]/40 transition-all duration-300 hover:shadow-2xl hover:shadow-[#D4AF37]/50 hover:scale-[1.02]">
+                <h3 className="text-2xl font-serif font-semibold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mb-2">Want to see more?</h3>
+                <p className="text-white/70 text-sm mb-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">Unlock exclusive content</p>
+                {/* VIP Button - Rich Gold Glassmorphism */}
+                <div className="px-7 py-3.5 rounded-full bg-black/50 backdrop-blur-xl text-[#D4AF37] font-semibold shadow-[0_0_15px_rgba(212,175,55,0.25)] transition-all duration-300 hover:bg-black/60 hover:shadow-[0_0_20px_rgba(212,175,55,0.35)] hover:scale-[1.02] drop-shadow-[0_0_6px_rgba(212,175,55,0.7)]">
                   Unlock VIP Content
                 </div>
               </div>
@@ -291,14 +291,14 @@ export function ProfileGallery({ items, name, socialLink, modelId, redirectUrl }
               
               {/* Content */}
               <div className="relative z-10 flex flex-col items-center">
-                {/* Lock icon with Rich Gold accent */}
-                <div className="rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 p-4 backdrop-blur-sm mb-4 shadow-lg shadow-[#D4AF37]/20">
-                  <Lock className="h-7 w-7 text-[#D4AF37]" strokeWidth={1.5} />
+                {/* Lock icon with Rich Gold Glassmorphism */}
+                <div className="rounded-full bg-black/50 backdrop-blur-xl p-4 mb-4 shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                  <Lock className="h-7 w-7 text-[#D4AF37] drop-shadow-[0_0_6px_rgba(212,175,55,0.6)]" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-2xl font-serif font-semibold text-foreground mb-2">Want to see more?</h3>
-                <p className="text-muted-foreground text-sm mb-5">Unlock exclusive content</p>
-                {/* VIP Button with Rich Gold gradient - Premium feel */}
-                <div className="px-7 py-3.5 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#C9A227] to-[#B8960F] text-[#050A14] font-semibold shadow-xl shadow-[#D4AF37]/30 border border-[#D4AF37]/40 transition-all duration-300 hover:shadow-2xl hover:shadow-[#D4AF37]/50 hover:scale-[1.02]">
+                <h3 className="text-2xl font-serif font-semibold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mb-2">Want to see more?</h3>
+                <p className="text-white/70 text-sm mb-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">Unlock exclusive content</p>
+                {/* VIP Button - Rich Gold Glassmorphism */}
+                <div className="px-7 py-3.5 rounded-full bg-black/50 backdrop-blur-xl text-[#D4AF37] font-semibold shadow-[0_0_15px_rgba(212,175,55,0.25)] transition-all duration-300 hover:bg-black/60 hover:shadow-[0_0_20px_rgba(212,175,55,0.35)] hover:scale-[1.02] drop-shadow-[0_0_6px_rgba(212,175,55,0.7)]">
                   Unlock VIP Content
                 </div>
               </div>
@@ -398,6 +398,14 @@ export function ProfileGallery({ items, name, socialLink, modelId, redirectUrl }
             </svg>
           </button>
         </div>
+
+        {/* Bottom Gradient Shadow - Smooth blend with Obsidian Navy background */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none z-40"
+          style={{
+            background: 'linear-gradient(to top, #050A14 0%, #050A14 15%, rgba(5, 10, 20, 0.85) 30%, rgba(5, 10, 20, 0.60) 50%, rgba(5, 10, 20, 0.30) 70%, rgba(5, 10, 20, 0.10) 85%, transparent 100%)'
+          }}
+        />
 
         {/* Pagination Dots */}
         {allSlides.length > 1 && (

@@ -293,6 +293,15 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
   - Storage events for cross-tab/window sync
   - Favorites and stories update instantly without page reload
 
+* **[x] Phase 5.3: Category Pills Glassmorphism Refinement**
+- [x] **Floating Glass Pills:** Refactored to individual floating glassmorphism elements (no background bar)
+- [x] **iOS 26 Glass Container:** Added subtle glass border container with extremely minimal blur and visible border
+- [x] **Border Removal:** Removed borders from inactive pills to match ChatButton aesthetic
+- [x] **Text Shadow:** Added subtle dark text shadow for white text readability on bright backgrounds
+- [x] **Transparency:** Made all containers fully transparent to eliminate visible lines
+- [x] **HomeStoriesBar:** Removed background bar for fully transparent stories container
+- [x] **Horizontal Extension:** Extended container slightly beyond content area to make borders visible
+
 ---
 
 ## 5. Exclusions (Not in V1)

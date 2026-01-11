@@ -242,13 +242,12 @@ export default async function ModelPage({ params }: PageProps) {
               <div className="overflow-x-auto scrollbar-hide -mx-4 lg:mx-0 w-[calc(100%+2rem)] lg:w-auto">
                 <div className="flex gap-2 lg:flex-wrap lg:px-0">
                   {translatedTags.map((tag: string, index: number) => (
-                    <Badge 
+                    <span 
                       key={index} 
-                      variant="secondary" 
-                      className={`flex-shrink-0 bg-[#7A27FF] text-[#F0F4F8] hover:bg-[#7A27FF]/80 ${index === translatedTags.length - 1 ? "mr-4" : ""}`}
+                      className={`flex-shrink-0 inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-[#7A27FF]/30 backdrop-blur-xl text-white border border-[#7A27FF]/40 shadow-[0_0_15px_rgba(122,39,255,0.3)] transition-all duration-300 hover:bg-[#7A27FF]/40 hover:border-[#7A27FF]/60 hover:shadow-[0_0_20px_rgba(122,39,255,0.5)] ${index === translatedTags.length - 1 ? "mr-4" : ""}`}
                     >
                       {tag}
-                    </Badge>
+                    </span>
                   ))}
                 </div>
               </div>

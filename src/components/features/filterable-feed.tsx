@@ -31,14 +31,24 @@ export function FilterableFeed({ models, topTags, userCity, language, buttons }:
 
   return (
     <>
-      {/* Category Pills for Tag Filtering - Hidden for favorites */}
+      {/* Category Pills for Tag Filtering - Sticky with floating glass pills and iOS 26 glass border */}
       {!isFavorites && (
-        <div className="mb-2">
-          <CategoryPills
-            tags={topTags}
-            selectedTag={selectedTag}
-            onSelectTag={setSelectedTag}
-          />
+        <div className="sticky top-[96px] z-40 -mx-2 px-2 py-2">
+          {/* iOS 26 Glass Border Container - Subtle glass with visible border like iOS 26 */}
+          <div 
+            className="rounded-2xl backdrop-blur-[2px]"
+            style={{
+              background: 'rgba(255, 255, 255, 0.005)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              boxShadow: '0 1px 4px rgba(0, 0, 0, 0.03), inset 0 0.5px 0 rgba(255, 255, 255, 0.06)'
+            }}
+          >
+            <CategoryPills
+              tags={topTags}
+              selectedTag={selectedTag}
+              onSelectTag={setSelectedTag}
+            />
+          </div>
         </div>
       )}
 

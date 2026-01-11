@@ -657,28 +657,33 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
         </div>
       )}
 
-      {/* Action Bar - Share + Respond to Story */}
+      {/* Action Bar Background - Opaque glass shadow at bottom */}
+      {socialLink && socialLink !== "#" && (
+        <div className="absolute bottom-0 left-0 right-0 z-[101] h-32 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
+      )}
+
+      {/* Action Bar - Respond to Story + Share */}
       {socialLink && socialLink !== "#" && (
         <div className="absolute bottom-8 left-0 right-0 z-[102] flex items-center justify-center gap-3 px-4 safe-area-bottom">
-          {/* Share Button - Round Glassmorphism with Gold accent */}
+          {/* Respond to Story Button - iOS Glassmorphism Style */}
+          <button
+            onClick={handleRespondToStory}
+            className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-xl text-[#00FF85] border border-white/20 rounded-full font-bold transition-all duration-300 shadow-[0_0_20px_rgba(0,255,133,0.15)] hover:bg-white/15 hover:border-[#00FF85]/40 hover:shadow-[0_0_25px_rgba(0,255,133,0.25)] active:scale-[0.98] active:bg-white/20"
+          >
+            <span>Respond to Story</span>
+          </button>
+
+          {/* Share Button - Neon Cyber Violet Dark Glass */}
           <button
             onClick={handleShare}
-            className="flex items-center justify-center w-12 h-12 bg-white/10 backdrop-blur-md border border-[#D4AF37]/30 rounded-full text-white transition-all hover:bg-white/20 hover:border-[#D4AF37]/50 hover:scale-105 active:scale-95"
+            className="relative flex items-center justify-center w-12 h-12 bg-black/50 backdrop-blur-xl rounded-full transition-all duration-300 shadow-[0_0_20px_rgba(192,132,252,0.3)] hover:bg-black/60 hover:shadow-[0_0_30px_rgba(192,132,252,0.5)] hover:scale-105 active:scale-95 active:bg-black/70"
             aria-label="Share story"
           >
             {isCopied ? (
-              <Check className="w-5 h-5 text-[#00FF85]" />
+              <Check className="w-5 h-5 text-[#C084FC] drop-shadow-[0_0_10px_rgba(192,132,252,1)]" />
             ) : (
-              <Share2 className="w-5 h-5" />
+              <Share2 className="w-5 h-5 text-[#C084FC] drop-shadow-[0_0_10px_rgba(192,132,252,1)]" />
             )}
-          </button>
-
-          {/* Respond to Story Button - Electric Emerald CTA */}
-          <button
-            onClick={handleRespondToStory}
-            className="flex items-center gap-2 px-6 py-3 bg-[#00FF85] hover:bg-[#00E077] rounded-full text-black font-bold transition-all hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(0,255,133,0.4)] hover:shadow-[0_0_25px_rgba(0,255,133,0.6)]"
-          >
-            <span>Respond to Story</span>
           </button>
         </div>
       )}

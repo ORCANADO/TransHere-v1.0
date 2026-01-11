@@ -89,12 +89,12 @@ export function ModelCard({ name, image, tags, slug, priority, isOnline, is_veri
           />
           {/* Subtle gradient overlay - clean fade for text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
-          {/* New Badge - Top Left (Cyber Violet accent) */}
+          {/* New Badge - Top Left (Darker Cyber Violet Glass + White Text) */}
           {is_new && (
             <div className="absolute top-3 left-3 z-10">
-              <Badge variant="secondary" className="border-0 font-semibold shadow-lg shadow-[#7A27FF]/20">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[#7A27FF]/50 backdrop-blur-xl text-white border border-[#7A27FF]/50 shadow-[0_0_15px_rgba(122,39,255,0.4)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8),0_1px_2px_rgba(0,0,0,0.6)]">
                 New
-              </Badge>
+              </span>
             </div>
           )}
           {/* Online Status - Top Right */}

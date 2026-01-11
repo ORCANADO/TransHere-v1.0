@@ -391,3 +391,19 @@
   - Favorites appear in Favorites feed immediately without page reload
   - Story positions update automatically when viewed (moves to end)
   - Works across multiple browser tabs/windows
+
+## [2026-01-10] - Phase 5.3: Category Pills Glassmorphism Refinement
+**Status:** Complete
+
+### Category Pills UI Enhancement:
+- **Floating Glass Pills:** Refactored category pills to be individual floating glassmorphism elements (no background bar)
+- **iOS 26 Glass Container:** Added subtle glass border container around pills with iOS 26-style aesthetic:
+  - Extremely subtle backdrop blur (`backdrop-blur-[2px]`)
+  - Minimal background opacity (`rgba(255, 255, 255, 0.005)`)
+  - Visible border (`rgba(255, 255, 255, 0.12)`) for elegant definition
+  - Soft shadows with inset highlight for depth
+- **Border Removal:** Removed borders from inactive pills to match ChatButton style
+- **Text Shadow:** Added subtle dark text shadow to white text for readability on bright backgrounds
+- **Horizontal Extension:** Extended container slightly beyond content area to make left/right borders visible
+- **Transparency:** Made all container elements fully transparent to eliminate visible lines
+- **HomeStoriesBar:** Removed background bar and blur effects for fully transparent stories container

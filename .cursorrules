@@ -133,7 +133,12 @@ Do not use `useRouter().push` for external links.
 - **Frequency Algorithm:** Display top 15 most-used tags (calculated server-side).
 - **State Management:** Use `FilterableFeed` client wrapper to bridge Server Component data with client-side filtering.
 - **Visibility:** Hide CategoryPills on "Favorites" feed.
-- **Styling:** Selected pills use `bg-pink-500 text-white border-pink-500`; unselected use `bg-white/10 hover:bg-white/20`.
+- **Styling:**
+  - **Container:** iOS 26-style glass border container with extremely subtle backdrop blur (`backdrop-blur-[2px]`), minimal background (`rgba(255, 255, 255, 0.005)`), and visible border (`rgba(255, 255, 255, 0.12)`)
+  - **Active Pills:** `bg-[#00FF85] text-black border border-[#00FF85]` with Electric Emerald glow
+  - **Inactive Pills:** `bg-white/10 backdrop-blur-xl border-0` (no border) with subtle text shadow for readability
+  - **Floating Design:** Individual floating glassmorphism pills, no background bar behind them
+  - **Horizontal Extension:** Container extends slightly beyond content area (`-mx-2 px-2`) to make borders visible
 
 ### 2.14 Conversion Protocol (User Interaction)
 - **"Respond" Button Rule:** ALL buttons labeled "Respond" or "Respond to Story" MUST use the "Copy & Go" pattern.
