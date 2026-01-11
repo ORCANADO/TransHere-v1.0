@@ -89,6 +89,10 @@ export function StoryViewer({
   // Animation state
   const [isClosing, setIsClosing] = useState(false);
   const [isAnimatingCube, setIsAnimatingCube] = useState(false); // Track cube animation state
+  
+  // Swipe detection state (no visual feedback, just detection)
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
+  const hasSwiped = useRef(false); // Track if a swipe occurred to prevent tap
 
   // Instagram-style cube animation transforms (3D rotation) - Mobile only
   // Cube width is the viewport width, so rotation happens at the edge
@@ -395,10 +399,16 @@ export function StoryViewer({
     setSlideDirection(null);
   }, [group.id, cubeRotation]);
 
-  // Handle screen tap navigation
+  // Handle screen tap navigation (for stories within same group)
+  // Only triggers if it's a tap (not a swipe)
   const handleTap = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isLongPress) {
       setIsLongPress(false);
+      return;
+    }
+
+    // Ignore if this was a swipe
+    if (hasSwiped.current) {
       return;
     }
 
@@ -413,6 +423,45 @@ export function StoryViewer({
       goToNext();
     }
   };
+
+  // Swipe detection handlers (Instagram mobile web style)
+  const handleSwipeStart = useCallback((e: React.PointerEvent) => {
+    swipeStart.current = { x: e.clientX, y: e.clientY };
+    hasSwiped.current = false; // Reset swipe flag
+  }, []);
+
+  const handleSwipeEnd = useCallback((e: React.PointerEvent) => {
+    if (!swipeStart.current) return;
+
+    const deltaX = e.clientX - swipeStart.current.x;
+    const deltaY = e.clientY - swipeStart.current.y;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+    const threshold = 50; // Minimum swipe distance
+
+    // Determine dominant direction
+    if (absY > absX + 20 && absY > threshold && deltaY > 0) {
+      // Vertical swipe down - instant close (no animation)
+      hasSwiped.current = true;
+      handleClose();
+    } else if (absX > absY + 20 && absX > threshold) {
+      // Horizontal swipe - trigger cube animation
+      hasSwiped.current = true;
+      if (deltaX < -threshold && nextGroupId) {
+        // Swiped left - go to next group
+        handleNextModel();
+      } else if (deltaX > threshold && prevGroupId) {
+        // Swiped right - go to previous group
+        handlePrevModel();
+      }
+    }
+
+    // Clear swipe start after a short delay to allow tap detection
+    setTimeout(() => {
+      swipeStart.current = null;
+      hasSwiped.current = false;
+    }, 100);
+  }, [nextGroupId, prevGroupId, handleNextModel, handlePrevModel, handleClose]);
 
   // Long press handlers - Instagram style (hide UI, freeze progress)
   const handleMouseDown = () => {
@@ -795,9 +844,18 @@ export function StoryViewer({
             transformStyle: 'preserve-3d',
             backfaceVisibility: 'hidden',
           }}
-          onPointerDown={handleMouseDown}
-          onPointerUp={handleMouseUp}
-          onPointerLeave={handleMouseUp}
+          onPointerDown={(e) => {
+            handleMouseDown();
+            if (!isDesktop) handleSwipeStart(e);
+          }}
+          onPointerUp={(e) => {
+            handleMouseUp();
+            if (!isDesktop) handleSwipeEnd(e);
+          }}
+          onPointerLeave={(e) => {
+            handleMouseUp();
+            if (!isDesktop && swipeStart.current) handleSwipeEnd(e);
+          }}
           onClick={handleTap}
         >
           {/* Story content wrapper - Vertical drag tracking (no animation during drag) */}
