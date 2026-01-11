@@ -87,6 +87,7 @@ export function StoryViewer({
   const [nextModelName, setNextModelName] = useState<string | null>(null); // For transition indicator
   
   // Swipe physics state
+  const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
@@ -341,6 +342,7 @@ export function StoryViewer({
     setCurrentStoryIndex(0);
     setIsAnimating(false);
     setIsPaused(false);
+    setDragY(0);
     dragX.set(0); // Reset Framer Motion value
     setIsClosing(false);
     setProgress(0);
@@ -434,8 +436,8 @@ export function StoryViewer({
     setIsDragging(false);
   }, [dragX, nextGroupId, prevGroupId, onNavigate, isPaused, isLongPress, resumeStory]);
 
-  // Horizontal drag handler (Framer Motion callback)
-  const handleHorizontalDrag = useCallback((event: any, info: { offset: { x: number } }) => {
+  // Combined drag handler - detects horizontal vs vertical
+  const handleDrag = useCallback((event: any, info: { offset: { x: number; y: number } }) => {
     const { offset } = info;
     
     // Cancel long press
@@ -449,14 +451,38 @@ export function StoryViewer({
     
     setIsDragging(true);
     
-    // Constrain drag based on available neighbors
-    let constrainedX = offset.x;
-    if (!nextGroupId && offset.x < 0) constrainedX = offset.x * 0.2; // Rubber band
-    if (!prevGroupId && offset.x > 0) constrainedX = offset.x * 0.2;
-    dragX.set(constrainedX);
+    // Determine dominant direction with threshold to prevent interference
+    const absX = Math.abs(offset.x);
+    const absY = Math.abs(offset.y);
+    
+    if (absX > absY + 10) {
+      // Horizontal drag - for navigation
+      let constrainedX = offset.x;
+      if (!nextGroupId && offset.x < 0) constrainedX = offset.x * 0.2; // Rubber band
+      if (!prevGroupId && offset.x > 0) constrainedX = offset.x * 0.2;
+      dragX.set(constrainedX);
+      setDragY(0); // Reset vertical drag
+    } else if (absY > absX + 10 && offset.y > 0) {
+      // Vertical drag down - for close gesture
+      setDragY(offset.y);
+      dragX.set(0); // Reset horizontal drag
+    }
     
     if (!isPaused) pauseStory();
   }, [dragX, nextGroupId, prevGroupId, isPaused, pauseStory, isLongPress]);
+
+  // Vertical drag end handler
+  const handleVerticalDragEnd = useCallback(() => {
+    if (dragY > 100) {
+      handleClose();
+    } else {
+      setDragY(0);
+      setIsDragging(false);
+      if (isPaused && !isLongPress) {
+        resumeStory();
+      }
+    }
+  }, [dragY, handleClose, isPaused, isLongPress, resumeStory]);
 
   // Block context menu (long press menu on mobile)
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -556,7 +582,7 @@ export function StoryViewer({
     ? modelImage 
     : group.cover_url;
 
-  // Preview Card Component for adjacent models
+  // Preview Card Component - Instagram-style: just the next/prev image, no overlays
   const PreviewCard = ({ 
     preview, 
     position 
@@ -579,59 +605,20 @@ export function StoryViewer({
         }}
       >
         <div 
-          className="relative w-full h-full max-w-lg mx-auto bg-[#0A1221]"
+          className="relative w-full h-full max-w-lg mx-auto"
           style={{ 
             maxHeight: 'calc(85vh - 40px)',
             margin: '20px 5px',
           }}
         >
-          {/* Preview Image - Blurred background */}
-          <div className="absolute inset-0">
-            <Image
-              src={getImageUrl(preview.coverUrl || preview.imageUrl)}
-              alt={preview.name}
-              fill
-              className="object-cover blur-sm scale-105"
-              unoptimized
-            />
-            {/* Dark overlay */}
-            <div className="absolute inset-0 bg-black/50" />
-          </div>
-          
-          {/* Model Info Overlay */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-            {/* Avatar */}
-            <div className="w-20 h-20 rounded-full overflow-hidden ring-4 ring-white/20 shadow-2xl">
-              <Image
-                src={getImageUrl(preview.imageUrl)}
-                alt={preview.name}
-                width={80}
-                height={80}
-                className="object-cover w-full h-full"
-                unoptimized
-              />
-            </div>
-            
-            {/* Name */}
-            <span className="text-white font-bold text-xl tracking-tight">
-              {preview.name}
-            </span>
-            
-            {/* Direction indicator */}
-            <div className="flex items-center gap-2 text-white/60 text-sm">
-              {isNext ? (
-                <>
-                  <span>Swipe to view</span>
-                  <span>→</span>
-                </>
-              ) : (
-                <>
-                  <span>←</span>
-                  <span>Swipe to view</span>
-                </>
-              )}
-            </div>
-          </div>
+          {/* Just the image - no blur, no zoom, no overlays */}
+          <Image
+            src={getImageUrl(preview.coverUrl || preview.imageUrl)}
+            alt={preview.name}
+            fill
+            className="object-contain"
+            unoptimized
+          />
         </div>
       </motion.div>
     );
@@ -846,21 +833,47 @@ export function StoryViewer({
             zIndex: 10,
             padding: '20px 5px',
           }}
-          drag={isDesktop ? false : "x"}
-          dragConstraints={{ left: 0, right: 0 }}
+          drag={isDesktop ? false : true}
+          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
           dragElastic={0.5}
           dragMomentum={false}
-          onDrag={isDesktop ? undefined : handleHorizontalDrag}
-          onDragEnd={isDesktop ? undefined : handleDragEnd}
+          onDrag={isDesktop ? undefined : handleDrag}
+          onDragEnd={isDesktop ? undefined : (e, info) => {
+            // Check if it was a horizontal or vertical drag
+            const absX = Math.abs(info.offset.x);
+            const absY = Math.abs(info.offset.y);
+            
+            if (absX > absY + 10) {
+              // Horizontal drag - handle navigation
+              handleDragEnd();
+            } else if (absY > absX + 10 && info.offset.y > 0) {
+              // Vertical drag down - handle close
+              handleVerticalDragEnd();
+            } else {
+              // Reset both
+              dragX.set(0);
+              setDragY(0);
+              setIsDragging(false);
+              if (isPaused && !isLongPress) {
+                resumeStory();
+              }
+            }
+          }}
           onPointerDown={handleMouseDown}
           onPointerUp={handleMouseUp}
           onPointerLeave={handleMouseUp}
           onClick={!isDragging ? handleTap : undefined}
         >
-          {/* Story content wrapper - No vertical drag */}
-          <div
+          {/* Story content wrapper - Vertical drag for close */}
+          <motion.div
             className="relative w-full h-full bg-black/20"
             style={{ maxHeight: 'calc(85vh - 40px)' }}
+            animate={{
+              y: dragY,
+              scale: Math.max(0.9, 1 - dragY / 1000),
+              opacity: Math.max(0.5, 1 - dragY / 400),
+            }}
+            transition={{ type: 'spring', stiffness: 500, damping: 40 }}
           >
             {currentStory?.media_type === "video" ? (
               (() => {
@@ -902,7 +915,7 @@ export function StoryViewer({
                 )}
               </div>
             )}
-          </div>
+          </motion.div>
           
           {/* Drag direction indicator overlay - Hidden on desktop */}
           <AnimatePresence>
@@ -955,6 +968,17 @@ export function StoryViewer({
             )}
           </div>
         </motion.div>
+      )}
+
+      {/* Vertical swipe indicator - shows when dragging down to close */}
+      {isDragging && dragY > 50 && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[102]">
+          <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-full px-5 py-2.5">
+            <span className="text-white/90 text-sm font-medium">
+              {dragY > 100 ? '↓ Release to close' : '↓ Swipe down to close'}
+            </span>
+          </div>
+        </div>
       )}
 
       {/* Micro-Toast - Link Copied Confirmation (Electric Emerald) */}
