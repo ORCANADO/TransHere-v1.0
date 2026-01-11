@@ -777,6 +777,13 @@ export function StoryViewer({
           </motion.div>
         </AnimatePresence>
         
+        {/* Model Transition Overlay - Prevents main layout flash during model-to-model navigation */}
+        {isTransitioning && animationType === 'model' && (
+          <div
+            className="absolute inset-0 bg-[#050A14] z-[110] pointer-events-none"
+            style={{ opacity: 1 }}
+          />
+        )}
       </div>
 
       {/* Micro-Toast - Link Copied Confirmation (Electric Emerald) */}
