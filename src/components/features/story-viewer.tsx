@@ -669,7 +669,10 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
         }}
       >
         {/* Rounded Media Container - Instagram style with proper aspect ratio */}
-        <div className="relative w-full h-full overflow-hidden" style={{ borderRadius: '1.75rem', maxHeight: 'calc(85vh - 40px)' }}>
+        <div 
+          className="story-rounded-container relative w-full h-full" 
+          style={{ maxHeight: 'calc(85vh - 40px)' }}
+        >
           {currentStory?.media_type === "video" ? (
             (() => {
               // Hybrid video strategy: WebM for performance, MP4 as fallback
@@ -684,7 +687,6 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
                 <video
                   key={currentStory.id}
                   className="w-full h-full object-contain pointer-events-none"
-                  style={{ borderRadius: '1.75rem' }}
                   poster={posterUrl}
                   autoPlay
                   muted
@@ -699,7 +701,7 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
               );
             })()
           ) : (
-            <div className="relative w-full h-full overflow-hidden" style={{ borderRadius: '1.75rem' }}>
+            <div className="story-rounded-container relative w-full h-full overflow-hidden">
               {mediaUrl && (
                 <Image
                   key={currentStory?.id}
@@ -707,7 +709,6 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
                   alt={`Story ${currentStoryIndex + 1}`}
                   fill
                   className="object-contain pointer-events-none"
-                  style={{ borderRadius: '1.75rem' }}
                   draggable={false}
                   sizes="100vw"
                   priority

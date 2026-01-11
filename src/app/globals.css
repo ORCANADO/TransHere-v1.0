@@ -424,5 +424,25 @@
         0 5px 8px -3px oklch(78% 0.13 85 / 0.2);
     }
   }
+
+  /* Story Viewer Rounded Corners - Force border radius on all devices */
+  .story-rounded-container {
+    border-radius: 1.75rem !important;
+    -webkit-border-radius: 1.75rem !important;
+    -moz-border-radius: 1.75rem !important;
+    overflow: hidden !important;
+  }
+
+  /* Target all images and videos within story container, including Next.js Image components */
+  .story-rounded-container img,
+  .story-rounded-container video,
+  .story-rounded-container > div img,
+  .story-rounded-container > div video,
+  .story-rounded-container span img,
+  .story-rounded-container > div > span img {
+    border-radius: 1.75rem !important;
+    -webkit-border-radius: 1.75rem !important;
+    -moz-border-radius: 1.75rem !important;
+  }
 }
 
