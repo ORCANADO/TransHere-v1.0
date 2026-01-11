@@ -127,20 +127,52 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
       </div>
 
       {/* Story Viewer Modal - Render when URL param exists and group is found */}
-      {storyId && selectedGroup && (
-        <StoryViewer
-          group={selectedGroup}
-          onClose={handleCloseViewer}
-          socialLink={socialLink}
-          modelName={modelName}
-          modelImage={modelImage}
-          modelSlug={modelSlug}
-          isVerified={isVerified}
-          nextGroupId={nextGroupId}
-          prevGroupId={prevGroupId}
-          onNavigate={handleNavigate}
-        />
-      )}
+      {storyId && selectedGroup && (() => {
+        // Determine which list the selected group belongs to
+        const isPinned = selectedGroup.is_pinned;
+        const relevantList = isPinned ? pinnedGroups : feedGroups;
+        
+        // Find current index in the relevant list
+        const currentIndex = relevantList.findIndex((g) => g.id === selectedGroup.id);
+        
+        // Get next and previous groups for preview
+        const nextGroup = currentIndex >= 0 && currentIndex < relevantList.length - 1
+          ? relevantList[currentIndex + 1]
+          : null;
+        const prevGroup = currentIndex > 0
+          ? relevantList[currentIndex - 1]
+          : null;
+        
+        // Create preview data (same model, different group cover)
+        const nextPreview = nextGroup && modelName && modelImage ? {
+          name: modelName,
+          imageUrl: modelImage,
+          coverUrl: nextGroup.cover_url,
+        } : null;
+        
+        const prevPreview = prevGroup && modelName && modelImage ? {
+          name: modelName,
+          imageUrl: modelImage,
+          coverUrl: prevGroup.cover_url,
+        } : null;
+
+        return (
+          <StoryViewer
+            group={selectedGroup}
+            onClose={handleCloseViewer}
+            socialLink={socialLink}
+            modelName={modelName}
+            modelImage={modelImage}
+            modelSlug={modelSlug}
+            isVerified={isVerified}
+            nextGroupId={nextGroupId}
+            prevGroupId={prevGroupId}
+            onNavigate={handleNavigate}
+            nextModelPreview={nextPreview}
+            prevModelPreview={prevPreview}
+          />
+        );
+      })()}
     </>
   );
 }

@@ -167,21 +167,45 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
 
       {/* Story Viewer Modal - Render when URL param exists and group is found */}
       {/* key={selectedGroup.id} forces React to recreate viewer on model change for fresh entry animation */}
-      {storyId && selectedGroup && selectedModel && (
-        <StoryViewer
-          key={selectedGroup.id}
-          group={selectedGroup}
-          onClose={handleCloseViewer}
-          socialLink={selectedModel.social_link}
-          modelName={selectedModel.name}
-          modelImage={selectedModel.image_url}
-          modelSlug={selectedModel.slug}
-          isVerified={selectedModel.is_verified}
-          nextGroupId={nextGroupId}
-          prevGroupId={prevGroupId}
-          onNavigate={handleNavigate}
-        />
-      )}
+      {storyId && selectedGroup && selectedModel && (() => {
+        // Get next model preview
+        const nextModelData = activeIndex >= 0 && activeIndex < allRecentGroups.length - 1
+          ? allRecentGroups[activeIndex + 1]
+          : null;
+        const nextPreview = nextModelData ? {
+          name: nextModelData.model.name,
+          imageUrl: nextModelData.model.image_url,
+          coverUrl: nextModelData.group.cover_url,
+        } : null;
+
+        // Get prev model preview
+        const prevModelData = activeIndex > 0
+          ? allRecentGroups[activeIndex - 1]
+          : null;
+        const prevPreview = prevModelData ? {
+          name: prevModelData.model.name,
+          imageUrl: prevModelData.model.image_url,
+          coverUrl: prevModelData.group.cover_url,
+        } : null;
+
+        return (
+          <StoryViewer
+            key={selectedGroup.id}
+            group={selectedGroup}
+            onClose={handleCloseViewer}
+            socialLink={selectedModel.social_link}
+            modelName={selectedModel.name}
+            modelImage={selectedModel.image_url}
+            modelSlug={selectedModel.slug}
+            isVerified={selectedModel.is_verified}
+            nextGroupId={nextGroupId}
+            prevGroupId={prevGroupId}
+            onNavigate={handleNavigate}
+            nextModelPreview={nextPreview}
+            prevModelPreview={prevPreview}
+          />
+        );
+      })()}
     </>
   );
 }
