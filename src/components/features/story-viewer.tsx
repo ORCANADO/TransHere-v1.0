@@ -669,7 +669,7 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
         }}
       >
         {/* Rounded Media Container - Instagram style with proper aspect ratio */}
-        <div className="relative w-full h-full max-h-[calc(85vh-40px)] rounded-[1.75rem] overflow-hidden" style={{ borderRadius: '1.75rem' }}>
+        <div className="relative w-full h-full overflow-hidden" style={{ borderRadius: '1.75rem', maxHeight: 'calc(85vh - 40px)' }}>
           {currentStory?.media_type === "video" ? (
             (() => {
               // Hybrid video strategy: WebM for performance, MP4 as fallback
