@@ -54,6 +54,10 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
   const [isAnimating, setIsAnimating] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isLongPress, setIsLongPress] = useState(false);
+  const [isUIHidden, setIsUIHidden] = useState(false); // Hides UI during long press
+  const [progress, setProgress] = useState(0); // 0-100 percentage for current story
+  const [storyStartTime, setStoryStartTime] = useState<number>(0); // Timestamp when story started
+  const [pausedProgress, setPausedProgress] = useState<number>(0); // Progress when paused
   const [animationType, setAnimationType] = useState<'story' | 'model'>('story');
   
   // Swipe physics state
@@ -78,6 +82,18 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
   });
   const currentStory = stories[currentStoryIndex];
   const duration = currentStory?.duration || 5;
+
+  // Pause and capture current progress
+  const pauseStory = useCallback(() => {
+    setPausedProgress(progress);
+    setIsPaused(true);
+  }, [progress]);
+
+  // Resume from paused state
+  const resumeStory = useCallback(() => {
+    setIsPaused(false);
+    // pausedProgress is already set, useEffect will use it to resume
+  }, []);
 
   // Close the viewer with animation
   const handleClose = useCallback(() => {
@@ -150,32 +166,41 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
     }
   }, [handlePrevStory, handlePrevModel]);
 
-  // CSS Transition Progress Bar - Start animation after story changes
+  // Progress tracking with JavaScript interval (replaces CSS-only approach)
   useEffect(() => {
     if (!currentStory || isPaused) return;
 
-    // Reset animation state
-    setIsAnimating(false);
+    // Set start time for this story
+    const now = Date.now();
+    // If resuming from pause, calculate adjusted start time
+    const adjustedStartTime = pausedProgress > 0 
+      ? now - (pausedProgress / 100 * duration * 1000)
+      : now;
+    setStoryStartTime(adjustedStartTime);
     
-    // Use requestAnimationFrame to ensure DOM has updated before starting animation
-    const raf = requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setIsAnimating(true);
-      });
-    });
-
-    // Set timer to advance to next story
-    timerRef.current = setTimeout(() => {
-      goToNext();
-    }, duration * 1000);
+    // Progress update interval (60fps feel)
+    const progressInterval = setInterval(() => {
+      const elapsed = Date.now() - adjustedStartTime;
+      const newProgress = Math.min((elapsed / (duration * 1000)) * 100, 100);
+      setProgress(newProgress);
+      
+      // Auto-advance when complete
+      if (newProgress >= 100) {
+        clearInterval(progressInterval);
+        goToNext();
+      }
+    }, 16); // ~60fps update rate
 
     return () => {
-      cancelAnimationFrame(raf);
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
+      clearInterval(progressInterval);
     };
-  }, [currentStoryIndex, currentStory, isPaused, duration, goToNext]);
+  }, [currentStoryIndex, currentStory, isPaused, duration, goToNext, pausedProgress]);
+
+  // Reset progress when story changes
+  useEffect(() => {
+    setProgress(0);
+    setPausedProgress(0);
+  }, [currentStoryIndex, group.id]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -203,6 +228,10 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
     setIsPaused(false);
     setDragY(0);
     setIsClosing(false);
+    setProgress(0);
+    setPausedProgress(0);
+    setIsUIHidden(false);
+    setIsLongPress(false);
     // Note: animationType is set before navigation, so we keep it for the incoming animation
     // Reset to 'story' after the animation completes
     const resetTimer = setTimeout(() => {
@@ -230,19 +259,24 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
     }
   };
 
-  // Long press handlers for pause
+  // Long press handlers - Instagram style (hide UI, freeze progress)
   const handleMouseDown = () => {
     longPressTimerRef.current = setTimeout(() => {
-      setIsPaused(true);
+      pauseStory();
+      setIsUIHidden(true);
       setIsLongPress(true);
-    }, 200);
+    }, 150); // Slightly faster for snappier feel
   };
 
   const handleMouseUp = () => {
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
     }
-    setIsPaused(false);
+    if (isLongPress) {
+      setIsUIHidden(false);
+      resumeStory();
+      setIsLongPress(false);
+    }
   };
 
   // Touch handlers with swipe physics - Applied to outermost container
@@ -253,11 +287,12 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
     setDragX(0);
     setDragY(0);
     
-    // Start long press timer
+    // Start long press timer - triggers UI hide
     longPressTimerRef.current = setTimeout(() => {
-      setIsPaused(true);
+      pauseStory();
+      setIsUIHidden(true);
       setIsLongPress(true);
-    }, 200);
+    }, 150);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -267,6 +302,13 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
     // Cancel long press if moving
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
+    }
+    
+    // If was in long press mode, exit it when dragging starts
+    if (isLongPress && !isDragging) {
+      setIsUIHidden(false);
+      setIsLongPress(false);
+      // Keep paused during drag
     }
 
     if (touchStartY.current === null || touchStartX.current === null) return;
@@ -284,19 +326,30 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
     if (absX > absY && absX > 10) {
       setIsDragging(true);
       setDragX(deltaX);
-      setIsPaused(true);
+      if (!isPaused) {
+        pauseStory();
+      }
     }
     // If vertical downward swipe is dominant, track it
     else if (deltaY > 10 && absY > absX) {
       setIsDragging(true);
       setDragY(deltaY);
-      setIsPaused(true);
+      if (!isPaused) {
+        pauseStory();
+      }
     }
   };
 
   const handleTouchEnd = () => {
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
+    }
+
+    // Restore UI if it was hidden
+    if (isLongPress || isUIHidden) {
+      setIsUIHidden(false);
+      setIsLongPress(false);
+      resumeStory();
     }
 
     const swipeThreshold = 50; // Minimum distance for a swipe
@@ -322,7 +375,11 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
     setDragX(0);
     setDragY(0);
     setIsDragging(false);
-    setIsPaused(false);
+    // Note: Don't unpause here if was long press - handled above
+    // If paused due to drag (not long press), resume
+    if (!isLongPress && isPaused && !isUIHidden) {
+      resumeStory();
+    }
   };
 
   // Block context menu (long press menu on mobile)
@@ -346,14 +403,18 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
           break;
         case " ":
           e.preventDefault();
-          setIsPaused((prev) => !prev);
+          if (isPaused) {
+            resumeStory();
+          } else {
+            pauseStory();
+          }
           break;
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [goToPrev, goToNext, handleClose]);
+  }, [goToPrev, goToNext, handleClose, isPaused, pauseStory, resumeStory]);
 
   // Get current story URL for sharing/deep linking
   // Always use group.id (not story.id) since HomeStoriesBar looks for group IDs
@@ -372,13 +433,22 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
     return url.toString();
   }, [group.id, modelSlug]);
 
-  // Handle Share button click
+  // Handle Share button click - Pause while share sheet is open
   const handleShare = async () => {
     const storyUrl = getCurrentStoryUrl();
-    await share({
-      url: storyUrl,
-      title: modelName ? `Check out ${modelName}'s story on TranSpot` : 'Check out this story on TranSpot',
-    });
+    
+    // Pause story while share menu is active
+    pauseStory();
+    
+    try {
+      await share({
+        url: storyUrl,
+        title: modelName ? `Check out ${modelName}'s story on TranSpot` : 'Check out this story on TranSpot',
+      });
+    } finally {
+      // Resume after share completes (success or cancel)
+      resumeStory();
+    }
   };
 
   // Handle "Respond to Story" CTA click - Copy & Go
@@ -455,8 +525,12 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
         aria-hidden="true"
       />
 
-      {/* Progress Bars - CSS Transition Based */}
-      <div className="absolute top-0 left-0 right-0 z-[102] flex gap-1 p-2 safe-area-top">
+      {/* Progress Bars - JavaScript-based progress tracking */}
+      <div 
+        className={`absolute top-0 left-0 right-0 z-[102] flex gap-1 p-2 safe-area-top transition-opacity duration-200 ${
+          isUIHidden ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
         {stories.map((story, index) => (
           <div
             key={story.id}
@@ -468,11 +542,10 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
                 width: index < currentStoryIndex 
                   ? '100%' 
                   : index === currentStoryIndex 
-                    ? (isAnimating && !isPaused ? '100%' : '0%')
+                    ? `${progress}%`
                     : '0%',
-                transition: index === currentStoryIndex && isAnimating && !isPaused
-                  ? `width ${duration}s linear`
-                  : 'none',
+                // Smooth micro-transitions for the progress bar
+                transition: 'width 0.05s linear',
               }}
             />
           </div>
@@ -480,7 +553,11 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
       </div>
 
       {/* Header - Group info and close button */}
-      <div className="absolute top-4 left-0 right-0 z-[102] flex items-center justify-between px-4 mt-2">
+      <div 
+        className={`absolute top-4 left-0 right-0 z-[102] flex items-center justify-between px-4 mt-2 transition-opacity duration-200 ${
+          isUIHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
+      >
         {/* Profile Link - Avatar and Name (clickable) */}
         {modelSlug ? (
           <button
@@ -588,69 +665,59 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
           // Transform only the content, not the black background
           transform: `translate3d(0, ${dragY}px, 0) scale(${dragScale})`,
           transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+          padding: '20px 5px', // Vertical and horizontal padding for rounded corners
         }}
       >
-        {currentStory?.media_type === "video" ? (
-          (() => {
-            // Hybrid video strategy: WebM for performance, MP4 as fallback
-            const mp4Url = getImageUrl(currentStory.media_url);
-            // Derive WebM URL by replacing .mp4 extension (safely handles edge cases)
-            const webmUrl = mp4Url.endsWith('.mp4') 
-              ? mp4Url.slice(0, -4) + '.webm' 
-              : mp4Url.replace(/\.mp4(\?|$)/, '.webm$1');
-            const posterUrl = getImageUrl(group.cover_url);
-            
-            return (
-              <video
-                key={currentStory.id}
-                className="w-full h-full object-contain pointer-events-none"
-                poster={posterUrl}
-                autoPlay
-                muted
-                playsInline
-                onEnded={goToNext}
-              >
-                {/* WebM first for better compression/performance on modern browsers */}
-                <source src={webmUrl} type="video/webm" />
-                {/* MP4 fallback for Safari and older browsers */}
-                <source src={mp4Url} type="video/mp4" />
-              </video>
-            );
-          })()
-        ) : (
-          <div className="relative w-full h-full">
-            {mediaUrl && (
-              <Image
-                key={currentStory?.id}
-                src={mediaUrl}
-                alt={`Story ${currentStoryIndex + 1}`}
-                fill
-                className="object-contain pointer-events-none"
-                draggable={false}
-                sizes="100vw"
-                priority
-                unoptimized
-              />
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Pause Indicator - Glassmorphism */}
-      {isPaused && !isDragging && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[102]">
-          <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-full p-4">
-            <svg
-              className="w-12 h-12 text-white/90"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <rect x="6" y="4" width="4" height="16" rx="1" />
-              <rect x="14" y="4" width="4" height="16" rx="1" />
-            </svg>
-          </div>
+        {/* Rounded Media Container - Instagram style with proper aspect ratio */}
+        <div className="relative w-full h-full max-h-[calc(85vh-40px)] rounded-[1.75rem] overflow-hidden" style={{ borderRadius: '1.75rem' }}>
+          {currentStory?.media_type === "video" ? (
+            (() => {
+              // Hybrid video strategy: WebM for performance, MP4 as fallback
+              const mp4Url = getImageUrl(currentStory.media_url);
+              // Derive WebM URL by replacing .mp4 extension (safely handles edge cases)
+              const webmUrl = mp4Url.endsWith('.mp4') 
+                ? mp4Url.slice(0, -4) + '.webm' 
+                : mp4Url.replace(/\.mp4(\?|$)/, '.webm$1');
+              const posterUrl = getImageUrl(group.cover_url);
+              
+              return (
+                <video
+                  key={currentStory.id}
+                  className="w-full h-full object-contain pointer-events-none"
+                  style={{ borderRadius: '1.75rem' }}
+                  poster={posterUrl}
+                  autoPlay
+                  muted
+                  playsInline
+                  onEnded={goToNext}
+                >
+                  {/* WebM first for better compression/performance on modern browsers */}
+                  <source src={webmUrl} type="video/webm" />
+                  {/* MP4 fallback for Safari and older browsers */}
+                  <source src={mp4Url} type="video/mp4" />
+                </video>
+              );
+            })()
+          ) : (
+            <div className="relative w-full h-full overflow-hidden" style={{ borderRadius: '1.75rem' }}>
+              {mediaUrl && (
+                <Image
+                  key={currentStory?.id}
+                  src={mediaUrl}
+                  alt={`Story ${currentStoryIndex + 1}`}
+                  fill
+                  className="object-contain pointer-events-none"
+                  style={{ borderRadius: '1.75rem' }}
+                  draggable={false}
+                  sizes="100vw"
+                  priority
+                  unoptimized
+                />
+              )}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Swipe indicator when dragging - Glassmorphism */}
       {isDragging && dragY > 50 && (
@@ -675,12 +742,20 @@ export function StoryViewer({ group, onClose, socialLink, modelName, modelImage,
 
       {/* Action Bar Background - Opaque glass shadow at bottom */}
       {socialLink && socialLink !== "#" && (
-        <div className="absolute bottom-0 left-0 right-0 z-[101] h-32 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
+        <div 
+          className={`absolute bottom-0 left-0 right-0 z-[101] h-32 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none transition-opacity duration-200 ${
+            isUIHidden ? 'opacity-0' : 'opacity-100'
+          }`}
+        />
       )}
 
       {/* Action Bar - Respond to Story + Share */}
       {socialLink && socialLink !== "#" && (
-        <div className="absolute bottom-8 left-0 right-0 z-[102] flex items-center justify-center gap-3 px-4 safe-area-bottom">
+        <div 
+          className={`absolute bottom-8 left-0 right-0 z-[102] flex items-center justify-center gap-3 px-4 safe-area-bottom transition-opacity duration-200 ${
+            isUIHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          }`}
+        >
           {/* Respond to Story Button - iOS Glassmorphism Style */}
           <button
             onClick={handleRespondToStory}
