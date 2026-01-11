@@ -777,11 +777,14 @@ export function StoryViewer({
           </motion.div>
         </AnimatePresence>
         
-        {/* Model Transition Overlay - Prevents main layout flash during model-to-model navigation */}
+        {/* Model Transition Overlay - Blurred overlay to prevent main layout flash during model-to-model navigation */}
         {isTransitioning && animationType === 'model' && (
           <div
-            className="absolute inset-0 bg-[#050A14] z-[110] pointer-events-none"
-            style={{ opacity: 1 }}
+            className="absolute inset-0 bg-[#050A14]/40 backdrop-blur-xl z-[110] pointer-events-none"
+            style={{ 
+              backdropFilter: 'blur(20px) saturate(120%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(120%)',
+            }}
           />
         )}
       </div>
