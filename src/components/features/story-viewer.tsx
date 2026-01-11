@@ -295,9 +295,16 @@ export function StoryViewer({
     };
   }, []);
 
-  // Keep blur during navigation transitions to prevent flash
-  // The transition overlay will handle covering the content
-  // We keep the blur to ensure no flash of the main layout
+  // Remove blur during navigation transitions for faster browsing (Instagram-style)
+  useEffect(() => {
+    if (isTransitioning) {
+      // Remove blur during transition
+      document.body.classList.remove('story-open');
+    } else {
+      // Restore blur when transition completes
+      document.body.classList.add('story-open');
+    }
+  }, [isTransitioning]);
 
   // Reset state when group changes
   useEffect(() => {
@@ -774,13 +781,6 @@ export function StoryViewer({
           </motion.div>
         </AnimatePresence>
         
-        {/* Transition Overlay - Prevents flash by fully covering during transition */}
-        {isTransitioning && (
-          <div
-            className="absolute inset-0 bg-[#050A14] z-[110] pointer-events-none"
-            style={{ opacity: 1 }}
-          />
-        )}
       </div>
 
       {/* Micro-Toast - Link Copied Confirmation (Electric Emerald) */}
