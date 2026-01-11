@@ -785,7 +785,6 @@ export function StoryViewer({
                   </div>
                 )}
               </div>
-            </div>
           </motion.div>
         </AnimatePresence>
         
