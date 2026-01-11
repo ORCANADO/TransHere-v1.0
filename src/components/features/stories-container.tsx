@@ -144,34 +144,6 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
           : null;
         
         // Create preview data - use first story image from next/prev group (Instagram-style)
-        const nextGroupStories = nextGroup?.stories || [];
-        const nextFirstStory = nextGroupStories.length > 0
-          ? [...nextGroupStories].sort((a, b) => {
-              const dateA = new Date(a.posted_date || a.created_at);
-              const dateB = new Date(b.posted_date || b.created_at);
-              return dateA.getTime() - dateB.getTime(); // Oldest first
-            })[0]
-          : null;
-        const nextPreview = nextGroup && modelName && modelImage ? {
-          name: modelName,
-          imageUrl: modelImage,
-          storyMediaUrl: nextFirstStory?.media_url || nextGroup.cover_url,
-        } : null;
-        
-        const prevGroupStories = prevGroup?.stories || [];
-        const prevFirstStory = prevGroupStories.length > 0
-          ? [...prevGroupStories].sort((a, b) => {
-              const dateA = new Date(a.posted_date || a.created_at);
-              const dateB = new Date(b.posted_date || b.created_at);
-              return dateA.getTime() - dateB.getTime(); // Oldest first
-            })[0]
-          : null;
-        const prevPreview = prevGroup && modelName && modelImage ? {
-          name: modelName,
-          imageUrl: modelImage,
-          storyMediaUrl: prevFirstStory?.media_url || prevGroup.cover_url,
-        } : null;
-
         return (
           <StoryViewer
             group={selectedGroup}
@@ -184,8 +156,6 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
             nextGroupId={nextGroupId}
             prevGroupId={prevGroupId}
             onNavigate={handleNavigate}
-            nextModelPreview={nextPreview}
-            prevModelPreview={prevPreview}
           />
         );
       })()}

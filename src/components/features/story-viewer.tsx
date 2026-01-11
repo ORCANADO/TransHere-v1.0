@@ -4,16 +4,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { X, Share2, Check, Link2, ChevronLeft, ChevronRight } from "lucide-react";
-import { motion, AnimatePresence, PanInfo, useMotionValue, useTransform, useSpring } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { StoryGroup } from "@/types";
 import { getImageUrl } from "@/lib/utils";
 import { useShare } from "@/hooks/use-share";
-
-interface ModelPreview {
-  name: string;
-  imageUrl: string;
-  storyMediaUrl?: string; // First story image from next/prev group (Instagram-style)
-}
 
 interface StoryViewerProps {
   group: StoryGroup;
@@ -27,9 +21,6 @@ interface StoryViewerProps {
   nextGroupId?: string;
   prevGroupId?: string;
   onNavigate?: (groupId: string) => void;
-  // NEW: Preview data for adjacent models (Tinder-style peek)
-  nextModelPreview?: ModelPreview | null;
-  prevModelPreview?: ModelPreview | null;
 }
 
 // Date formatting helper - no external dependency
@@ -65,9 +56,7 @@ export function StoryViewer({
   isVerified, 
   nextGroupId, 
   prevGroupId, 
-  onNavigate,
-  nextModelPreview,
-  prevModelPreview 
+  onNavigate
 }: StoryViewerProps) {
   // Share hook
   const { share, copyAndGo, isCopied, isCopiedAndGo } = useShare();
@@ -88,70 +77,10 @@ export function StoryViewer({
   
   // Animation state
   const [isClosing, setIsClosing] = useState(false);
-  const [isAnimatingCube, setIsAnimatingCube] = useState(false); // Track cube animation state
   
   // Swipe detection state (no visual feedback, just detection)
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const hasSwiped = useRef(false); // Track if a swipe occurred to prevent tap
-
-  // Instagram-style cube animation transforms (3D rotation) - Mobile only
-  // Cube width is the viewport width, so rotation happens at the edge
-  const cubeWidth = typeof window !== 'undefined' ? window.innerWidth : 400;
-  
-  // Animation value for cube rotation (smooth spring animation)
-  const cubeRotation = useMotionValue(0);
-  const animatedCubeRotation = useSpring(cubeRotation, { 
-    stiffness: 400, 
-    damping: 35,
-    mass: 0.4
-  });
-  
-  // Current card: rotates like a cube face (connected to next/prev)
-  const currentRotateY = useTransform(animatedCubeRotation, (r) => r);
-  const currentOpacity = useTransform(animatedCubeRotation, (r) => {
-    const progress = Math.abs(r) / 90;
-    return Math.max(0.7, 1 - progress * 0.3); // Keep more opacity for connected feel
-  });
-  
-  // Next card (right side): connected cube face rotates in from the right
-  const nextRotateY = useTransform(animatedCubeRotation, (r) => {
-    if (r < 0) return 90 + r; // Connected: rotates in as current rotates out
-    return 90; // Hidden when not animating
-  });
-  const nextOpacity = useTransform(animatedCubeRotation, (r) => {
-    if (r < 0) {
-      const progress = Math.abs(r) / 90;
-      return progress; // Fade in as it rotates in
-    }
-    return 0;
-  });
-  const nextZ = useTransform(animatedCubeRotation, (r) => {
-    if (r < 0) {
-      // Connected cube: z-position follows rotation for 3D depth
-      return (cubeWidth / 2) * Math.sin((Math.abs(r) * Math.PI) / 180);
-    }
-    return cubeWidth / 2; // Behind when hidden
-  });
-  
-  // Prev card (left side): connected cube face rotates in from the left
-  const prevRotateY = useTransform(animatedCubeRotation, (r) => {
-    if (r > 0) return -90 + r; // Connected: rotates in as current rotates out
-    return -90; // Hidden when not animating
-  });
-  const prevOpacity = useTransform(animatedCubeRotation, (r) => {
-    if (r > 0) {
-      const progress = r / 90;
-      return progress; // Fade in as it rotates in
-    }
-    return 0;
-  });
-  const prevZ = useTransform(animatedCubeRotation, (r) => {
-    if (r > 0) {
-      // Connected cube: z-position follows rotation for 3D depth
-      return (cubeWidth / 2) * Math.sin((r * Math.PI) / 180);
-    }
-    return cubeWidth / 2; // Behind when hidden
-  });
 
   // Desktop detection
   const [isDesktop, setIsDesktop] = useState(false);
@@ -238,47 +167,29 @@ export function StoryViewer({
     onClose();
   }, [onClose]);
 
-  // Navigation helpers - Model transitions with smooth 3D cube animation
+  // Navigation helpers - Model transitions (instant, no animation)
   const handleNextModel = useCallback(() => {
     if (nextGroupId && onNavigate) {
       setAnimationType('model');
       setIsTransitioning(true);
-      setIsAnimatingCube(true);
-      
-      // Animate cube rotation to -90 degrees (smooth 3D transition)
-      cubeRotation.set(-90);
-      
-      // Navigate after animation completes
-      setTimeout(() => {
-        onNavigate(nextGroupId);
-        cubeRotation.set(0); // Reset for new story
-        setIsAnimatingCube(false);
-        setTimeout(() => setIsTransitioning(false), 50);
-      }, 350); // Smooth animation duration
+      // Instant navigation - no animation
+      onNavigate(nextGroupId);
+      setTimeout(() => setIsTransitioning(false), 50);
     } else {
       handleClose();
     }
-  }, [nextGroupId, onNavigate, handleClose, cubeRotation]);
+  }, [nextGroupId, onNavigate, handleClose]);
 
   const handlePrevModel = useCallback(() => {
     if (prevGroupId && onNavigate) {
       setAnimationType('model');
       setIsTransitioning(true);
-      setIsAnimatingCube(true);
-      
-      // Animate cube rotation to 90 degrees (smooth 3D transition)
-      cubeRotation.set(90);
-      
-      // Navigate after animation completes
-      setTimeout(() => {
-        onNavigate(prevGroupId);
-        cubeRotation.set(0); // Reset for new story
-        setIsAnimatingCube(false);
-        setTimeout(() => setIsTransitioning(false), 50);
-      }, 350); // Smooth animation duration
+      // Instant navigation - no animation
+      onNavigate(prevGroupId);
+      setTimeout(() => setIsTransitioning(false), 50);
     }
     // If no prevGroupId, do nothing (stay on current)
-  }, [prevGroupId, onNavigate, cubeRotation]);
+  }, [prevGroupId, onNavigate]);
 
   // Navigation helpers - Story transitions
   const handleNextStory = useCallback(() => {
@@ -386,18 +297,16 @@ export function StoryViewer({
     setCurrentStoryIndex(0);
     setIsAnimating(false);
     setIsPaused(false);
-    cubeRotation.set(0); // Reset cube rotation
     setIsClosing(false);
     setProgress(0);
     setPausedProgress(0);
     setIsUIHidden(false);
     setIsLongPress(false);
-    setIsAnimatingCube(false);
     
     // Reset animation state
     setAnimationType('story');
     setSlideDirection(null);
-  }, [group.id, cubeRotation]);
+  }, [group.id]);
 
   // Handle screen tap navigation (for stories within same group)
   // Only triggers if it's a tap (not a swipe)
@@ -583,50 +492,6 @@ export function StoryViewer({
     ? modelImage 
     : group.cover_url;
 
-  // Preview Card Component - Instagram cube animation style
-  const PreviewCard = ({ 
-    preview, 
-    position 
-  }: { 
-    preview: ModelPreview | null | undefined; 
-    position: 'next' | 'prev' 
-  }) => {
-    if (!preview) return null;
-    
-    const isNext = position === 'next';
-    
-    return (
-      <motion.div
-        className="absolute inset-0 flex items-center justify-center pointer-events-none"
-        style={{
-          rotateY: isDesktop ? 0 : (isAnimatingCube ? (isNext ? nextRotateY : prevRotateY) : (isNext ? 90 : -90)),
-          opacity: isDesktop ? 0 : (isAnimatingCube ? (isNext ? nextOpacity : prevOpacity) : 0),
-          z: isDesktop ? 0 : (isAnimatingCube ? (isNext ? nextZ : prevZ) : 0),
-          zIndex: 5,
-          transformStyle: 'preserve-3d',
-          backfaceVisibility: 'hidden',
-        }}
-      >
-        <div 
-          className="relative w-full h-full max-w-lg mx-auto"
-          style={{ 
-            maxHeight: 'calc(85vh - 40px)',
-            margin: '20px 5px',
-            transformStyle: 'preserve-3d',
-          }}
-        >
-          {/* Just the next/prev story image - no blur, no zoom, no overlays */}
-          <Image
-            src={getImageUrl(preview.storyMediaUrl || preview.imageUrl)}
-            alt={preview.name}
-            fill
-            className="object-contain"
-            unoptimized
-          />
-        </div>
-      </motion.div>
-    );
-  };
 
   // Get portal container - render outside main content to avoid blur
   const portalContainer = typeof document !== 'undefined' 
@@ -790,20 +655,8 @@ export function StoryViewer({
         </button>
       </div>
 
-      {/* Card Stack Container - Instagram cube animation (mobile only) */}
-      <div 
-        className="relative w-full h-full flex items-center justify-center overflow-hidden"
-        style={isDesktop ? {} : {
-          perspective: '1000px',
-          perspectiveOrigin: 'center center',
-        }}
-      >
-        
-        {/* Previous Model Preview Card (behind, left) - Only visible during cube animation */}
-        {!isDesktop && isAnimatingCube && <PreviewCard preview={prevModelPreview} position="prev" />}
-        
-        {/* Next Model Preview Card (behind, right) - Only visible during cube animation */}
-        {!isDesktop && isAnimatingCube && <PreviewCard preview={nextModelPreview} position="next" />}
+      {/* Story Container */}
+      <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
         
         {/* Desktop Navigation Arrows */}
         {isDesktop && (
@@ -832,17 +685,12 @@ export function StoryViewer({
           </>
         )}
         
-        {/* Current Story Card (front) - Instagram cube animation (mobile only) */}
-        <motion.div
+        {/* Current Story Card */}
+        <div
           key={`${group.id}-${currentStoryIndex}`}
           className="relative w-full h-full max-w-lg mx-auto flex items-center justify-center cursor-pointer"
           style={{
-            rotateY: isDesktop ? 0 : (isAnimatingCube ? currentRotateY : 0),
-            opacity: isDesktop ? 1 : (isAnimatingCube ? currentOpacity : 1),
-            zIndex: 10,
             padding: '20px 5px',
-            transformStyle: 'preserve-3d',
-            backfaceVisibility: 'hidden',
           }}
           onPointerDown={(e) => {
             handleMouseDown();

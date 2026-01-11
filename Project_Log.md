@@ -491,6 +491,12 @@
   - Updated drag handlers to use pause/resume helpers for consistent progress tracking
   - Keyboard spacebar handler uses pause/resume functions
   - Touch handlers properly restore UI on release
+- **Navigation System:**
+  - **Tap/Click Navigation:** Stories within same group navigate via tap (left/right tap zones)
+  - **Swipe Navigation:** Horizontal swipe navigates between story blocks/groups (Instagram mobile web style)
+  - **Vertical Swipe:** Vertical swipe down closes story instantly (no animation)
+  - **No Horizontal Animation:** Removed all 3D cube animations for instant navigation between groups
+  - Navigation is now instant and clean, matching Instagram's mobile web behavior
 
 ### Deferred Features:
 - **Rounded Corners (Future Implementation):**
