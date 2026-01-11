@@ -295,16 +295,17 @@ export function StoryViewer({
     };
   }, []);
 
-  // Remove blur during navigation transitions for faster browsing (Instagram-style)
+  // Remove blur only during model-to-model transitions (not story-to-story)
+  // This prevents flash while keeping blur during story navigation
   useEffect(() => {
-    if (isTransitioning) {
-      // Remove blur during transition
+    if (isTransitioning && animationType === 'model') {
+      // Remove blur only during model-to-model transitions
       document.body.classList.remove('story-open');
     } else {
-      // Restore blur when transition completes
+      // Keep blur active for story-to-story navigation and when not transitioning
       document.body.classList.add('story-open');
     }
-  }, [isTransitioning]);
+  }, [isTransitioning, animationType]);
 
   // Reset state when group changes
   useEffect(() => {
