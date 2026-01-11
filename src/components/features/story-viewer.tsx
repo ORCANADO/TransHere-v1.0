@@ -94,24 +94,24 @@ export function StoryViewer({
   const dragX = useMotionValue(0);
   const dragProgress = useTransform(dragX, [-200, 0, 200], [-1, 0, 1]); // -1 = full left, 1 = full right
 
-  // Spring config for smooth snap-back
-  const springConfig = { stiffness: 400, damping: 30 };
+  // Spring config for smooth snap-back - optimized for smoothness
+  const springConfig = { stiffness: 300, damping: 35, mass: 0.5 };
   const animatedX = useSpring(dragX, springConfig);
 
-  // Card stack transforms based on drag
+  // Card stack transforms based on drag - reduced scale/opacity changes for smoother feel
   const currentCardX = useTransform(animatedX, (x) => x);
-  const currentCardScale = useTransform(animatedX, [-200, 0, 200], [0.92, 1, 0.92]);
-  const currentCardOpacity = useTransform(animatedX, [-200, 0, 200], [0.7, 1, 0.7]);
+  const currentCardScale = useTransform(animatedX, [-200, 0, 200], [0.96, 1, 0.96]);
+  const currentCardOpacity = useTransform(animatedX, [-200, 0, 200], [0.85, 1, 0.85]);
 
-  // Next card (right side) - starts hidden, reveals as you drag left
-  const nextCardX = useTransform(animatedX, [-200, 0], [0, 80]); // Starts 80px off, moves to 0
-  const nextCardScale = useTransform(animatedX, [-200, 0], [1, 0.85]);
-  const nextCardOpacity = useTransform(animatedX, [-200, -50, 0], [1, 0.8, 0]);
+  // Next card (right side) - starts hidden, reveals as you drag left - smoother transitions
+  const nextCardX = useTransform(animatedX, [-200, 0], [0, 60]); // Starts 60px off, moves to 0
+  const nextCardScale = useTransform(animatedX, [-200, 0], [1, 0.92]);
+  const nextCardOpacity = useTransform(animatedX, [-200, -50, 0], [1, 0.9, 0]);
 
-  // Prev card (left side) - starts hidden, reveals as you drag right
-  const prevCardX = useTransform(animatedX, [0, 200], [-80, 0]); // Starts -80px off, moves to 0
-  const prevCardScale = useTransform(animatedX, [0, 200], [0.85, 1]);
-  const prevCardOpacity = useTransform(animatedX, [0, 50, 200], [0, 0.8, 1]);
+  // Prev card (left side) - starts hidden, reveals as you drag right - smoother transitions
+  const prevCardX = useTransform(animatedX, [0, 200], [-60, 0]); // Starts -60px off, moves to 0
+  const prevCardScale = useTransform(animatedX, [0, 200], [0.92, 1]);
+  const prevCardOpacity = useTransform(animatedX, [0, 50, 200], [0, 0.9, 1]);
 
   // Desktop detection
   const [isDesktop, setIsDesktop] = useState(false);
@@ -207,11 +207,13 @@ export function StoryViewer({
     if (nextGroupId && onNavigate) {
       setAnimationType('model');
       setSlideDirection('left'); // Content slides LEFT (new content comes from right)
-      setIsTransitioning(true);
+      setIsTransitioning(true); // Remove blur during transition
       
       // Small delay to allow exit animation to start
       setTimeout(() => {
         onNavigate(nextGroupId);
+        // Reset transition state after navigation completes
+        setTimeout(() => setIsTransitioning(false), 100);
       }, 50);
     } else {
       handleClose();
@@ -222,10 +224,12 @@ export function StoryViewer({
     if (prevGroupId && onNavigate) {
       setAnimationType('model');
       setSlideDirection('right'); // Content slides RIGHT (new content comes from left)
-      setIsTransitioning(true);
+      setIsTransitioning(true); // Remove blur during transition
       
       setTimeout(() => {
         onNavigate(prevGroupId);
+        // Reset transition state after navigation completes
+        setTimeout(() => setIsTransitioning(false), 100);
       }, 50);
     }
     // If no prevGroupId, do nothing (stay on current)
@@ -310,6 +314,7 @@ export function StoryViewer({
   }, []);
 
   // Add blur effect to page content when story viewer opens
+  // Remove blur during transitions for faster browsing (Instagram-style)
   useEffect(() => {
     // Add class to body to blur background content
     document.body.classList.add('story-open');
@@ -319,6 +324,17 @@ export function StoryViewer({
       document.body.classList.remove('story-open');
     };
   }, []);
+
+  // Remove blur during navigation transitions for faster browsing
+  useEffect(() => {
+    if (isTransitioning) {
+      // Remove blur during transition
+      document.body.classList.remove('story-open');
+    } else {
+      // Restore blur when transition completes
+      document.body.classList.add('story-open');
+    }
+  }, [isTransitioning]);
 
   // Reset state when group changes
   useEffect(() => {
@@ -380,25 +396,31 @@ export function StoryViewer({
     }
   };
 
-  // Tinder-style drag end handler
+  // Tinder-style drag end handler - optimized for smoothness
   const handleDragEnd = useCallback(() => {
     const currentDragX = dragX.get();
-    const threshold = 80; // Pixels to trigger navigation
+    const threshold = 60; // Reduced threshold for faster navigation
     
     if (currentDragX < -threshold && nextGroupId && onNavigate) {
       // Dragged left past threshold -> go to next model
+      setIsTransitioning(true); // Remove blur during transition
       // Animate card off screen before navigating
       dragX.set(-300);
       setTimeout(() => {
         onNavigate(nextGroupId);
         dragX.set(0); // Reset for new model
+        // Reset transition state after navigation completes
+        setTimeout(() => setIsTransitioning(false), 100);
       }, 150);
     } else if (currentDragX > threshold && prevGroupId && onNavigate) {
       // Dragged right past threshold -> go to previous model
+      setIsTransitioning(true); // Remove blur during transition
       dragX.set(300);
       setTimeout(() => {
         onNavigate(prevGroupId);
         dragX.set(0);
+        // Reset transition state after navigation completes
+        setTimeout(() => setIsTransitioning(false), 100);
       }, 150);
     } else {
       // Snap back to center
@@ -826,7 +848,8 @@ export function StoryViewer({
           }}
           drag={isDesktop ? false : "x"}
           dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.7}
+          dragElastic={0.5}
+          dragMomentum={false}
           onDrag={isDesktop ? undefined : handleHorizontalDrag}
           onDragEnd={isDesktop ? undefined : handleDragEnd}
           onPointerDown={handleMouseDown}
