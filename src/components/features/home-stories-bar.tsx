@@ -166,11 +166,9 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
       </div>
 
       {/* Story Viewer Modal - Render when URL param exists and group is found */}
-      {/* key={selectedGroup.id} forces React to recreate viewer on model change for fresh entry animation */}
       {storyId && selectedGroup && selectedModel && (() => {
         return (
           <StoryViewer
-            key={selectedGroup.id}
             group={selectedGroup}
             onClose={handleCloseViewer}
             socialLink={selectedModel.social_link}
