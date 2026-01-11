@@ -775,17 +775,12 @@ export function StoryViewer({
         </AnimatePresence>
         
         {/* Transition Overlay - Prevents flash by fully covering during transition */}
-        <AnimatePresence>
-          {isTransitioning && (
-            <motion.div
-              className="absolute inset-0 bg-[#050A14] z-[110] pointer-events-none"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.1 }}
-            />
-          )}
-        </AnimatePresence>
+        {isTransitioning && (
+          <div
+            className="absolute inset-0 bg-[#050A14] z-[110] pointer-events-none"
+            style={{ opacity: 1 }}
+          />
+        )}
       </div>
 
       {/* Micro-Toast - Link Copied Confirmation (Electric Emerald) */}
