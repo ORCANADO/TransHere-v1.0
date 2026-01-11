@@ -295,17 +295,12 @@ export function StoryViewer({
     };
   }, []);
 
-  // Remove blur only during model-to-model transitions (not story-to-story)
-  // This prevents flash while keeping blur during story navigation
+  // Keep blur active at all times - overlay will handle covering during model transitions
+  // This ensures smooth experience without flicker
   useEffect(() => {
-    if (isTransitioning && animationType === 'model') {
-      // Remove blur only during model-to-model transitions
-      document.body.classList.remove('story-open');
-    } else {
-      // Keep blur active for story-to-story navigation and when not transitioning
-      document.body.classList.add('story-open');
-    }
-  }, [isTransitioning, animationType]);
+    // Always keep blur active - overlay covers during model-to-model transitions
+    document.body.classList.add('story-open');
+  }, []);
 
   // Reset state when group changes
   useEffect(() => {
