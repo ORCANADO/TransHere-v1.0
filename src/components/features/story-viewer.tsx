@@ -298,10 +298,6 @@ export function StoryViewer({
   useEffect(() => {
     if (!currentStory) return;
 
-    // Reset progress immediately when story index changes
-    setProgress(0);
-    setPausedProgress(0);
-
     // If paused, don't start or continue the interval
     if (isPaused) {
       return;
@@ -309,10 +305,18 @@ export function StoryViewer({
 
     // Set start time for this story
     const now = Date.now();
-    // If resuming from pause, calculate adjusted start time
+    // If resuming from pause, calculate adjusted start time using saved progress
+    // Otherwise, reset progress to 0 for new story
     const adjustedStartTime = pausedProgress > 0 
       ? now - (pausedProgress / 100 * duration * 1000)
       : now;
+    
+    // Only reset progress if we're starting fresh (pausedProgress is 0)
+    // If resuming, keep the current progress value
+    if (pausedProgress === 0) {
+      setProgress(0);
+    }
+    
     setStoryStartTime(adjustedStartTime);
     
     // Progress update interval (60fps feel)
@@ -338,6 +342,14 @@ export function StoryViewer({
       clearInterval(progressInterval);
     };
   }, [currentStoryIndex, currentStory, isPaused, duration, goToNext, pausedProgress]);
+
+  // Reset progress when story index changes (new story, not resume)
+  useEffect(() => {
+    if (!currentStory) return;
+    // Only reset when story actually changes, not when resuming
+    setProgress(0);
+    setPausedProgress(0);
+  }, [currentStoryIndex, currentStory]);
 
   // Reset progress when story changes
   useEffect(() => {
