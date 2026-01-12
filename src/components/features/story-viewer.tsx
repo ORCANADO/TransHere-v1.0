@@ -633,7 +633,9 @@ export function StoryViewer({
       </div>
 
       {/* Header - Group info and close button */}
+      {/* Key by group.id to prevent duplication during transitions */}
       <div 
+        key={`header-${group.id}`}
         className={`absolute top-4 left-0 right-0 z-[102] flex items-center justify-between px-4 mt-2 transition-opacity duration-200 ${
           isUIHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
