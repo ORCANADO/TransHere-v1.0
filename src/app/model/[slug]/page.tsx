@@ -324,7 +324,8 @@ export default async function ModelPage({ params }: PageProps) {
           <div className="lg:flex-1 lg:min-h-0 lg:overflow-hidden lg:flex lg:flex-col bg-background/30 backdrop-blur-xl rounded-2xl border border-white/10">
             <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto scrollbar-hide lg:p-4 [&>div]:!mt-0 [&>div]:!border-0 [&>div]:!rounded-none [&>div]:!bg-transparent [&>div]:!backdrop-blur-none">
               <StoriesContainer 
-                groups={filteredStoryGroups} 
+                groups={filteredStoryGroups}
+                originalGroups={storyGroups || []}
                 socialLink={socialLink}
                 modelName={model.name}
                 modelImage={model.image_url}

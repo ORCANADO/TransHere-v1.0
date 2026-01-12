@@ -7,17 +7,22 @@ import { useViewedStories } from "@/hooks/use-viewed-stories";
 
 interface StoryCircleProps {
   group: StoryGroup;
+  allStories?: Array<{ id: string }>; // Optional: full stories array for memory checks (when group is filtered)
   onClick: () => void;
 }
 
-export function StoryCircle({ group, onClick }: StoryCircleProps) {
+export function StoryCircle({ group, allStories, onClick }: StoryCircleProps) {
   const { hasUnseenStories } = useViewedStories();
   const coverUrl = getImageUrl(group.cover_url);
   const displayTitle = group.title || "Recent";
   
+  // For memory checks, use allStories (full array) if provided, otherwise use group.stories
+  // This ensures we check against ALL stories in the group, not just the filtered/displayed ones
+  const storiesForMemoryCheck = allStories || group.stories || [];
+  
   // For recent (non-pinned) groups, check if ALL stories have been seen
   // For pinned groups, always show as "viewed" (gray ring) since they don't have the seen dynamic
-  const isGroupViewed = group.is_pinned ? true : !hasUnseenStories(group.stories || []);
+  const isGroupViewed = group.is_pinned ? true : !hasUnseenStories(storiesForMemoryCheck);
 
   return (
     <button
