@@ -177,6 +177,15 @@ export function StoryViewer({
 
   // Navigation helpers - Model transitions (with slide animation)
   const handleNextModel = useCallback(() => {
+    // Clear any pending long press timer to prevent UI from hiding
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    // Ensure UI is visible when navigating
+    setIsUIHidden(false);
+    setIsLongPress(false);
+    
     if (nextGroupId && onNavigate) {
       setAnimationType('model');
       setSlideDirection('left'); // Content slides LEFT (new comes from right)
@@ -198,6 +207,15 @@ export function StoryViewer({
   }, [nextGroupId, onNavigate, handleClose]);
 
   const handlePrevModel = useCallback(() => {
+    // Clear any pending long press timer to prevent UI from hiding
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    // Ensure UI is visible when navigating
+    setIsUIHidden(false);
+    setIsLongPress(false);
+    
     if (prevGroupId && onNavigate) {
       setAnimationType('model');
       setSlideDirection('right'); // Content slides RIGHT (new comes from left)
