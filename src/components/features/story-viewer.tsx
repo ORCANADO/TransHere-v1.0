@@ -401,24 +401,25 @@ export function StoryViewer({
   }, [nextGroupId, prevGroupId, handleNextModel, handlePrevModel, handleClose]);
 
   // Long press handlers - Instagram style (hide UI, freeze progress)
-  const handleMouseDown = () => {
+  const handleMouseDown = useCallback(() => {
     longPressTimerRef.current = setTimeout(() => {
       pauseStory();
       setIsUIHidden(true);
       setIsLongPress(true);
     }, 150); // Slightly faster for snappier feel
-  };
+  }, [pauseStory]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
     }
     if (isLongPress) {
       setIsUIHidden(false);
       resumeStory();
       setIsLongPress(false);
     }
-  };
+  }, [isLongPress, resumeStory]);
 
 
 
