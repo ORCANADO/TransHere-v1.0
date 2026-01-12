@@ -492,8 +492,10 @@ export function StoryViewer({
   const handleShare = async () => {
     const storyUrl = getCurrentStoryUrl();
     
-    // Pause story immediately - capture current progress and stop updates
-    pauseStory();
+    // Only pause if long press is enabled (main layout)
+    if (!disableLongPress) {
+      pauseStory();
+    }
     
     try {
       await share({
@@ -504,10 +506,12 @@ export function StoryViewer({
       // Handle any errors silently
       console.error('Share error:', error);
     } finally {
-      // Small delay to ensure share sheet is fully closed before resuming
-      setTimeout(() => {
-        resumeStory();
-      }, 100);
+      // Only resume if long press is enabled (main layout)
+      if (!disableLongPress) {
+        setTimeout(() => {
+          resumeStory();
+        }, 100);
+      }
     }
   };
 
@@ -749,22 +753,22 @@ export function StoryViewer({
             style={{ pointerEvents: 'auto' }}
             onPointerDown={(e) => {
               e.stopPropagation();
-              handleMouseDown();
+              if (!disableLongPress) handleMouseDown();
               if (!isDesktop) handleSwipeStart(e);
             }}
             onPointerUp={(e) => {
               e.stopPropagation();
-              handleMouseUp();
+              if (!disableLongPress) handleMouseUp();
               if (!isDesktop) handleSwipeEnd(e);
             }}
             onPointerLeave={(e) => {
               e.stopPropagation();
-              handleMouseUp();
+              if (!disableLongPress) handleMouseUp();
               if (!isDesktop && swipeStart.current) handleSwipeEnd(e);
             }}
             onPointerCancel={(e) => {
               e.stopPropagation();
-              handleMouseUp();
+              if (!disableLongPress) handleMouseUp();
             }}
             onClick={(e) => {
               e.stopPropagation();
@@ -772,15 +776,15 @@ export function StoryViewer({
             }}
             onTouchStart={(e) => {
               e.stopPropagation();
-              handleMouseDown();
+              if (!disableLongPress) handleMouseDown();
             }}
             onTouchEnd={(e) => {
               e.stopPropagation();
-              handleMouseUp();
+              if (!disableLongPress) handleMouseUp();
             }}
             onTouchCancel={(e) => {
               e.stopPropagation();
-              handleMouseUp();
+              if (!disableLongPress) handleMouseUp();
             }}
           >
             {/* Story content wrapper */}
