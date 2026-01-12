@@ -21,6 +21,8 @@ interface StoryViewerProps {
   nextGroupId?: string;
   prevGroupId?: string;
   onNavigate?: (groupId: string) => void;
+  // Disable long press pause (for model profile stories)
+  disableLongPress?: boolean;
 }
 
 // Date formatting helper - no external dependency
@@ -56,7 +58,8 @@ export function StoryViewer({
   isVerified, 
   nextGroupId, 
   prevGroupId, 
-  onNavigate
+  onNavigate,
+  disableLongPress = false
 }: StoryViewerProps) {
   // Share hook
   const { share, copyAndGo, isCopied, isCopiedAndGo } = useShare();
@@ -407,14 +410,20 @@ export function StoryViewer({
 
   // Long press handlers - Instagram style (hide UI, freeze progress)
   const handleMouseDown = useCallback(() => {
+    // Disable long press if disabled (model profile)
+    if (disableLongPress) return;
+    
     longPressTimerRef.current = setTimeout(() => {
       pauseStory();
       setIsUIHidden(true);
       setIsLongPress(true);
     }, 150); // Slightly faster for snappier feel
-  }, [pauseStory]);
+  }, [pauseStory, disableLongPress]);
 
   const handleMouseUp = useCallback(() => {
+    // Disable long press if disabled (model profile)
+    if (disableLongPress) return;
+    
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
@@ -424,7 +433,7 @@ export function StoryViewer({
       resumeStory();
       setIsLongPress(false);
     }
-  }, [isLongPress, resumeStory]);
+  }, [isLongPress, resumeStory, disableLongPress]);
 
 
 

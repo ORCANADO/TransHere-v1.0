@@ -156,6 +156,7 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
             nextGroupId={nextGroupId}
             prevGroupId={prevGroupId}
             onNavigate={handleNavigate}
+            disableLongPress={true}
           />
         );
       })()}
