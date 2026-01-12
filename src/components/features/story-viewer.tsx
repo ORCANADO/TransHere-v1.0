@@ -697,7 +697,8 @@ export function StoryViewer({
       />
 
       {/* Progress Bars - JavaScript-based progress tracking */}
-      {/* Key by group.id to prevent duplication during transitions */}
+      {/* TEMPORARY FIX: Hide progress bars for pinned stories in model profile */}
+      {!(disableLongPress && group.is_pinned) && (
       <div 
         key={`progress-${group.id}`}
         className={`absolute top-0 left-0 right-0 z-[102] flex gap-1 p-2 safe-area-top transition-opacity duration-200 ${
@@ -724,6 +725,7 @@ export function StoryViewer({
           </div>
         ))}
       </div>
+      )}
 
       {/* Header - Group info and close button */}
       {/* Key by group.id to prevent duplication during transitions */}
@@ -768,7 +770,8 @@ export function StoryViewer({
                 />
               )}
               {/* Date Display - Relative for Recent, Absolute for Pinned */}
-              {currentStory?.posted_date && (
+              {/* TEMPORARY FIX: Hide date for pinned stories in model profile */}
+              {currentStory?.posted_date && !(disableLongPress && group.is_pinned) && (
                 <span className="text-white/50 text-xs">
                   {formatStoryDate(currentStory.posted_date, group.is_pinned)}
                 </span>
@@ -805,7 +808,8 @@ export function StoryViewer({
                 />
               )}
               {/* Date Display - Relative for Recent, Absolute for Pinned */}
-              {currentStory?.posted_date && (
+              {/* TEMPORARY FIX: Hide date for pinned stories in model profile */}
+              {currentStory?.posted_date && !(disableLongPress && group.is_pinned) && (
                 <span className="text-white/50 text-xs">
                   {formatStoryDate(currentStory.posted_date, group.is_pinned)}
                 </span>
