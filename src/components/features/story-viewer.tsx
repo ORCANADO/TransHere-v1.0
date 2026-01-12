@@ -136,6 +136,11 @@ export function StoryViewer({
 
   // Pause and capture current progress
   const pauseStory = useCallback(() => {
+    // Immediately clear the progress interval
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     setPausedProgress(progress);
     setIsPaused(true);
   }, [progress]);
