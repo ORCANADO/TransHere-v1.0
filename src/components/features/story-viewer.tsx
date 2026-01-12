@@ -86,6 +86,7 @@ export function StoryViewer({
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const hasSwiped = useRef(false); // Track if a swipe occurred to prevent tap
   const touchStartTime = useRef<number>(0); // Track when touch started to detect quick taps
+  const longPressTimerId = useRef<NodeJS.Timeout | null>(null); // Track timer ID to verify it's still active
 
   // Desktop detection
   const [isDesktop, setIsDesktop] = useState(false);
@@ -401,6 +402,10 @@ export function StoryViewer({
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
+      longPressTimerId.current = null;
+      // Immediately ensure UI is visible
+      setIsUIHidden(false);
+      setIsLongPress(false);
     }
     
     if (isLongPress) {
@@ -470,35 +475,47 @@ export function StoryViewer({
     // Disable long press if disabled (model profile)
     if (disableLongPress) return;
     
+    // Clear any existing timer first
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+      longPressTimerId.current = null;
+    }
+    
     // Record touch start time to detect quick taps
     touchStartTime.current = Date.now();
     
-    longPressTimerRef.current = setTimeout(() => {
-      pauseStory();
-      setIsUIHidden(true);
-      setIsLongPress(true);
+    // Create new timer and store its ID
+    const timerId = setTimeout(() => {
+      // Only execute if this timer is still the active one
+      if (longPressTimerId.current === timerId && longPressTimerRef.current === timerId) {
+        pauseStory();
+        setIsUIHidden(true);
+        setIsLongPress(true);
+      }
     }, 150); // Slightly faster for snappier feel
+    
+    longPressTimerRef.current = timerId;
+    longPressTimerId.current = timerId;
   }, [pauseStory, disableLongPress]);
 
   const handleMouseUp = useCallback(() => {
     // Disable long press if disabled (model profile)
     if (disableLongPress) return;
     
-    // Clear long press timer immediately
+    // Clear long press timer immediately and ensure UI is visible
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
+      longPressTimerId.current = null;
+      // Always ensure UI is visible when timer is cleared
+      setIsUIHidden(false);
+      setIsLongPress(false);
     }
     
-    // If this was a quick tap (less than 150ms), ensure UI stays visible
-    const touchDuration = Date.now() - touchStartTime.current;
-    if (touchDuration < 150) {
-      setIsUIHidden(false);
-      setIsLongPress(false);
-    } else if (isLongPress) {
-      setIsUIHidden(false);
+    // If long press was active, resume story
+    if (isLongPress) {
       resumeStory();
-      setIsLongPress(false);
     }
   }, [isLongPress, resumeStory, disableLongPress]);
 
@@ -847,6 +864,10 @@ export function StoryViewer({
               if (longPressTimerRef.current) {
                 clearTimeout(longPressTimerRef.current);
                 longPressTimerRef.current = null;
+                longPressTimerId.current = null;
+                // Immediately ensure UI is visible
+                setIsUIHidden(false);
+                setIsLongPress(false);
               }
               if (!disableLongPress) handleMouseUp();
               if (!isDesktop) handleSwipeEnd(e);
@@ -891,6 +912,10 @@ export function StoryViewer({
                 if (longPressTimerRef.current) {
                   clearTimeout(longPressTimerRef.current);
                   longPressTimerRef.current = null;
+                  longPressTimerId.current = null;
+                  // Immediately ensure UI is visible
+                  setIsUIHidden(false);
+                  setIsLongPress(false);
                 }
                 if (!disableLongPress) handleMouseUp();
                 if (!isDesktop) handleSwipeEnd(e);
