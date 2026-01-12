@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { StoryGroup } from "@/types";
 import { getImageUrl } from "@/lib/utils";
 import { useShare } from "@/hooks/use-share";
+import { useViewedStories } from "@/hooks/use-viewed-stories";
 
 interface StoryViewerProps {
   group: StoryGroup;
@@ -23,6 +24,8 @@ interface StoryViewerProps {
   onNavigate?: (groupId: string) => void;
   // Disable long press pause (for model profile stories)
   disableLongPress?: boolean;
+  // Starting index for resume playback
+  initialStoryIndex?: number;
 }
 
 // Date formatting helper - no external dependency
@@ -59,13 +62,17 @@ export function StoryViewer({
   nextGroupId, 
   prevGroupId, 
   onNavigate,
-  disableLongPress = false
+  disableLongPress = false,
+  initialStoryIndex
 }: StoryViewerProps) {
   // Share hook
   const { share, copyAndGo, isCopied, isCopiedAndGo } = useShare();
+  
+  // Viewed stories hook
+  const { markStoryAsViewed } = useViewedStories();
 
   // Local state
-  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(initialStoryIndex ?? 0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isLongPress, setIsLongPress] = useState(false);
@@ -384,9 +391,17 @@ export function StoryViewer({
     document.body.classList.add('story-open');
   }, []);
 
+  // Mark story as viewed when displayed
+  useEffect(() => {
+    const currentStory = stories[currentStoryIndex];
+    if (currentStory?.id) {
+      markStoryAsViewed(currentStory.id);
+    }
+  }, [currentStoryIndex, stories, markStoryAsViewed]);
+
   // Reset state when group changes
   useEffect(() => {
-    setCurrentStoryIndex(0);
+    setCurrentStoryIndex(initialStoryIndex ?? 0);
     setIsAnimating(false);
     setIsPaused(false);
     setIsClosing(false);
@@ -405,7 +420,7 @@ export function StoryViewer({
     }, 400);
     
     return () => clearTimeout(resetTimer);
-  }, [group.id]);
+  }, [group.id, initialStoryIndex]);
 
   // Handle screen tap navigation (for stories within same group)
   // Only triggers if it's a tap (not a swipe)

@@ -109,12 +109,12 @@ Do not use `useRouter().push` for external links.
 - **Telemetry:** Every conversion click MUST trigger `trackClick(modelId, type)` before the user leaves.
 
 ### 2.13 Stories Logic
-- Story Viewer must use `nuqs` for state management (`?story=ID`) to ensure shareability.
+- Story Viewer must use `nuqs` for state management (`?story=ID&si=INDEX`) to ensure shareability and resume playback.
 - **Navigation Rule:** Internal navigation (switching between models/stories) MUST use `history: 'replace'` to prevent polluting the browser history stack.
 - **Timestamp Logic:** NEVER manually update `last_story_added_at`. Rely strictly on the Postgres Trigger (`on_story_created`) to handle this automatically.
 - **Filtering:** Main Feed stories must ONLY show models with active, unpinned groups.
 - **Visuals:** Recent stories must use `bg-gradient` rings; Pinned stories use `bg-gray`.
-- **Deep Linking:** The Story Viewer MUST maintain the `?story=UUID` parameter in the URL bar at all times to allow instant copying/sharing.
+- **Deep Linking:** The Story Viewer MUST maintain the `?story=UUID&si=INDEX` parameters in the URL bar at all times to allow instant copying/sharing and resume playback.
 - **Action Bar:** Must contain two distinct actions:
     1. **Share (Icon):** Triggers Native Share Sheet (Viral Loop).
     2. **Respond (Text):** Triggers Copy & Go -> OnlyFans (Conversion Loop).
@@ -132,6 +132,20 @@ Do not use `useRouter().push` for external links.
   - CSS targets `body.story-open #main-content` for targeted blur effect
   - StoryViewer adds `story-open` class to body on mount, removes on unmount
   - Result: Instagram-style frosted glass with blurred background, clear story overlay
+- **Story-Level View Tracking (Instagram Style):**
+  - Individual story IDs are tracked in localStorage, not group IDs
+  - Hook: `useViewedStories` provides `markStoryAsViewed`, `isStoryViewed`, `hasUnseenStories`, `getFirstUnseenStoryIndex`, `isGroupFullyViewed`
+  - **Ring Color Logic:** Recent groups show gradient ring if `hasUnseenStories(group.stories)` returns true; pinned groups always show gray
+  - **Resume Playback:** `getFirstUnseenStoryIndex(stories)` returns the index of the oldest unseen story for resume
+  - **Group Seen Status:** A group is marked as "seen" (gray ring) only when ALL stories inside have been viewed
+  - **New Story Alert:** If a model uploads a new story to a previously-seen group, the group automatically shows as unseen (gradient ring)
+  - **Story Marking:** Stories are automatically marked as viewed when displayed in StoryViewer (via `useEffect` on `currentStoryIndex`)
+- **Real-Time Story Updates:**
+  - Use `useStoriesRealtime` hook in `HomeStoriesBar` and `StoriesContainer` to listen for new story uploads
+  - Subscribes to Supabase Realtime events on `stories` and `story_groups` tables
+  - Automatically calls `router.refresh()` when INSERT events are detected
+  - Requires Realtime to be enabled in Supabase Dashboard for `stories` and `story_groups` tables
+  - Zero-cost solution using Supabase's free tier Realtime feature
 
 ### 2.15 Category Pills & Filtering
 - **Frequency Algorithm:** Display top 15 most-used tags (calculated server-side).

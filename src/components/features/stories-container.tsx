@@ -5,6 +5,8 @@ import { useQueryState } from "nuqs";
 import dynamic from "next/dynamic";
 import { StoryGroup } from "@/types";
 import { StoryCircle } from "./story-circle";
+import { useViewedStories } from "@/hooks/use-viewed-stories";
+import { useStoriesRealtime } from "@/hooks/use-stories-realtime";
 
 // Lazy load StoryViewer - modal that is hidden by default, should NOT be in initial bundle
 const StoryViewer = dynamic(() => import("./story-viewer").then(mod => ({ default: mod.StoryViewer })), {
@@ -21,12 +23,25 @@ interface StoriesContainerProps {
 }
 
 export function StoriesContainer({ groups, socialLink, modelName, modelImage, modelSlug, isVerified }: StoriesContainerProps) {
+  // Real-time updates: Listen for new story uploads
+  useStoriesRealtime();
+  
+  // Visual Memory: Track which stories have been viewed
+  const { getFirstUnseenStoryIndex, hasUnseenStories } = useViewedStories();
+  
   // URL state management with nuqs - syncs with browser history
-  // history: 'push' creates entries in browser history for back button support
+  // Use 'replace' to avoid polluting browser history (per .cursorrules)
   const [storyId, setStoryId] = useQueryState("story", {
     defaultValue: "",
     clearOnDefault: true,
-    history: "push",
+    history: "replace",
+  });
+  
+  // Story index parameter for resume playback
+  const [storyIndexParam, setStoryIndexParam] = useQueryState("si", {
+    defaultValue: "",
+    clearOnDefault: true,
+    history: "replace",
   });
 
   // Safety check: Return null if groups is undefined or empty
@@ -77,17 +92,34 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
 
   // Handle circle click - open story viewer (updates URL)
   const handleStoryClick = (groupId: string) => {
-    setStoryId(groupId);
+    // Find the group to calculate starting index
+    const group = groups?.find(g => g.id === groupId);
+    
+    // Calculate starting index (resume from first unseen story)
+    const startIndex = group ? getFirstUnseenStoryIndex(group.stories || []) : 0;
+    
+    // Set both story ID and index
+    setStoryId(groupId, { history: "replace" });
+    setStoryIndexParam(startIndex > 0 ? String(startIndex) : null, { history: "replace" });
   };
 
-  // Handle close viewer (removes URL param)
+  // Handle close viewer (removes URL params)
   const handleCloseViewer = () => {
-    setStoryId(null);
+    setStoryId(null, { history: "replace" });
+    setStoryIndexParam(null, { history: "replace" });
   };
 
   // Handle navigation between groups (uses replace to avoid history pollution)
   const handleNavigate = (groupId: string) => {
+    // Find the group to calculate starting index
+    const group = groups?.find(g => g.id === groupId);
+    
+    // Calculate starting index for the new group
+    const startIndex = group ? getFirstUnseenStoryIndex(group.stories || []) : 0;
+    
+    // Set both story ID and index
     setStoryId(groupId, { history: "replace" });
+    setStoryIndexParam(startIndex > 0 ? String(startIndex) : null, { history: "replace" });
   };
 
   return (
@@ -143,6 +175,14 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
           ? relevantList[currentIndex - 1]
           : null;
         
+        // Get starting story index from URL or calculate fresh
+        // If URL has index, use it (for resume on reopen)
+        // Otherwise, calculate from first unseen story (for new opens)
+        // Use the FULL stories array from the group (not a truncated preview)
+        const urlIndex = storyIndexParam ? parseInt(storyIndexParam, 10) : null;
+        const calculatedIndex = getFirstUnseenStoryIndex(selectedGroup.stories || []);
+        const initialStoryIndex = urlIndex !== null && !isNaN(urlIndex) ? urlIndex : calculatedIndex;
+        
         // Create preview data - use first story image from next/prev group (Instagram-style)
         return (
           <StoryViewer
@@ -157,6 +197,7 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
             prevGroupId={prevGroupId}
             onNavigate={handleNavigate}
             disableLongPress={true}
+            initialStoryIndex={initialStoryIndex}
           />
         );
       })()}

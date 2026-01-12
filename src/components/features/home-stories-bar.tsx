@@ -1,11 +1,13 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQueryState } from "nuqs";
 import dynamic from "next/dynamic";
 import { Model, StoryGroup } from "@/types";
 import { StoryCircle } from "./story-circle";
 import { cn } from "@/lib/utils";
 import { useViewedStories } from "@/hooks/use-viewed-stories";
+import { useStoriesRealtime } from "@/hooks/use-stories-realtime";
 
 // Lazy load StoryViewer - modal that is hidden by default, should NOT be in initial bundle
 const StoryViewer = dynamic(() => import("./story-viewer").then(mod => ({ default: mod.StoryViewer })), {
@@ -17,17 +19,28 @@ interface HomeStoriesBarProps {
 }
 
 export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
+  // Real-time updates: Listen for new story uploads
+  useStoriesRealtime();
+  
   // Read current feed from URL - only show on 'near' feed
   const [feed] = useQueryState("feed", { defaultValue: "near" });
   
   // Visual Memory: Track which stories have been viewed
-  const { isViewed } = useViewedStories();
+  const { hasUnseenStories, getFirstUnseenStoryIndex } = useViewedStories();
   
   // URL state management with nuqs - syncs with browser history
+  // Use 'replace' to avoid polluting browser history (per .cursorrules)
   const [storyId, setStoryId] = useQueryState("story", {
     defaultValue: "",
     clearOnDefault: true,
-    history: "push",
+    history: "replace",
+  });
+  
+  // Story index parameter for resume playback
+  const [storyIndexParam, setStoryIndexParam] = useQueryState("si", {
+    defaultValue: "",
+    clearOnDefault: true,
+    history: "replace",
   });
 
   // Only render on 'near' feed
@@ -50,70 +63,80 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
 
   // Handle circle click - open story viewer with recent group
   const handleRecentGroupClick = (groupId: string) => {
-    setStoryId(groupId);
+    // Find the group to calculate starting index
+    const group = models
+      .flatMap(m => m.story_groups || [])
+      .find(g => g.id === groupId);
+    
+    // Calculate starting index (resume from first unseen story)
+    const startIndex = group ? getFirstUnseenStoryIndex(group.stories || []) : 0;
+    
+    // Set both story ID and index
+    setStoryId(groupId, { history: "replace" });
+    setStoryIndexParam(startIndex > 0 ? String(startIndex) : null, { history: "replace" });
   };
 
-  // Handle close viewer (removes URL param)
+  // Handle close viewer (removes URL params)
   const handleCloseViewer = () => {
-    setStoryId(null);
+    setStoryId(null, { history: "replace" });
+    setStoryIndexParam(null, { history: "replace" });
   };
 
   // Filter models with recent groups and extract the recent group
-  const modelsWithRecentGroups = models
-    .map((model) => {
-      // Find the specific recent (unpinned) group with stories
-      const recentGroup = model.story_groups?.find(
-        (g) => !g.is_pinned && g.stories && g.stories.length > 0
-      );
+  // Use useMemo to recalculate when models or viewedStoryIds change
+  const modelsWithRecentGroups = useMemo(() => {
+    return models
+      .map((model) => {
+        // Find the specific recent (unpinned) group with stories
+        const recentGroup = model.story_groups?.find(
+          (g) => !g.is_pinned && g.stories && g.stories.length > 0
+        );
 
-      // Return null if no recent group found
-      if (!recentGroup) {
-        return null;
-      }
+        // Return null if no recent group found
+        if (!recentGroup) {
+          return null;
+        }
 
-      // Get the most recent story for the preview
-      const sortedStories = [...(recentGroup.stories || [])].sort((a, b) => {
-        const dateA = new Date(a.posted_date || a.created_at);
-        const dateB = new Date(b.posted_date || b.created_at);
-        return dateB.getTime() - dateA.getTime(); // Newest first
+        // Get the most recent story for the preview
+        const sortedStories = [...(recentGroup.stories || [])].sort((a, b) => {
+          const dateA = new Date(a.posted_date || a.created_at);
+          const dateB = new Date(b.posted_date || b.created_at);
+          return dateB.getTime() - dateA.getTime(); // Newest first
+        });
+        const latestStory = sortedStories[0];
+        const latestStoryDate = latestStory ? new Date(latestStory.posted_date || latestStory.created_at) : new Date(0);
+        
+        // For cover: use media_url only if it's an image, for videos use group's cover_url (poster)
+        const latestStoryMedia = latestStory?.media_type === 'video' 
+          ? null  // Don't use video URL as cover
+          : latestStory?.media_url;
+
+        // Create display group with proper cover fallback:
+        // 1. Use the most recent IMAGE story's media (like Instagram)
+        // 2. Fall back to group's cover_url (which is poster for videos)
+        // 3. Fall back to model's profile image (last resort)
+        const displayGroup: StoryGroup = {
+          ...recentGroup,
+          title: model.name, // Show model name, not "Recent"
+          cover_url: latestStoryMedia || recentGroup.cover_url || model.image_url || '',
+        };
+
+        // Check if this story group has unseen stories (Visual Memory)
+        const hasUnseen = hasUnseenStories(recentGroup.stories || []);
+
+        return { model, recentGroup, displayGroup, latestStoryDate, hasUnseen };
+      })
+      .filter((item): item is { model: Model; recentGroup: StoryGroup; displayGroup: StoryGroup; latestStoryDate: Date; hasUnseen: boolean } => item !== null)
+      // Instagram-style sorting: Groups with unseen stories first, then fully viewed. Within each group, sort by newest first
+      .sort((a, b) => {
+        // Primary sort: Groups with unseen stories come first
+        if (a.hasUnseen !== b.hasUnseen) {
+          return a.hasUnseen ? -1 : 1; // Unseen (true) comes before fully viewed (false)
+        }
+        // Secondary sort: Newest first within same unseen status
+        return b.latestStoryDate.getTime() - a.latestStoryDate.getTime();
       });
-      const latestStory = sortedStories[0];
-      const latestStoryDate = latestStory ? new Date(latestStory.posted_date || latestStory.created_at) : new Date(0);
-      
-      // For cover: use media_url only if it's an image, for videos use group's cover_url (poster)
-      const latestStoryMedia = latestStory?.media_type === 'video' 
-        ? null  // Don't use video URL as cover
-        : latestStory?.media_url;
-
-      // Create display group with proper cover fallback:
-      // 1. Use the most recent IMAGE story's media (like Instagram)
-      // 2. Fall back to group's cover_url (which is poster for videos)
-      // 3. Fall back to model's profile image (last resort)
-      const displayGroup: StoryGroup = {
-        ...recentGroup,
-        title: model.name, // Show model name, not "Recent"
-        cover_url: latestStoryMedia || recentGroup.cover_url || model.image_url || '',
-      };
-
-      // Check if this story group has been viewed (Visual Memory)
-      // Get latest story ID to detect new stories
-      const latestStoryId = recentGroup.stories && recentGroup.stories.length > 0
-        ? recentGroup.stories[recentGroup.stories.length - 1]?.id
-        : undefined;
-      const viewed = isViewed(recentGroup.id, latestStoryId);
-
-      return { model, recentGroup, displayGroup, latestStoryDate, viewed };
-    })
-    .filter((item): item is { model: Model; recentGroup: StoryGroup; displayGroup: StoryGroup; latestStoryDate: Date; viewed: boolean } => item !== null)
-    // Instagram-style sorting: Unviewed first, then viewed. Within each group, sort by newest first
-    .sort((a, b) => {
-      // Primary sort: Unviewed stories first (false < true in boolean, so !viewed gives priority)
-      if (a.viewed !== b.viewed) {
-        return a.viewed ? 1 : -1; // Unviewed (false) comes before viewed (true)
-      }
-      // Secondary sort: Newest first within same viewed status
-      return b.latestStoryDate.getTime() - a.latestStoryDate.getTime();
-    });
+  }, [models, hasUnseenStories]);
 
   // Don't render if no models with recent groups
   if (modelsWithRecentGroups.length === 0) {
@@ -144,7 +167,17 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
   // Handler for navigating between models' stories
   // Use 'replace' history to avoid creating multiple back button entries
   const handleNavigate = (id: string) => {
+    // Find the group to calculate starting index
+    const group = models
+      .flatMap(m => m.story_groups || [])
+      .find(g => g.id === id);
+    
+    // Calculate starting index for the new group
+    const startIndex = group ? getFirstUnseenStoryIndex(group.stories || []) : 0;
+    
+    // Set both story ID and index
     setStoryId(id, { history: 'replace' });
+    setStoryIndexParam(startIndex > 0 ? String(startIndex) : null, { history: 'replace' });
   };
 
   return (
@@ -171,6 +204,13 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
 
       {/* Story Viewer Modal - Render when URL param exists and group is found */}
       {storyId && selectedGroup && selectedModel && (() => {
+        // Get starting story index from URL or calculate fresh
+        // If URL has index, use it (for resume on reopen)
+        // Otherwise, calculate from first unseen story (for new opens)
+        const urlIndex = storyIndexParam ? parseInt(storyIndexParam, 10) : null;
+        const calculatedIndex = getFirstUnseenStoryIndex(selectedGroup.stories || []);
+        const startIndex = urlIndex !== null && !isNaN(urlIndex) ? urlIndex : calculatedIndex;
+        
         return (
           <StoryViewer
             group={selectedGroup}
@@ -183,6 +223,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
             nextGroupId={nextGroupId}
             prevGroupId={prevGroupId}
             onNavigate={handleNavigate}
+            initialStoryIndex={startIndex}
           />
         );
       })()}

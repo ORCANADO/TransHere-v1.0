@@ -11,26 +11,17 @@ interface StoryCircleProps {
 }
 
 export function StoryCircle({ group, onClick }: StoryCircleProps) {
-  const { isViewed, markAsViewed } = useViewedStories();
+  const { hasUnseenStories } = useViewedStories();
   const coverUrl = getImageUrl(group.cover_url);
   const displayTitle = group.title || "Recent";
   
-  // Get the latest story ID to detect new stories
-  const latestStoryId = group.stories && group.stories.length > 0
-    ? group.stories[group.stories.length - 1]?.id
-    : undefined;
-  
-  const viewed = isViewed(group.id, latestStoryId);
-
-  // Handle click: mark as viewed with latest story ID and trigger parent onClick
-  const handleClick = () => {
-    markAsViewed(group.id, latestStoryId);
-    onClick();
-  };
+  // For recent (non-pinned) groups, check if ALL stories have been seen
+  // For pinned groups, always show as "viewed" (gray ring) since they don't have the seen dynamic
+  const isGroupViewed = group.is_pinned ? true : !hasUnseenStories(group.stories || []);
 
   return (
     <button
-      onClick={handleClick}
+      onClick={onClick}
       className="flex flex-col items-center gap-1.5 hover:scale-105 active:scale-95 transition-all duration-300"
       aria-label={`View ${displayTitle} stories`}
     >
@@ -38,12 +29,12 @@ export function StoryCircle({ group, onClick }: StoryCircleProps) {
       <div
         className={cn(
           "w-[76px] h-[76px] rounded-full p-[2.5px] transition-all duration-300 shadow-lg",
-          // Viewed stories: Glass gray ring
-          viewed && "bg-white/20 shadow-black/20",
-          // Unviewed + Recent (not pinned): Electric Emerald to Rich Gold gradient with glow
-          !viewed && !group.is_pinned && "bg-gradient-to-tr from-[#00FF85] via-[#D4AF37] to-[#7A27FF] shadow-[0_0_15px_rgba(0,255,133,0.4)]",
-          // Unviewed + Pinned: Glass muted ring
-          !viewed && group.is_pinned && "bg-white/20 shadow-black/20"
+          // Pinned: Always gray ring (no seen/unseen dynamic)
+          group.is_pinned && "bg-muted-foreground/40 shadow-black/20",
+          // Recent (not pinned) + Viewed: Glass gray ring
+          !group.is_pinned && isGroupViewed && "bg-muted-foreground/40 shadow-black/20",
+          // Recent (not pinned) + Unviewed: Electric Emerald to Rich Gold gradient with glow
+          !group.is_pinned && !isGroupViewed && "bg-gradient-to-tr from-[#00FF85] via-[#D4AF37] to-[#7A27FF] shadow-[0_0_15px_rgba(0,255,133,0.4)]"
         )}
       >
         {/* Glass border container */}
