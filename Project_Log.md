@@ -503,3 +503,53 @@
   - Instagram-style rounded corners (`borderRadius: 1.75rem`) deferred to future version
   - Implementation attempted but encountered cross-device/viewport compatibility issues
   - Will be revisited with a more robust approach in a future update
+
+## [2026-01-11] - Phase 5.7: StoryViewer Model Profile Optimization & Bug Fixes
+**Status:** Complete
+
+### Model Profile Story Customization:
+- **Long Press Disabled:** Added `disableLongPress` prop to `StoryViewer` component
+  - Model profile stories: Long press does nothing (no pause, no UI hiding)
+  - Main layout stories: Long press pause works as before
+  - Prevents accidental UI hiding in model profile context
+- **Doubled Story Duration:** Story duration automatically doubled in model profile
+  - Base duration: `currentStory?.duration || 5` seconds
+  - Model profile: `baseDuration * 2` (10 seconds default)
+  - Main layout: Unchanged (5 seconds default)
+  - Rationale: Since pause is disabled, longer duration compensates for viewing time
+- **Share Button Enhancement:** Share button in model profile now auto-copies URL to clipboard
+  - Model profile: Copies story URL to clipboard and shows "Link Copied!" toast
+  - Main layout: Uses native share sheet with pause/resume (unchanged)
+  - Toast notification: 2-second display with Electric Emerald styling
+
+### Bug Fixes:
+- **Duplicate Progress Bars:** Fixed duplicate/fake loading bars appearing during transitions
+  - Added `key` prop to progress bars container based on `group.id`
+  - Added `key` prop to header container based on `group.id`
+  - Ensures React properly replaces elements when group changes
+  - Prevents visual artifacts during model-to-model navigation
+- **UI Hiding on Navigation:** Fixed UI elements hiding when navigating between stories/models
+  - Cleared long press timer in all navigation handlers (`handleNextStory`, `handlePrevStory`, `handleNextModel`, `handlePrevModel`)
+  - Added immediate timer clearing in `onPointerUp` handlers
+  - Added timer ID tracking to prevent race conditions
+  - Timer callback now checks if it's still active before executing
+  - Always resets `isUIHidden` to `false` when clearing timer
+  - Fixed mobile-specific issue where timer could fire after touch release
+- **Progress Bar Memory:** Fixed progress bar resetting to beginning when resuming from pause
+  - Separated progress reset logic into separate `useEffect` for story changes only
+  - Progress no longer resets when resuming from pause
+  - `pausedProgress` is preserved and used correctly to calculate resume position
+  - Progress only resets when navigating to a new story, not when resuming
+
+### Technical Implementation:
+- **Timer Race Condition Prevention:**
+  - Added `longPressTimerId` ref to track active timer ID
+  - Timer callback checks if it's still the active timer before executing
+  - Prevents stale timer callbacks from hiding UI
+- **Touch Duration Tracking:**
+  - Added `touchStartTime` ref to detect quick taps (< 150ms)
+  - Ensures UI stays visible for quick taps on mobile
+- **State Management:**
+  - All navigation handlers now clear timers and reset UI state immediately
+  - Progress state properly preserved during pause/resume cycles
+  - Consistent behavior across desktop and mobile platforms
