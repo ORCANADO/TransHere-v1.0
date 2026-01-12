@@ -7,7 +7,6 @@ import { Model, StoryGroup } from "@/types";
 import { StoryCircle } from "./story-circle";
 import { cn } from "@/lib/utils";
 import { useViewedStories } from "@/hooks/use-viewed-stories";
-import { useStoriesRealtime } from "@/hooks/use-stories-realtime";
 
 // Lazy load StoryViewer - modal that is hidden by default, should NOT be in initial bundle
 const StoryViewer = dynamic(() => import("./story-viewer").then(mod => ({ default: mod.StoryViewer })), {
@@ -19,9 +18,6 @@ interface HomeStoriesBarProps {
 }
 
 export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
-  // Real-time updates: Listen for new story uploads
-  useStoriesRealtime();
-  
   // Read current feed from URL - only show on 'near' feed
   const [feed] = useQueryState("feed", { defaultValue: "near" });
   
@@ -29,19 +25,26 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
   const { hasUnseenStories, getFirstUnseenStoryIndex } = useViewedStories();
   
   // URL state management with nuqs - syncs with browser history
-  // Use 'replace' to avoid polluting browser history (per .cursorrules)
   const [storyId, setStoryId] = useQueryState("story", {
     defaultValue: "",
     clearOnDefault: true,
-    history: "replace",
+    history: "push",
   });
   
-  // Story index parameter for resume playback
+  // Story index parameter for resume playback (si = story index)
   const [storyIndexParam, setStoryIndexParam] = useQueryState("si", {
     defaultValue: "",
     clearOnDefault: true,
-    history: "replace",
+    history: "push",
+    parse: (value) => {
+      const parsed = parseInt(value, 10);
+      return isNaN(parsed) ? "" : parsed.toString();
+    },
+    serialize: (value) => value,
   });
+  
+  // Parse story index from URL (defaults to 0 if not provided or invalid)
+  const initialStoryIndexFromUrl = storyIndexParam ? parseInt(storyIndexParam, 10) : 0;
 
   // Only render on 'near' feed
   if (feed !== "near") {
@@ -62,18 +65,30 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
     : null;
 
   // Handle circle click - open story viewer with recent group
+  // Calculate initial index and set both URL parameters
   const handleRecentGroupClick = (groupId: string) => {
     // Find the group to calculate starting index
     const group = models
-      .flatMap(m => m.story_groups || [])
-      .find(g => g.id === groupId);
+      .flatMap((m) => m.story_groups || [])
+      .find((g) => g.id === groupId);
     
-    // Calculate starting index (resume from first unseen story)
-    const startIndex = group ? getFirstUnseenStoryIndex(group.stories || []) : 0;
-    
-    // Set both story ID and index
-    setStoryId(groupId, { history: "replace" });
-    setStoryIndexParam(startIndex > 0 ? String(startIndex) : null, { history: "replace" });
+    if (group) {
+      // Sort stories chronologically (oldest first) to match StoryViewer
+      const sortedStories = [...(group.stories || [])].sort((a, b) => {
+        const dateA = new Date(a.posted_date || a.created_at);
+        const dateB = new Date(b.posted_date || b.created_at);
+        return dateA.getTime() - dateB.getTime();
+      });
+      const startIndex = getFirstUnseenStoryIndex(sortedStories);
+      
+      // Set both parameters with replace to avoid history pollution
+      setStoryId(groupId, { history: "replace" });
+      setStoryIndexParam(startIndex.toString(), { history: "replace" });
+    } else {
+      // Fallback if group not found
+      setStoryId(groupId, { history: "replace" });
+      setStoryIndexParam("0", { history: "replace" });
+    }
   };
 
   // Handle close viewer (removes URL params)
@@ -83,7 +98,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
   };
 
   // Filter models with recent groups and extract the recent group
-  // Use useMemo to recalculate when models or viewedStoryIds change
+  // Use useMemo to optimize sorting and re-run when viewedStoryIds changes
   const modelsWithRecentGroups = useMemo(() => {
     return models
       .map((model) => {
@@ -122,6 +137,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
         };
 
         // Check if this story group has unseen stories (Visual Memory)
+        // Groups with unseen stories should appear first
         const hasUnseen = hasUnseenStories(recentGroup.stories || []);
 
         return { model, recentGroup, displayGroup, latestStoryDate, hasUnseen };
@@ -129,10 +145,9 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
       .filter((item): item is { model: Model; recentGroup: StoryGroup; displayGroup: StoryGroup; latestStoryDate: Date; hasUnseen: boolean } => item !== null)
       // Instagram-style sorting: Groups with unseen stories first, then fully viewed. Within each group, sort by newest first
       .sort((a, b) => {
-        // Primary sort: Groups with unseen stories come first
-        if (a.hasUnseen !== b.hasUnseen) {
-          return a.hasUnseen ? -1 : 1; // Unseen (true) comes before fully viewed (false)
-        }
+        // Primary sort: Groups with unseen stories first
+        if (a.hasUnseen && !b.hasUnseen) return -1;
+        if (!a.hasUnseen && b.hasUnseen) return 1;
         // Secondary sort: Newest first within same unseen status
         return b.latestStoryDate.getTime() - a.latestStoryDate.getTime();
       });
@@ -166,18 +181,29 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
 
   // Handler for navigating between models' stories
   // Use 'replace' history to avoid creating multiple back button entries
+  // Calculate and set initial index for the new group
   const handleNavigate = (id: string) => {
     // Find the group to calculate starting index
     const group = models
-      .flatMap(m => m.story_groups || [])
-      .find(g => g.id === id);
+      .flatMap((m) => m.story_groups || [])
+      .find((g) => g.id === id);
     
-    // Calculate starting index for the new group
-    const startIndex = group ? getFirstUnseenStoryIndex(group.stories || []) : 0;
-    
-    // Set both story ID and index
-    setStoryId(id, { history: 'replace' });
-    setStoryIndexParam(startIndex > 0 ? String(startIndex) : null, { history: 'replace' });
+    if (group) {
+      // Sort stories chronologically (oldest first) to match StoryViewer
+      const sortedStories = [...(group.stories || [])].sort((a, b) => {
+        const dateA = new Date(a.posted_date || a.created_at);
+        const dateB = new Date(b.posted_date || b.created_at);
+        return dateA.getTime() - dateB.getTime();
+      });
+      const startIndex = getFirstUnseenStoryIndex(sortedStories);
+      
+      setStoryId(id, { history: 'replace' });
+      setStoryIndexParam(startIndex.toString(), { history: 'replace' });
+    } else {
+      // Fallback if group not found
+      setStoryId(id, { history: 'replace' });
+      setStoryIndexParam("0", { history: 'replace' });
+    }
   };
 
   return (
@@ -204,12 +230,20 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
 
       {/* Story Viewer Modal - Render when URL param exists and group is found */}
       {storyId && selectedGroup && selectedModel && (() => {
-        // Get starting story index from URL or calculate fresh
-        // If URL has index, use it (for resume on reopen)
-        // Otherwise, calculate from first unseen story (for new opens)
-        const urlIndex = storyIndexParam ? parseInt(storyIndexParam, 10) : null;
-        const calculatedIndex = getFirstUnseenStoryIndex(selectedGroup.stories || []);
-        const startIndex = urlIndex !== null && !isNaN(urlIndex) ? urlIndex : calculatedIndex;
+        // Use index from URL if valid, otherwise calculate from first unseen story
+        // This allows resume-on-reopen within the same session
+        let initialStoryIndex = initialStoryIndexFromUrl;
+        
+        // Validate index is within bounds
+        if (initialStoryIndex < 0 || initialStoryIndex >= (selectedGroup.stories?.length || 0)) {
+          // Recalculate if URL index is invalid
+          const sortedStories = [...(selectedGroup.stories || [])].sort((a, b) => {
+            const dateA = new Date(a.posted_date || a.created_at);
+            const dateB = new Date(b.posted_date || b.created_at);
+            return dateA.getTime() - dateB.getTime();
+          });
+          initialStoryIndex = getFirstUnseenStoryIndex(sortedStories);
+        }
         
         return (
           <StoryViewer
@@ -223,7 +257,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
             nextGroupId={nextGroupId}
             prevGroupId={prevGroupId}
             onNavigate={handleNavigate}
-            initialStoryIndex={startIndex}
+            initialStoryIndex={initialStoryIndex}
           />
         );
       })()}

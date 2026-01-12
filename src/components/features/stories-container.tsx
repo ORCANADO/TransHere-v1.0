@@ -6,7 +6,6 @@ import dynamic from "next/dynamic";
 import { StoryGroup } from "@/types";
 import { StoryCircle } from "./story-circle";
 import { useViewedStories } from "@/hooks/use-viewed-stories";
-import { useStoriesRealtime } from "@/hooks/use-stories-realtime";
 
 // Lazy load StoryViewer - modal that is hidden by default, should NOT be in initial bundle
 const StoryViewer = dynamic(() => import("./story-viewer").then(mod => ({ default: mod.StoryViewer })), {
@@ -15,7 +14,6 @@ const StoryViewer = dynamic(() => import("./story-viewer").then(mod => ({ defaul
 
 interface StoriesContainerProps {
   groups?: StoryGroup[];
-  originalGroups?: StoryGroup[]; // Full unfiltered groups for memory checks
   socialLink?: string;
   modelName?: string;
   modelImage?: string;
@@ -23,39 +21,38 @@ interface StoriesContainerProps {
   isVerified?: boolean;
 }
 
-export function StoriesContainer({ groups, originalGroups, socialLink, modelName, modelImage, modelSlug, isVerified }: StoriesContainerProps) {
-  // Real-time updates: Listen for new story uploads
-  useStoriesRealtime();
-  
+export function StoriesContainer({ groups, socialLink, modelName, modelImage, modelSlug, isVerified }: StoriesContainerProps) {
   // Visual Memory: Track which stories have been viewed
-  const { getFirstUnseenStoryIndex, hasUnseenStories } = useViewedStories();
+  const { getFirstUnseenStoryIndex } = useViewedStories();
   
   // URL state management with nuqs - syncs with browser history
-  // Use 'replace' to avoid polluting browser history (per .cursorrules)
+  // history: 'push' creates entries in browser history for back button support
   const [storyId, setStoryId] = useQueryState("story", {
     defaultValue: "",
     clearOnDefault: true,
-    history: "replace",
+    history: "push",
   });
   
-  // Story index parameter for resume playback
+  // Story index parameter for resume playback (si = story index)
   const [storyIndexParam, setStoryIndexParam] = useQueryState("si", {
     defaultValue: "",
     clearOnDefault: true,
-    history: "replace",
+    history: "push",
+    parse: (value) => {
+      const parsed = parseInt(value, 10);
+      return isNaN(parsed) ? "" : parsed.toString();
+    },
+    serialize: (value) => value,
   });
+  
+  // Parse story index from URL (defaults to 0 if not provided or invalid)
+  const initialStoryIndexFromUrl = storyIndexParam ? parseInt(storyIndexParam, 10) : 0;
 
   // Safety check: Return null if groups is undefined or empty
   // This allows the layout to collapse neatly when no stories are available
   if (!groups || groups.length === 0) {
     return null;
   }
-
-  // Create a map of original groups for memory checks
-  const originalGroupsMap = useMemo(() => {
-    if (!originalGroups) return new Map<string, StoryGroup>();
-    return new Map(originalGroups.map(g => [g.id, g]));
-  }, [originalGroups]);
 
   // Separate pinned and feed groups for isolated navigation
   const pinnedGroups = useMemo(
@@ -98,19 +95,27 @@ export function StoriesContainer({ groups, originalGroups, socialLink, modelName
   }, [selectedGroup, pinnedGroups, feedGroups]);
 
   // Handle circle click - open story viewer (updates URL)
+  // Calculate initial index and set both URL parameters
   const handleStoryClick = (groupId: string) => {
-    // Find the original group (with all stories) to calculate starting index
-    const originalGroup = originalGroupsMap.get(groupId);
-    const group = groups?.find(g => g.id === groupId);
-    const groupToUse = originalGroup || group;
+    const group = groups.find((g) => g.id === groupId);
     
-    // Calculate starting index (resume from first unseen story)
-    // Use original group's full stories array, not the filtered one
-    const startIndex = groupToUse ? getFirstUnseenStoryIndex(groupToUse.stories || []) : 0;
-    
-    // Set both story ID and index
-    setStoryId(groupId, { history: "replace" });
-    setStoryIndexParam(startIndex > 0 ? String(startIndex) : null, { history: "replace" });
+    if (group) {
+      // Sort stories chronologically (oldest first) to match StoryViewer
+      const sortedStories = [...(group.stories || [])].sort((a, b) => {
+        const dateA = new Date(a.posted_date || a.created_at);
+        const dateB = new Date(b.posted_date || b.created_at);
+        return dateA.getTime() - dateB.getTime();
+      });
+      const startIndex = getFirstUnseenStoryIndex(sortedStories);
+      
+      // Set both parameters with push for initial open (allows back button)
+      setStoryId(groupId);
+      setStoryIndexParam(startIndex.toString());
+    } else {
+      // Fallback if group not found
+      setStoryId(groupId);
+      setStoryIndexParam("0");
+    }
   };
 
   // Handle close viewer (removes URL params)
@@ -120,19 +125,26 @@ export function StoriesContainer({ groups, originalGroups, socialLink, modelName
   };
 
   // Handle navigation between groups (uses replace to avoid history pollution)
+  // Calculate and set initial index for the new group
   const handleNavigate = (groupId: string) => {
-    // Find the original group (with all stories) to calculate starting index
-    const originalGroup = originalGroupsMap.get(groupId);
-    const group = groups?.find(g => g.id === groupId);
-    const groupToUse = originalGroup || group;
+    const group = groups.find((g) => g.id === groupId);
     
-    // Calculate starting index for the new group
-    // Use original group's full stories array, not the filtered one
-    const startIndex = groupToUse ? getFirstUnseenStoryIndex(groupToUse.stories || []) : 0;
-    
-    // Set both story ID and index
-    setStoryId(groupId, { history: "replace" });
-    setStoryIndexParam(startIndex > 0 ? String(startIndex) : null, { history: "replace" });
+    if (group) {
+      // Sort stories chronologically (oldest first) to match StoryViewer
+      const sortedStories = [...(group.stories || [])].sort((a, b) => {
+        const dateA = new Date(a.posted_date || a.created_at);
+        const dateB = new Date(b.posted_date || b.created_at);
+        return dateA.getTime() - dateB.getTime();
+      });
+      const startIndex = getFirstUnseenStoryIndex(sortedStories);
+      
+      setStoryId(groupId, { history: "replace" });
+      setStoryIndexParam(startIndex.toString(), { history: "replace" });
+    } else {
+      // Fallback if group not found
+      setStoryId(groupId, { history: "replace" });
+      setStoryIndexParam("0", { history: "replace" });
+    }
   };
 
   return (
@@ -141,22 +153,17 @@ export function StoriesContainer({ groups, originalGroups, socialLink, modelName
       {/* -mx-4 breaks out of parent's px-4 padding, w-[calc(100%+2rem)] compensates for full width */}
       <div className="lg:hidden w-[calc(100%+2rem)] overflow-x-auto scrollbar-hide -mx-4 bg-background/30 backdrop-blur-xl border-y border-white/10">
         <div className="flex gap-3 py-4 px-1">
-          {groups.map((group, index) => {
-            // Use original group (with all stories) for memory checks, filtered group for display
-            const originalGroup = originalGroupsMap.get(group.id) || group;
-            return (
-              <div 
-                key={group.id} 
-                className={index === groups.length - 1 ? "pr-4" : ""}
-              >
-                <StoryCircle
-                  group={group}
-                  allStories={originalGroup.stories}
-                  onClick={() => handleStoryClick(group.id)}
-                />
-              </div>
-            );
-          })}
+          {groups.map((group, index) => (
+            <div 
+              key={group.id} 
+              className={index === groups.length - 1 ? "pr-4" : ""}
+            >
+              <StoryCircle
+                group={group}
+                onClick={() => handleStoryClick(group.id)}
+              />
+            </div>
+          ))}
         </div>
       </div>
 
@@ -166,53 +173,38 @@ export function StoriesContainer({ groups, originalGroups, socialLink, modelName
           Stories
         </h3>
         <div className="flex flex-col gap-4">
-          {groups.map((group) => {
-            // Use original group (with all stories) for memory checks, filtered group for display
-            const originalGroup = originalGroupsMap.get(group.id) || group;
-            return (
-              <StoryCircle
-                key={group.id}
-                group={group}
-                allStories={originalGroup.stories}
-                onClick={() => handleStoryClick(group.id)}
-              />
-            );
-          })}
+          {groups.map((group) => (
+            <StoryCircle
+              key={group.id}
+              group={group}
+              onClick={() => handleStoryClick(group.id)}
+            />
+          ))}
         </div>
       </div>
 
       {/* Story Viewer Modal - Render when URL param exists and group is found */}
       {storyId && selectedGroup && (() => {
-        // Use original group (with all stories) for StoryViewer, not the filtered one
-        const originalGroup = originalGroupsMap.get(selectedGroup.id) || selectedGroup;
+        // Use index from URL if valid, otherwise calculate from first unseen story
+        // This allows resume-on-reopen within the same session
+        let initialStoryIndex = initialStoryIndexFromUrl;
         
-        // Determine which list the selected group belongs to
-        const isPinned = selectedGroup.is_pinned;
-        const relevantList = isPinned ? pinnedGroups : feedGroups;
+        // Validate index is within bounds
+        if (initialStoryIndex < 0 || initialStoryIndex >= (selectedGroup.stories?.length || 0)) {
+          // Recalculate if URL index is invalid
+          // Use the FULL stories array from the group (not a truncated preview)
+          // Stories are sorted chronologically (oldest first) in StoryViewer
+          const sortedStories = [...(selectedGroup.stories || [])].sort((a, b) => {
+            const dateA = new Date(a.posted_date || a.created_at);
+            const dateB = new Date(b.posted_date || b.created_at);
+            return dateA.getTime() - dateB.getTime();
+          });
+          initialStoryIndex = getFirstUnseenStoryIndex(sortedStories);
+        }
         
-        // Find current index in the relevant list
-        const currentIndex = relevantList.findIndex((g) => g.id === selectedGroup.id);
-        
-        // Get next and previous groups for preview
-        const nextGroup = currentIndex >= 0 && currentIndex < relevantList.length - 1
-          ? relevantList[currentIndex + 1]
-          : null;
-        const prevGroup = currentIndex > 0
-          ? relevantList[currentIndex - 1]
-          : null;
-        
-        // Get starting story index from URL or calculate fresh
-        // If URL has index, use it (for resume on reopen)
-        // Otherwise, calculate from first unseen story (for new opens)
-        // Use the FULL stories array from the original group (not a truncated preview)
-        const urlIndex = storyIndexParam ? parseInt(storyIndexParam, 10) : null;
-        const calculatedIndex = getFirstUnseenStoryIndex(originalGroup.stories || []);
-        const initialStoryIndex = urlIndex !== null && !isNaN(urlIndex) ? urlIndex : calculatedIndex;
-        
-        // Create preview data - use first story image from next/prev group (Instagram-style)
         return (
           <StoryViewer
-            group={originalGroup}
+            group={selectedGroup}
             onClose={handleCloseViewer}
             socialLink={socialLink}
             modelName={modelName}

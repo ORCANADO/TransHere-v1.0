@@ -7,22 +7,17 @@ import { useViewedStories } from "@/hooks/use-viewed-stories";
 
 interface StoryCircleProps {
   group: StoryGroup;
-  allStories?: Array<{ id: string }>; // Optional: full stories array for memory checks (when group is filtered)
   onClick: () => void;
 }
 
-export function StoryCircle({ group, allStories, onClick }: StoryCircleProps) {
+export function StoryCircle({ group, onClick }: StoryCircleProps) {
   const { hasUnseenStories } = useViewedStories();
   const coverUrl = getImageUrl(group.cover_url);
   const displayTitle = group.title || "Recent";
   
-  // For memory checks, use allStories (full array) if provided, otherwise use group.stories
-  // This ensures we check against ALL stories in the group, not just the filtered/displayed ones
-  const storiesForMemoryCheck = allStories || group.stories || [];
-  
   // For recent (non-pinned) groups, check if ALL stories have been seen
   // For pinned groups, always show as "viewed" (gray ring) since they don't have the seen dynamic
-  const isGroupViewed = group.is_pinned ? true : !hasUnseenStories(storiesForMemoryCheck);
+  const isGroupViewed = group.is_pinned ? true : !hasUnseenStories(group.stories || []);
 
   return (
     <button
@@ -34,12 +29,10 @@ export function StoryCircle({ group, allStories, onClick }: StoryCircleProps) {
       <div
         className={cn(
           "w-[76px] h-[76px] rounded-full p-[2.5px] transition-all duration-300 shadow-lg",
-          // Pinned: Always gray ring (no seen/unseen dynamic)
-          group.is_pinned && "bg-muted-foreground/40 shadow-black/20",
-          // Recent (not pinned) + Viewed: Glass gray ring
-          !group.is_pinned && isGroupViewed && "bg-muted-foreground/40 shadow-black/20",
-          // Recent (not pinned) + Unviewed: Electric Emerald to Rich Gold gradient with glow
-          !group.is_pinned && !isGroupViewed && "bg-gradient-to-tr from-[#00FF85] via-[#D4AF37] to-[#7A27FF] shadow-[0_0_15px_rgba(0,255,133,0.4)]"
+          // Viewed stories: Glass gray ring
+          isGroupViewed && "bg-white/20 shadow-black/20",
+          // Unviewed + Recent (not pinned): Electric Emerald to Rich Gold gradient with glow
+          !isGroupViewed && "bg-gradient-to-tr from-[#00FF85] via-[#D4AF37] to-[#7A27FF] shadow-[0_0_15px_rgba(0,255,133,0.4)]"
         )}
       >
         {/* Glass border container */}

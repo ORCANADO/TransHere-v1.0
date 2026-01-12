@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { X, Share2, Check, Link2, ChevronLeft, ChevronRight } from "lucide-react";
@@ -68,10 +68,21 @@ export function StoryViewer({
   // Share hook
   const { share, copyAndGo, isCopied, isCopiedAndGo } = useShare();
   
-  // Viewed stories hook
+  // Visual Memory hook - track viewed stories
   const { markStoryAsViewed } = useViewedStories();
 
-  // Local state
+  // Sort stories chronologically (oldest first) so they play in order
+  // Most recent story should be at the END of the sequence
+  // Memoize to prevent unnecessary recalculations
+  const stories = useMemo(() => {
+    return [...(group.stories || [])].sort((a, b) => {
+      const dateA = new Date(a.posted_date || a.created_at);
+      const dateB = new Date(b.posted_date || b.created_at);
+      return dateA.getTime() - dateB.getTime(); // Ascending: oldest first, newest last
+    });
+  }, [group.stories]);
+
+  // Local state - initialize with prop if provided, otherwise 0
   const [currentStoryIndex, setCurrentStoryIndex] = useState(initialStoryIndex ?? 0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -112,13 +123,6 @@ export function StoryViewer({
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Sort stories chronologically (oldest first) so they play in order
-  // Most recent story should be at the END of the sequence
-  const stories = [...(group.stories || [])].sort((a, b) => {
-    const dateA = new Date(a.posted_date || a.created_at);
-    const dateB = new Date(b.posted_date || b.created_at);
-    return dateA.getTime() - dateB.getTime(); // Ascending: oldest first, newest last
-  });
   const currentStory = stories[currentStoryIndex];
   // Double duration in model profile (since pause is disabled)
   const baseDuration = currentStory?.duration || 5;
@@ -341,6 +345,10 @@ export function StoryViewer({
       // Auto-advance when complete
       if (newProgress >= 100) {
         clearInterval(progressInterval);
+        // Mark current story as viewed when it completes
+        if (currentStory?.id) {
+          markStoryAsViewed(currentStory.id);
+        }
         goToNext();
       }
     }, 16); // ~60fps update rate
@@ -350,6 +358,14 @@ export function StoryViewer({
     };
   }, [currentStoryIndex, currentStory, isPaused, duration, goToNext, pausedProgress]);
 
+  // Mark story as viewed when displayed
+  useEffect(() => {
+    const currentStory = stories[currentStoryIndex];
+    if (currentStory?.id) {
+      markStoryAsViewed(currentStory.id);
+    }
+  }, [currentStoryIndex, stories, markStoryAsViewed]);
+
   // Reset progress when story index changes (new story, not resume)
   useEffect(() => {
     if (!currentStory) return;
@@ -357,12 +373,6 @@ export function StoryViewer({
     setProgress(0);
     setPausedProgress(0);
   }, [currentStoryIndex, currentStory]);
-
-  // Reset progress when story changes
-  useEffect(() => {
-    setProgress(0);
-    setPausedProgress(0);
-  }, [currentStoryIndex, group.id]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -391,16 +401,9 @@ export function StoryViewer({
     document.body.classList.add('story-open');
   }, []);
 
-  // Mark story as viewed when displayed
+  // Reset state when group changes - use initialStoryIndex if provided
   useEffect(() => {
-    const currentStory = stories[currentStoryIndex];
-    if (currentStory?.id) {
-      markStoryAsViewed(currentStory.id);
-    }
-  }, [currentStoryIndex, stories, markStoryAsViewed]);
-
-  // Reset state when group changes
-  useEffect(() => {
+    // Reset to initialStoryIndex when group changes (resume playback)
     setCurrentStoryIndex(initialStoryIndex ?? 0);
     setIsAnimating(false);
     setIsPaused(false);
@@ -420,7 +423,8 @@ export function StoryViewer({
     }, 400);
     
     return () => clearTimeout(resetTimer);
-  }, [group.id, initialStoryIndex]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [group.id, initialStoryIndex]); // Depend on group.id and initialStoryIndex
 
   // Handle screen tap navigation (for stories within same group)
   // Only triggers if it's a tap (not a swipe)

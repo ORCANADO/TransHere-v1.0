@@ -308,16 +308,14 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
 - [x] **Implementation:** Conditional rendering based on `disableLongPress` prop and story count
 - [x] **Condition:** `(!disableLongPress || stories.length > 1)` ensures main layout always shows bars, model profile shows only for multiple stories
 
-* **[x] Phase 5.10: Instagram-Style Story View Tracking & Real-Time Updates**
-- [x] **Story-Level Tracking:** Migrated from group IDs to individual story IDs for precise view tracking
+* **[x] Phase 5.10: Instagram-Style Story View Tracking**
+- [x] **Story-Level Tracking:** Migrated from group IDs to individual story IDs in localStorage
 - [x] **Smart Resume:** Stories resume from oldest unseen story using `getFirstUnseenStoryIndex`
-- [x] **Group Seen Logic:** Group marked seen only when ALL stories viewed (Instagram behavior)
-- [x] **New Story Detection:** Previously-seen groups become unseen when new story added
-- [x] **Unified State:** Main layout and model profile share same viewed state via localStorage
-- [x] **URL Persistence:** Resume index stored in URL parameter `?si=INDEX` for shareable deep links
-- [x] **Real-Time Updates:** Implemented Supabase Realtime subscriptions for instant story appearance
-- [x] **Auto-Refresh:** New stories appear immediately after upload without page reload
-- [x] **Zero-Cost Solution:** Uses Supabase free tier Realtime feature
+- [x] **Group Seen Logic:** Group marked seen only when ALL stories viewed (`isGroupFullyViewed`)
+- [x] **New Story Detection:** Previously-seen groups become unseen when new story added (automatic via `hasUnseenStories`)
+- [x] **Unified State:** Main layout and model profile share same viewed state (cross-component sync)
+- [x] **URL Persistence:** Added `?si=INDEX` parameter for resume playback across navigation
+- [x] **Visual Indicators:** Gradient ring for unseen groups, gray ring for fully viewed groups
 
 ---
 

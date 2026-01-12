@@ -139,13 +139,6 @@ Do not use `useRouter().push` for external links.
   - **Resume Playback:** `getFirstUnseenStoryIndex(stories)` returns the index of the oldest unseen story for resume
   - **Group Seen Status:** A group is marked as "seen" (gray ring) only when ALL stories inside have been viewed
   - **New Story Alert:** If a model uploads a new story to a previously-seen group, the group automatically shows as unseen (gradient ring)
-  - **Story Marking:** Stories are automatically marked as viewed when displayed in StoryViewer (via `useEffect` on `currentStoryIndex`)
-- **Real-Time Story Updates:**
-  - Use `useStoriesRealtime` hook in `HomeStoriesBar` and `StoriesContainer` to listen for new story uploads
-  - Subscribes to Supabase Realtime events on `stories` and `story_groups` tables
-  - Automatically calls `router.refresh()` when INSERT events are detected
-  - Requires Realtime to be enabled in Supabase Dashboard for `stories` and `story_groups` tables
-  - Zero-cost solution using Supabase's free tier Realtime feature
 
 ### 2.15 Category Pills & Filtering
 - **Frequency Algorithm:** Display top 15 most-used tags (calculated server-side).
@@ -227,21 +220,27 @@ Do not use `useRouter().push` for external links.
 
 ### 2.19 Story Visual Memory System
 - **Hook:** `useViewedStories` in `src/hooks/use-viewed-stories.ts`
-  - Storage key: `'transpot-viewed-stories'`
+  - Storage key: `'transpot-viewed-story-ids'` (tracks individual story IDs, not group IDs)
   - Hydration-safe: Loads from localStorage only after client mount
-  - Functions: `markAsViewed(id)`, `isViewed(id)`, `viewedIds` array
-  - **Real-Time Sync:** Custom events (`viewedStoriesUpdated`) + storage events for cross-component/cross-tab sync
+  - Functions: `markStoryAsViewed(storyId)`, `isStoryViewed(storyId)`, `hasUnseenStories(stories[])`, `getFirstUnseenStoryIndex(stories[])`, `isGroupFullyViewed(stories[])`, `viewedStoryIds` array
+  - **Real-Time Sync:** Custom events (`viewedStoryIdsUpdated`) + storage events for cross-component/cross-tab sync
 - **StoryCircle Visual States:**
-  - **Unviewed:** Electric Emerald → Gold → Violet gradient ring (`bg-gradient-to-tr from-[#00FF85] via-[#D4AF37] to-[#7A27FF]`)
-  - **Viewed:** Gray ring (`bg-muted-foreground/40`)
+  - **Unviewed (Recent Groups):** Electric Emerald → Gold → Violet gradient ring (`bg-gradient-to-tr from-[#00FF85] via-[#D4AF37] to-[#7A27FF]`) when `hasUnseenStories(group.stories)` is true
+  - **Viewed (Recent Groups):** Gray ring (`bg-muted-foreground/40`) when all stories are viewed
+  - **Pinned Groups:** Always gray ring (pinned stories don't have seen/unseen dynamic)
   - **Transition:** 300ms for smooth visual feedback
 - **Story Sorting (Instagram-Style):**
-  - **Primary:** Unviewed stories appear first (left side of `HomeStoriesBar`)
-  - **Secondary:** Within each group (viewed/unviewed), newest stories first
-  - **Auto-Update:** Viewed stories automatically move to end when viewed (no page reload needed)
+  - **Primary:** Groups with unseen stories appear first (left side of `HomeStoriesBar`)
+  - **Secondary:** Within each category (unseen/seen), newest stories first
+  - **Auto-Update:** Groups automatically move to end when all stories are viewed (no page reload needed)
+- **Resume Playback:**
+  - Stories resume from oldest unseen story using `getFirstUnseenStoryIndex(stories)`
+  - If all stories seen, playback starts from index 0
+  - Works consistently across main layout and model profile
 - **Implementation:**
-  - StoryCircle calls `markAsViewed(groupId)` on click
-  - HomeStoriesBar uses `isViewed(groupId)` for sorting logic
+  - StoryViewer marks individual stories as viewed when displayed via `markStoryAsViewed(storyId)`
+  - StoryCircle uses `hasUnseenStories(group.stories)` to determine ring color
+  - HomeStoriesBar uses `hasUnseenStories` for sorting logic
   - Real-time sync ensures all components update instantly
 
 ### 2.20 Real-Time Synchronization (localStorage Hooks)

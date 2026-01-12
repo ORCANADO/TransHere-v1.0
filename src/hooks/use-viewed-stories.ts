@@ -21,23 +21,8 @@ export function useViewedStories() {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
-          // Handle migration from old formats
-          if (Array.isArray(parsed)) {
-            if (parsed.length > 0) {
-              // Check if old format (ViewedStory[] with groupId)
-              if (typeof parsed[0] === 'object' && 'groupId' in parsed[0]) {
-                // Old format: can't recover individual story IDs, start fresh
-                setViewedStoryIds([]);
-                // Save new format
-                localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-              } else if (typeof parsed[0] === 'string') {
-                // New format: array of story IDs
-                setViewedStoryIds(parsed);
-              }
-            } else {
-              // Empty array
-              setViewedStoryIds([]);
-            }
+          if (Array.isArray(parsed) && parsed.every((id) => typeof id === "string")) {
+            setViewedStoryIds(parsed);
           }
         }
       } catch (error) {
@@ -54,7 +39,7 @@ export function useViewedStories() {
       if (e.key === STORAGE_KEY && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
-          if (Array.isArray(parsed) && parsed.every((id) => typeof id === 'string')) {
+          if (Array.isArray(parsed) && parsed.every((id) => typeof id === "string")) {
             setViewedStoryIds(parsed);
           }
         } catch (error) {
@@ -83,13 +68,15 @@ export function useViewedStories() {
   // Persist to localStorage whenever viewedStoryIds changes (after hydration)
   useEffect(() => {
     if (!isMounted) return;
-    
+
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(viewedStoryIds));
       // Dispatch custom event for same-window sync (storage event only works cross-tab)
-      window.dispatchEvent(new CustomEvent("viewedStoryIdsUpdated", { 
-        detail: { viewedStoryIds } 
-      }));
+      window.dispatchEvent(
+        new CustomEvent("viewedStoryIdsUpdated", {
+          detail: { viewedStoryIds },
+        })
+      );
     } catch (error) {
       // localStorage full or unavailable - fail silently
       console.warn("Failed to save viewed story IDs to localStorage:", error);
@@ -101,9 +88,8 @@ export function useViewedStories() {
    */
   const markStoryAsViewed = useCallback((storyId: string) => {
     setViewedStoryIds((prev) => {
-      // Avoid duplicates
       if (prev.includes(storyId)) {
-        return prev;
+        return prev; // Already viewed, no change needed
       }
       return [...prev, storyId];
     });
@@ -122,7 +108,7 @@ export function useViewedStories() {
 
   /**
    * Check if ALL stories in a group are viewed (Instagram behavior).
-   * Returns false if not mounted, empty array, or any story is unviewed.
+   * Returns false if group is empty or not mounted.
    */
   const isGroupFullyViewed = useCallback(
     (stories: Array<{ id: string }>): boolean => {
@@ -134,7 +120,7 @@ export function useViewedStories() {
 
   /**
    * Check if group has ANY unseen stories (inverse of fully viewed).
-   * Returns true if not mounted or empty array (default to unseen).
+   * Returns true by default if not mounted (assumes unseen).
    */
   const hasUnseenStories = useCallback(
     (stories: Array<{ id: string }>): boolean => {

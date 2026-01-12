@@ -609,7 +609,7 @@
   - Ensures main layout always shows progress bars regardless of story count
   - Model profile only shows progress bars when multiple stories exist
 
-## [2026-01-11] - Phase 5.10: Instagram-Style Story View Tracking & Real-Time Updates
+## [2026-01-11] - Phase 5.10: Instagram-Style Story View Tracking
 **Status:** Complete
 
 ### Story-Level View Tracking:
@@ -631,25 +631,16 @@
 - Stories resume from oldest unseen story, not from beginning
 - If all stories seen, playback starts from index 0
 - Works consistently across main layout and model profile
-- URL parameter `?si=INDEX` stores resume position for persistence
+- URL state includes `?story=GROUP_ID&si=INDEX` for persistence across navigation
 
 ### Cross-Component Sync:
 - Same localStorage key used everywhere
-- Real-time sync via custom events + storage events
+- Real-time sync via custom events (`viewedStoryIdsUpdated`) + storage events
 - Viewing story on model profile updates main layout instantly
+- No manual refresh required for state consistency
 
 ### Component Updates:
-- **StoryViewer:** Automatically marks stories as viewed when displayed (via `useEffect` on `currentStoryIndex`)
+- **StoryViewer:** Marks stories as viewed when displayed, accepts `initialStoryIndex` prop
 - **StoryCircle:** Uses `hasUnseenStories` to determine ring color
-- **HomeStoriesBar:** Sorts groups by unseen status, calculates and passes `initialStoryIndex` to StoryViewer
-- **StoriesContainer:** Calculates and passes `initialStoryIndex` for resume playback
-
-### Real-Time Story Updates:
-- **New Hook:** Created `useStoriesRealtime` hook to listen for new story uploads
-- **Implementation:** Subscribes to Supabase Realtime events on `stories` and `story_groups` tables
-- **Auto-Refresh:** Automatically calls `router.refresh()` when INSERT events are detected
-- **Zero-Cost:** Uses Supabase's free tier Realtime feature (no additional costs)
-- **Setup:** Requires Realtime to be enabled in Supabase Dashboard for `stories` and `story_groups` tables
-- **Integration:** Hook added to both `HomeStoriesBar` and `StoriesContainer` components
-- **Migration:** Created `013_enable_stories_realtime.sql` (optional - dashboard UI handles it)
-- **UX Impact:** New stories appear immediately after upload without manual page refresh
+- **HomeStoriesBar:** Sorts by unseen status, calculates and passes initial index
+- **StoriesContainer:** Calculates initial index for model profile stories
