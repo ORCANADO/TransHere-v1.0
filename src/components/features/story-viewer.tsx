@@ -236,6 +236,15 @@ export function StoryViewer({
 
   // Navigation helpers - Story transitions
   const handleNextStory = useCallback(() => {
+    // Clear any pending long press timer to prevent UI from hiding
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    // Ensure UI is visible when navigating
+    setIsUIHidden(false);
+    setIsLongPress(false);
+    
     if (currentStoryIndex < stories.length - 1) {
       setAnimationType('story');
       setIsAnimating(false);
@@ -249,6 +258,15 @@ export function StoryViewer({
   }, [currentStoryIndex, stories.length]);
 
   const handlePrevStory = useCallback(() => {
+    // Clear any pending long press timer to prevent UI from hiding
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    // Ensure UI is visible when navigating
+    setIsUIHidden(false);
+    setIsLongPress(false);
+    
     if (currentStoryIndex > 0) {
       setAnimationType('story');
       setIsAnimating(false);
