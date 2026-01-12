@@ -229,7 +229,7 @@ export default async function ModelPage({ params }: PageProps) {
               <div className="space-y-6">
                 {/* Name, Verified Badge, New Badge with Online Dot - Sticky at top */}
                 <div className="flex flex-col gap-2 lg:sticky lg:top-0 lg:z-10 lg:bg-background lg:pt-0 lg:-mt-4 lg:pb-2">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap lg:flex-nowrap">
                     <h1 className="text-3xl font-bold lg:text-[1.6875rem]">{model.name}</h1>
                     {model.is_verified && (
                       <img
@@ -240,12 +240,20 @@ export default async function ModelPage({ params }: PageProps) {
                         height={24}
                       />
                     )}
-                    {/* Online dot - Only for non-new profiles, inline with name */}
-                    {!model.is_new && <StatusIndicator />}
+                    {/* New Badge with Online Dot - Inline on desktop, below on mobile */}
+                    {model.is_new ? (
+                      <span className="inline-flex items-center gap-2 px-3 py-1 pr-2 rounded-full text-xs font-semibold bg-[#7A27FF]/50 backdrop-blur-xl text-white border border-[#7A27FF]/50 shadow-[0_0_15px_rgba(122,39,255,0.4)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8),0_1px_2px_rgba(0,0,0,0.6)] w-fit lg:flex-shrink-0">
+                        New
+                        <StatusIndicator />
+                      </span>
+                    ) : (
+                      /* Online dot - Only for non-new profiles, inline with name */
+                      <StatusIndicator />
+                    )}
                   </div>
-                  {/* New Badge with Online Dot - Below name, only for new profiles */}
+                  {/* New Badge - Mobile only, below name */}
                   {model.is_new && (
-                    <span className="inline-flex items-center gap-2 px-3 py-1 pr-2 rounded-full text-xs font-semibold bg-[#7A27FF]/50 backdrop-blur-xl text-white border border-[#7A27FF]/50 shadow-[0_0_15px_rgba(122,39,255,0.4)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8),0_1px_2px_rgba(0,0,0,0.6)] w-fit">
+                    <span className="inline-flex items-center gap-2 px-3 py-1 pr-2 rounded-full text-xs font-semibold bg-[#7A27FF]/50 backdrop-blur-xl text-white border border-[#7A27FF]/50 shadow-[0_0_15px_rgba(122,39,255,0.4)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8),0_1px_2px_rgba(0,0,0,0.6)] w-fit lg:hidden">
                       New
                       <StatusIndicator />
                     </span>
