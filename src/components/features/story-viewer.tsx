@@ -843,6 +843,11 @@ export function StoryViewer({
             }}
             onPointerUp={(e) => {
               e.stopPropagation();
+              // Always clear long press timer on pointer up (especially important for mobile)
+              if (longPressTimerRef.current) {
+                clearTimeout(longPressTimerRef.current);
+                longPressTimerRef.current = null;
+              }
               if (!disableLongPress) handleMouseUp();
               if (!isDesktop) handleSwipeEnd(e);
             }}
