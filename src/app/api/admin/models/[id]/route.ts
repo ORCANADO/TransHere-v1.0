@@ -105,7 +105,6 @@ export async function PUT(
     if (body.slug !== undefined) updateData.slug = body.slug;
     if (body.bio !== undefined) updateData.bio = body.bio;
     if (body.bio_es !== undefined) updateData.bio_es = body.bio_es;
-    if (body.age !== undefined) updateData.age = body.age;
     if (body.tags !== undefined) updateData.tags = body.tags;
     if (body.social_link !== undefined) updateData.social_link = body.social_link;
     if (body.image_url !== undefined) updateData.image_url = body.image_url;
