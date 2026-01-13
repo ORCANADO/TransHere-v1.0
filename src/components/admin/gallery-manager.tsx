@@ -133,43 +133,25 @@ export function GalleryManager({
       const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const filename = `${modelSlug}/${timestamp}-${sanitizedName}`;
 
-      // Get presigned URL - specify 'models' bucket for gallery items
-      setUploadProgress(`Getting upload URL for ${file.name}...`);
-      const presignRes = await fetch(`/api/upload?key=${adminKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filename,
-          contentType,
-          bucket: 'models', // Gallery items go to models bucket
-        }),
-      });
-
-      if (!presignRes.ok) {
-        throw new Error('Failed to get upload URL');
-      }
-
-      const { uploadUrl, key } = await presignRes.json();
-
-      // Upload file to R2
+      // Use proxy upload to avoid CORS issues
       setUploadProgress(`Uploading ${file.name}...`);
-      const uploadRes = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': contentType,
-          'Cache-Control': 'public, max-age=31536000, immutable',
-        },
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('filename', filename);
+      formData.append('contentType', contentType);
+      formData.append('bucket', 'models'); // Gallery items go to models bucket
+
+      const uploadRes = await fetch(`/api/upload/proxy?key=${adminKey}`, {
+        method: 'POST',
+        body: formData,
       });
 
       if (!uploadRes.ok) {
-        throw new Error('Failed to upload file');
+        const error = await uploadRes.json();
+        throw new Error(error.error || 'Failed to upload file');
       }
 
-      // The upload API returns key with "stories/" prefix, but for gallery items
-      // we want the model-slug path. For now, we'll use the key as-is and note
-      // that the upload API may need to be enhanced to support custom paths.
-      // TODO: Enhance upload API to support gallery item paths without "stories/" prefix
+      const { key } = await uploadRes.json();
       return key;
     } catch (err) {
       console.error('Upload error:', err);

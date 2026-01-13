@@ -1,5 +1,4 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
 
 export const runtime = "edge";
@@ -7,7 +6,6 @@ export const runtime = "edge";
 const ADMIN_KEY = process.env.ADMIN_KEY || "admin123";
 
 // Initialize S3Client for Cloudflare R2
-// Support both R2_ENDPOINT (full URL) and R2_ACCOUNT_ID (construct URL)
 function getS3Client() {
   const endpoint = process.env.R2_ENDPOINT 
     || `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
@@ -22,9 +20,10 @@ function getS3Client() {
   });
 }
 
+// POST - Proxy upload to R2 (avoids CORS issues)
 export async function POST(request: Request) {
   try {
-    // Security check - validate admin key
+    // Security check
     const { searchParams } = new URL(request.url);
     const key = searchParams.get("key");
 
@@ -32,27 +31,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { filename, contentType, bucket } = body;
+    const formData = await request.formData();
+    const file = formData.get("file") as File;
+    const filename = formData.get("filename") as string;
+    const contentType = formData.get("contentType") as string;
+    const bucket = formData.get("bucket") as string;
 
-    if (!filename || !contentType) {
+    if (!file || !filename || !contentType) {
       return NextResponse.json(
-        { error: "Missing required fields: filename and contentType" },
+        { error: "Missing required fields: file, filename, contentType" },
         { status: 400 }
       );
     }
 
-    // Determine bucket and path based on bucket parameter or filename pattern
-    // bucket can be: 'stories' | 'models' | undefined (defaults to 'stories' for backward compatibility)
+    // Determine bucket and path
     const targetBucket = bucket || 'stories';
-    
-    // Generate unique file path based on bucket
     let uniqueFilename: string;
     if (targetBucket === 'models' || targetBucket === 'trans-image-directory') {
-      // For gallery items: use filename as-is (already includes model-slug/)
       uniqueFilename = filename;
     } else {
-      // For stories: prefix with "stories/"
       uniqueFilename = `stories/${Date.now()}-${filename}`;
     }
 
@@ -64,51 +61,38 @@ export async function POST(request: Request) {
       bucketName = process.env.R2_STORIES_BUCKET_NAME || 'stories';
     }
 
-    // Log for debugging (remove in production if needed)
-    console.log("Upload bucket selection:", {
-      path: uniqueFilename,
-      targetBucket,
-      R2_STORIES_BUCKET_NAME: process.env.R2_STORIES_BUCKET_NAME,
-      R2_BUCKET_NAME: process.env.R2_BUCKET_NAME,
-      selectedBucket: bucketName,
-    });
+    // Convert File to ArrayBuffer
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-    // Create the PutObject command
+    // Upload directly to R2
     const s3Client = getS3Client();
-    const command = new PutObjectCommand({
+    await s3Client.send(new PutObjectCommand({
       Bucket: bucketName,
       Key: uniqueFilename,
+      Body: buffer,
       ContentType: contentType,
-      // Add CORS headers to the command
-      Metadata: {
-        'x-amz-server-side-encryption': 'AES256',
-      },
-    });
+      CacheControl: 'public, max-age=31536000, immutable',
+    }));
 
-    // Generate presigned URL (expires in 60 seconds)
-    // Note: CORS must be configured on the R2 bucket itself
-    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 60 });
-
-    // Construct public URL using the appropriate domain based on bucket
-    // Stories should use NEXT_PUBLIC_R2_STORIES_DOMAIN, models use NEXT_PUBLIC_R2_DOMAIN
+    // Construct public URL
     const publicDomain = (targetBucket === 'models' || targetBucket === 'trans-image-directory')
       ? process.env.NEXT_PUBLIC_R2_DOMAIN || process.env.NEXT_PUBLIC_R2_PUBLIC_URL || "pub-7a8adad1ccfc4f0db171158b6cf5c030.r2.dev"
       : process.env.NEXT_PUBLIC_R2_STORIES_DOMAIN || process.env.NEXT_PUBLIC_R2_DOMAIN || "pub-7a8adad1ccfc4f0db171158b6cf5c030.r2.dev";
     
-    // Ensure domain has https:// prefix if it doesn't already
     const publicUrl = publicDomain.startsWith("http")
       ? `${publicDomain}/${uniqueFilename}`
       : `https://${publicDomain}/${uniqueFilename}`;
 
     return NextResponse.json({
-      uploadUrl,
-      publicUrl,
+      success: true,
       key: uniqueFilename,
+      publicUrl,
     });
   } catch (error) {
-    console.error("Upload presign error:", error);
+    console.error("Proxy upload error:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: error instanceof Error ? error.message : "Internal Server Error" },
       { status: 500 }
     );
   }

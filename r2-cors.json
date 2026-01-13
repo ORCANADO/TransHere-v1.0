@@ -1,19 +1,25 @@
 [
   {
     "AllowedOrigins": [
+      "https://transhere.vip",
+      "https://www.transhere.vip",
       "http://localhost:3000",
-      "https://yourdomain.com"
+      "http://localhost:3001"
     ],
     "AllowedMethods": [
       "GET",
       "PUT",
-      "HEAD"
+      "HEAD",
+      "POST",
+      "DELETE"
     ],
     "AllowedHeaders": [
       "*"
     ],
     "ExposeHeaders": [
-      "ETag"
+      "ETag",
+      "Content-Length",
+      "Content-Type"
     ],
     "MaxAgeSeconds": 3600
   }

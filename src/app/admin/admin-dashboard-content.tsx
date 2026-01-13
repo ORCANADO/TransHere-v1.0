@@ -114,7 +114,7 @@ export default function AdminDashboardContent() {
   };
 
   // Helper: upload a single file to R2 and return the key
-  // contentType parameter allows explicit MIME type override for proper streaming headers
+  // Uses proxy endpoint to avoid CORS issues
   const uploadFileToR2 = async (
     file: File,
     filename: string,
@@ -125,39 +125,26 @@ export default function AdminDashboardContent() {
     // Use explicit contentType if provided, otherwise fall back to file.type
     const mimeType = contentType || file.type || 'application/octet-stream';
     
-    // Get presigned URL
-    const presignResponse = await fetch(`/api/upload?key=${adminKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        filename,
-        contentType: mimeType,
-        bucket, // Pass bucket parameter for gallery items
-      }),
-    });
-
-    if (!presignResponse.ok) {
-      const err = await presignResponse.json();
-      throw new Error(err.error || "Failed to get upload URL");
+    // Use proxy upload to avoid CORS issues
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('filename', filename);
+    formData.append('contentType', mimeType);
+    if (bucket) {
+      formData.append('bucket', bucket);
     }
 
-    const { uploadUrl, key } = await presignResponse.json();
-
-    // Upload to R2 with explicit Content-Type header for proper browser streaming
-    // Cache-Control: Aggressive caching (1 year) since files are timestamped and immutable
-    const uploadResponse = await fetch(uploadUrl, {
-      method: "PUT",
-      body: file,
-      headers: { 
-        "Content-Type": mimeType,
-        "Cache-Control": "public, max-age=31536000, immutable"
-      },
+    const uploadResponse = await fetch(`/api/upload/proxy?key=${adminKey}`, {
+      method: "POST",
+      body: formData,
     });
 
     if (!uploadResponse.ok) {
-      throw new Error(`R2 upload failed: ${uploadResponse.statusText}`);
+      const err = await uploadResponse.json();
+      throw new Error(err.error || "Failed to upload file");
     }
 
+    const { key } = await uploadResponse.json();
     return key;
   };
 
