@@ -183,9 +183,21 @@ export async function PUT(
       
       if (currentItem && currentItem.media_url !== body.media_url) {
         // Delete old files from R2
-        const oldKeys = getGalleryItemMediaKeys(currentItem);
-        if (oldKeys.length > 0) {
-          await deleteMultipleFromR2(oldKeys, 'models');
+        const oldKeysWithBuckets = getGalleryItemMediaKeys(currentItem);
+        if (oldKeysWithBuckets.length > 0) {
+          // Group keys by bucket
+          const modelsKeys = oldKeysWithBuckets.filter(k => k.bucket === 'models').map(k => k.key);
+          const storiesKeys = oldKeysWithBuckets.filter(k => k.bucket === 'stories').map(k => k.key);
+          
+          // Delete from models bucket
+          if (modelsKeys.length > 0) {
+            await deleteMultipleFromR2(modelsKeys, 'models');
+          }
+          
+          // Delete from stories bucket (for old gallery items)
+          if (storiesKeys.length > 0) {
+            await deleteMultipleFromR2(storiesKeys, 'stories');
+          }
         }
       }
     }
