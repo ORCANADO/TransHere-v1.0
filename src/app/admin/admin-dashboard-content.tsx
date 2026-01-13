@@ -140,8 +140,8 @@ export default function AdminDashboardContent() {
     });
 
     // Check content type before parsing
-    const contentType = uploadResponse.headers.get("content-type") || "";
-    const isJson = contentType.includes("application/json");
+    const responseContentType = uploadResponse.headers.get("content-type") || "";
+    const isJson = responseContentType.includes("application/json");
 
     if (!uploadResponse.ok) {
       // Try to parse JSON error, fallback to status text
