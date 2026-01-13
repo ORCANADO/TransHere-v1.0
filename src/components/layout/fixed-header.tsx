@@ -45,9 +45,9 @@ export function FixedHeader({ userCity, nav, header }: FixedHeaderProps) {
             <Image
               src="/Page-logo.svg"
               alt="TranSpot Logo"
-              width={12}
-              height={12}
-              className="w-3 h-3"
+              width={18}
+              height={18}
+              className="w-[18px] h-[18px] animate-[logo-pulse_2s_ease-in-out_infinite]"
               priority
             />
             {isYou ? (

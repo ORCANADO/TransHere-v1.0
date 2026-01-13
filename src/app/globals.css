@@ -424,5 +424,15 @@
         0 5px 8px -3px oklch(78% 0.13 85 / 0.2);
     }
   }
+
+  /* Logo Pulse Animation - Proximity indicator */
+  @keyframes logo-pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.3);
+    }
+  }
 }
 
