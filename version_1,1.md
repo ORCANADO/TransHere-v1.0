@@ -317,6 +317,12 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
 - [x] **URL Persistence:** Added `?si=INDEX` parameter for resume playback across navigation
 - [x] **Visual Indicators:** Gradient ring for unseen groups, gray ring for fully viewed groups
 
+* **[x] Phase 5.11: Story Chain Navigation Fix**
+- [x] **Chain Snapshot Mechanism:** Chain group IDs are snapshotted at open time to maintain isolation
+- [x] **Navigation Isolation:** Users stay within the same chain (unseen/seen) throughout navigation session
+- [x] **Real-Time Protection:** Navigation uses snapshot instead of recalculating from current chain state
+- [x] **Consistent Experience:** Navigating through 3 unseen models stays within unseen chain, doesn't jump to seen groups
+
 ---
 
 ## 5. Exclusions (Not in V1)

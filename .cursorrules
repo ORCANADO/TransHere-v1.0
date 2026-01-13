@@ -122,6 +122,7 @@ Do not use `useRouter().push` for external links.
     - **Story transitions:** `animate-in fade-in zoom-in-95 duration-300`
     - **Model transitions:** `animate-in slide-in-from-right-full duration-500 ease-out`
 - **Navigation Isolation:** Pinned and Feed story groups MUST have separate neighbor calculations. Swiping on a pinned story navigates only to other pinned stories.
+- **Chain Snapshot Mechanism:** When opening a story viewer, the chain (unseen or seen) is snapshotted at open time. Navigation uses this snapshot to maintain chain isolation, preventing groups from jumping between chains mid-navigation even if their viewed status changes. The snapshot is stored in `activeChainGroupIds` state and used for all neighbor calculations during navigation.
 - **Progress Bar Visibility:**
   - **Main Layout** (`!disableLongPress`): Progress bars ALWAYS visible, even for single-story blocks
   - **Model Profile** (`disableLongPress`): Progress bars hidden for single-story blocks, visible only when `stories.length > 1`

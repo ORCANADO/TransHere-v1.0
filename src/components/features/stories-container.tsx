@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { useQueryState } from "nuqs";
 import dynamic from "next/dynamic";
 import { StoryGroup } from "@/types";
@@ -23,7 +23,7 @@ interface StoriesContainerProps {
 
 export function StoriesContainer({ groups, socialLink, modelName, modelImage, modelSlug, isVerified }: StoriesContainerProps) {
   // Visual Memory: Track which stories have been viewed
-  const { getFirstUnseenStoryIndex } = useViewedStories();
+  const { getFirstUnseenStoryIndex, hasUnseenStories } = useViewedStories();
   
   // URL state management with nuqs - syncs with browser history
   // history: 'push' creates entries in browser history for back button support
@@ -59,40 +59,73 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
     () => groups.filter((g) => g.is_pinned && g.stories && g.stories.length > 0),
     [groups]
   );
-  const feedGroups = useMemo(
+  
+  // Split recent (non-pinned) groups into seen/unseen chains
+  const recentGroups = useMemo(
     () => groups.filter((g) => !g.is_pinned && g.stories && g.stories.length > 0),
     [groups]
   );
+  
+  const unseenGroups = useMemo(() => {
+    return recentGroups.filter((g) => hasUnseenStories(g.stories || []));
+  }, [recentGroups, hasUnseenStories]);
+  
+  const seenGroups = useMemo(() => {
+    return recentGroups.filter((g) => !hasUnseenStories(g.stories || []));
+  }, [recentGroups, hasUnseenStories]);
 
   // Find selected group based on URL param
   const selectedGroup = storyId
     ? groups.find((g) => g.id === storyId)
     : null;
 
-  // Determine which list the active group belongs to and calculate neighbors
-  const { nextGroupId, prevGroupId } = useMemo(() => {
-    if (!selectedGroup) return { nextGroupId: undefined, prevGroupId: undefined };
+  // Store chain neighbors at open time to prevent dynamic changes mid-viewing
+  const [activeChainNeighbors, setActiveChainNeighbors] = useState<{
+    prevGroupId: string | null;
+    nextGroupId: string | null;
+  } | null>(null);
 
-    // Determine if this is a pinned or feed group
-    const isPinned = selectedGroup.is_pinned;
-    const relevantList = isPinned ? pinnedGroups : feedGroups;
+  // Calculate neighbors for a group based on its chain membership
+  const getNeighborsForGroup = useCallback((groupId: string) => {
+    const group = groups.find((g) => g.id === groupId);
+    if (!group) return { prevGroupId: null, nextGroupId: null };
 
-    // Find current index in the relevant list
-    const currentIndex = relevantList.findIndex((g) => g.id === selectedGroup.id);
-
-    if (currentIndex === -1) {
-      return { nextGroupId: undefined, prevGroupId: undefined };
+    // Pinned groups navigate among pinned only (existing behavior)
+    if (group.is_pinned) {
+      const indexInPinned = pinnedGroups.findIndex((g) => g.id === groupId);
+      if (indexInPinned === -1) {
+        return { prevGroupId: null, nextGroupId: null };
+      }
+      return {
+        prevGroupId: indexInPinned > 0 ? pinnedGroups[indexInPinned - 1].id : null,
+        nextGroupId: indexInPinned < pinnedGroups.length - 1 ? pinnedGroups[indexInPinned + 1].id : null,
+      };
     }
 
-    // Calculate neighbors within the same list only
-    const nextGroup = currentIndex < relevantList.length - 1 ? relevantList[currentIndex + 1] : undefined;
-    const prevGroup = currentIndex > 0 ? relevantList[currentIndex - 1] : undefined;
+    // Recent groups navigate within their seen/unseen chain
+    const isUnseen = hasUnseenStories(group.stories || []);
+    const chain = isUnseen ? unseenGroups : seenGroups;
+    const indexInChain = chain.findIndex((g) => g.id === groupId);
+
+    if (indexInChain === -1) {
+      return { prevGroupId: null, nextGroupId: null };
+    }
 
     return {
-      nextGroupId: nextGroup?.id,
-      prevGroupId: prevGroup?.id,
+      prevGroupId: indexInChain > 0 ? chain[indexInChain - 1].id : null,
+      nextGroupId: indexInChain < chain.length - 1 ? chain[indexInChain + 1].id : null,
     };
-  }, [selectedGroup, pinnedGroups, feedGroups]);
+  }, [groups, pinnedGroups, unseenGroups, seenGroups, hasUnseenStories]);
+
+  // Set chain neighbors when storyId changes (e.g., direct link or navigation)
+  useEffect(() => {
+    if (storyId && selectedGroup) {
+      const neighbors = getNeighborsForGroup(storyId);
+      setActiveChainNeighbors(neighbors);
+    } else if (!storyId) {
+      setActiveChainNeighbors(null);
+    }
+  }, [storyId, selectedGroup, getNeighborsForGroup]);
 
   // Handle circle click - open story viewer (updates URL)
   // Calculate initial index and set both URL parameters
@@ -108,24 +141,31 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
       });
       const startIndex = getFirstUnseenStoryIndex(sortedStories);
       
+      // Calculate and store chain neighbors at open time
+      const neighbors = getNeighborsForGroup(groupId);
+      setActiveChainNeighbors(neighbors);
+      
       // Set both parameters with push for initial open (allows back button)
       setStoryId(groupId);
       setStoryIndexParam(startIndex.toString());
     } else {
       // Fallback if group not found
+      setActiveChainNeighbors({ prevGroupId: null, nextGroupId: null });
       setStoryId(groupId);
       setStoryIndexParam("0");
     }
   };
 
-  // Handle close viewer (removes URL params)
+  // Handle close viewer (removes URL params and clears chain neighbors)
   const handleCloseViewer = () => {
+    setActiveChainNeighbors(null);
     setStoryId(null, { history: "replace" });
     setStoryIndexParam(null, { history: "replace" });
   };
 
   // Handle navigation between groups (uses replace to avoid history pollution)
   // Calculate and set initial index for the new group
+  // Note: Neighbors remain from the original chain (stored at open time)
   const handleNavigate = (groupId: string) => {
     const group = groups.find((g) => g.id === groupId);
     
@@ -138,10 +178,15 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
       });
       const startIndex = getFirstUnseenStoryIndex(sortedStories);
       
+      // Update neighbors for the new group (still within same chain)
+      const neighbors = getNeighborsForGroup(groupId);
+      setActiveChainNeighbors(neighbors);
+      
       setStoryId(groupId, { history: "replace" });
       setStoryIndexParam(startIndex.toString(), { history: "replace" });
     } else {
       // Fallback if group not found
+      setActiveChainNeighbors({ prevGroupId: null, nextGroupId: null });
       setStoryId(groupId, { history: "replace" });
       setStoryIndexParam("0", { history: "replace" });
     }
@@ -211,8 +256,8 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
             modelImage={modelImage}
             modelSlug={modelSlug}
             isVerified={isVerified}
-            nextGroupId={nextGroupId}
-            prevGroupId={prevGroupId}
+            nextGroupId={activeChainNeighbors?.nextGroupId ?? undefined}
+            prevGroupId={activeChainNeighbors?.prevGroupId ?? undefined}
             onNavigate={handleNavigate}
             disableLongPress={true}
             initialStoryIndex={initialStoryIndex}

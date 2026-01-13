@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { useQueryState } from "nuqs";
 import dynamic from "next/dynamic";
 import { Model, StoryGroup } from "@/types";
@@ -81,18 +81,39 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
       });
       const startIndex = getFirstUnseenStoryIndex(sortedStories);
       
+      // Determine chain and snapshot group IDs at open time
+      const groupData = modelsWithRecentGroups.find(({ recentGroup }) => recentGroup.id === groupId);
+      if (groupData) {
+        const isUnseen = groupData.hasUnseen;
+        const chain = isUnseen ? unseenGroups : seenGroups;
+        // Snapshot the chain group IDs to prevent changes mid-navigation
+        const chainGroupIds = chain.map((g) => g.id);
+        setActiveChainGroupIds(chainGroupIds);
+        
+        // Calculate neighbors using the snapshot
+        const neighbors = getNeighborsForGroup(groupId, chainGroupIds);
+        setActiveChainNeighbors(neighbors);
+      } else {
+        setActiveChainGroupIds(null);
+        setActiveChainNeighbors({ prevGroupId: null, nextGroupId: null });
+      }
+      
       // Set both parameters with replace to avoid history pollution
       setStoryId(groupId, { history: "replace" });
       setStoryIndexParam(startIndex.toString(), { history: "replace" });
     } else {
       // Fallback if group not found
+      setActiveChainNeighbors({ prevGroupId: null, nextGroupId: null });
+      setActiveChainGroupIds(null);
       setStoryId(groupId, { history: "replace" });
       setStoryIndexParam("0", { history: "replace" });
     }
   };
 
-  // Handle close viewer (removes URL params)
+  // Handle close viewer (removes URL params and clears chain neighbors)
   const handleCloseViewer = () => {
+    setActiveChainNeighbors(null);
+    setActiveChainGroupIds(null);
     setStoryId(null, { history: "replace" });
     setStoryIndexParam(null, { history: "replace" });
   };
@@ -158,30 +179,115 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
     return null;
   }
 
-  // Playlist Logic: Create array of all recent groups for navigation
-  const allRecentGroups = modelsWithRecentGroups.map(({ recentGroup, model }) => ({
-    id: recentGroup.id,
-    model,
-    group: recentGroup,
-  }));
+  // Split groups into seen/unseen chains for isolated navigation
+  const unseenGroups = useMemo(() => {
+    return modelsWithRecentGroups
+      .filter(({ hasUnseen }) => hasUnseen)
+      .map(({ recentGroup }) => recentGroup);
+  }, [modelsWithRecentGroups]);
 
-  // Find current position in playlist
-  const activeIndex = storyId 
-    ? allRecentGroups.findIndex((item) => item.id === storyId)
-    : -1;
+  const seenGroups = useMemo(() => {
+    return modelsWithRecentGroups
+      .filter(({ hasUnseen }) => !hasUnseen)
+      .map(({ recentGroup }) => recentGroup);
+  }, [modelsWithRecentGroups]);
 
-  // Calculate neighbor group IDs for navigation
-  const nextGroupId = activeIndex >= 0 && activeIndex < allRecentGroups.length - 1
-    ? allRecentGroups[activeIndex + 1]?.id
-    : undefined;
+  // Store chain neighbors at open time to prevent dynamic changes mid-viewing
+  const [activeChainNeighbors, setActiveChainNeighbors] = useState<{
+    prevGroupId: string | null;
+    nextGroupId: string | null;
+  } | null>(null);
+  
+  // Store snapshot of chain group IDs at open time to maintain chain isolation
+  // This prevents groups from disappearing from the chain mid-navigation
+  const [activeChainGroupIds, setActiveChainGroupIds] = useState<string[] | null>(null);
 
-  const prevGroupId = activeIndex > 0
-    ? allRecentGroups[activeIndex - 1]?.id
-    : undefined;
+  // Calculate neighbors for a group based on its chain membership
+  // If chainGroupIds is provided, use that snapshot instead of current chain arrays
+  const getNeighborsForGroup = useCallback((groupId: string, chainGroupIds?: string[]) => {
+    // Use snapshot if provided (for maintaining chain during navigation)
+    if (chainGroupIds) {
+      const indexInChain = chainGroupIds.findIndex((id) => id === groupId);
+      if (indexInChain === -1) {
+        return { prevGroupId: null, nextGroupId: null };
+      }
+      return {
+        prevGroupId: indexInChain > 0 ? chainGroupIds[indexInChain - 1] : null,
+        nextGroupId: indexInChain < chainGroupIds.length - 1 ? chainGroupIds[indexInChain + 1] : null,
+      };
+    }
+
+    // Otherwise, determine from group's current seen status (for initial open)
+    const groupData = modelsWithRecentGroups.find(({ recentGroup }) => recentGroup.id === groupId);
+    if (!groupData) {
+      // Fallback: try to find in either chain
+      const inUnseen = unseenGroups.find((g) => g.id === groupId);
+      const inSeen = seenGroups.find((g) => g.id === groupId);
+      let chain: StoryGroup[];
+      if (inUnseen) {
+        chain = unseenGroups;
+      } else if (inSeen) {
+        chain = seenGroups;
+      } else {
+        return { prevGroupId: null, nextGroupId: null };
+      }
+      
+      const indexInChain = chain.findIndex((g) => g.id === groupId);
+      if (indexInChain === -1) {
+        return { prevGroupId: null, nextGroupId: null };
+      }
+      
+      return {
+        prevGroupId: indexInChain > 0 ? chain[indexInChain - 1].id : null,
+        nextGroupId: indexInChain < chain.length - 1 ? chain[indexInChain + 1].id : null,
+      };
+    }
+
+    const isUnseen = groupData.hasUnseen;
+    const chain = isUnseen ? unseenGroups : seenGroups;
+    const indexInChain = chain.findIndex((g) => g.id === groupId);
+
+    if (indexInChain === -1) {
+      return { prevGroupId: null, nextGroupId: null };
+    }
+
+    return {
+      prevGroupId: indexInChain > 0 ? chain[indexInChain - 1].id : null,
+      nextGroupId: indexInChain < chain.length - 1 ? chain[indexInChain + 1].id : null,
+    };
+  }, [modelsWithRecentGroups, unseenGroups, seenGroups]);
+
+  // Set chain neighbors when storyId changes (e.g., direct link)
+  // NOTE: This only runs on initial open or direct link, NOT during navigation
+  // Navigation updates neighbors directly in handleNavigate to preserve the snapshot
+  useEffect(() => {
+    if (storyId && selectedGroup && !activeChainGroupIds) {
+      // Only set neighbors if we don't already have a snapshot (initial open or direct link)
+      // Determine chain from group's current status and snapshot it
+      const groupData = modelsWithRecentGroups.find(({ recentGroup }) => recentGroup.id === storyId);
+      if (groupData) {
+        const isUnseen = groupData.hasUnseen;
+        const chain = isUnseen ? unseenGroups : seenGroups;
+        // Snapshot the chain group IDs
+        const chainGroupIds = chain.map((g) => g.id);
+        setActiveChainGroupIds(chainGroupIds);
+        
+        const neighbors = getNeighborsForGroup(storyId, chainGroupIds);
+        setActiveChainNeighbors(neighbors);
+      } else {
+        setActiveChainGroupIds(null);
+        setActiveChainNeighbors({ prevGroupId: null, nextGroupId: null });
+      }
+    } else if (!storyId) {
+      setActiveChainNeighbors(null);
+      setActiveChainGroupIds(null);
+    }
+  }, [storyId, selectedGroup, getNeighborsForGroup, modelsWithRecentGroups, unseenGroups, seenGroups, activeChainGroupIds]);
 
   // Handler for navigating between models' stories
   // Use 'replace' history to avoid creating multiple back button entries
   // Calculate and set initial index for the new group
+  // Note: Neighbors remain from the original chain (stored at open time)
   const handleNavigate = (id: string) => {
     // Find the group to calculate starting index
     const group = models
@@ -197,10 +303,33 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
       });
       const startIndex = getFirstUnseenStoryIndex(sortedStories);
       
+      // Update neighbors for the new group using the snapshot chain
+      // This ensures we stay in the same chain even if groups change status mid-navigation
+      if (activeChainGroupIds) {
+        const neighbors = getNeighborsForGroup(id, activeChainGroupIds);
+        setActiveChainNeighbors(neighbors);
+        // If group not found in snapshot chain, it means we've reached the end - neighbors will be null
+      } else {
+        // Fallback: determine chain from current status (shouldn't happen, but safety check)
+        const groupData = modelsWithRecentGroups.find(({ recentGroup }) => recentGroup.id === id);
+        if (groupData) {
+          const isUnseen = groupData.hasUnseen;
+          const chain = isUnseen ? unseenGroups : seenGroups;
+          const chainGroupIds = chain.map((g) => g.id);
+          setActiveChainGroupIds(chainGroupIds);
+          const neighbors = getNeighborsForGroup(id, chainGroupIds);
+          setActiveChainNeighbors(neighbors);
+        } else {
+          setActiveChainNeighbors({ prevGroupId: null, nextGroupId: null });
+        }
+      }
+      
       setStoryId(id, { history: 'replace' });
       setStoryIndexParam(startIndex.toString(), { history: 'replace' });
     } else {
       // Fallback if group not found
+      setActiveChainNeighbors({ prevGroupId: null, nextGroupId: null });
+      setActiveChainGroupIds(null);
       setStoryId(id, { history: 'replace' });
       setStoryIndexParam("0", { history: 'replace' });
     }
@@ -254,8 +383,8 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
             modelImage={selectedModel.image_url}
             modelSlug={selectedModel.slug}
             isVerified={selectedModel.is_verified}
-            nextGroupId={nextGroupId}
-            prevGroupId={prevGroupId}
+            nextGroupId={activeChainNeighbors?.nextGroupId ?? undefined}
+            prevGroupId={activeChainNeighbors?.prevGroupId ?? undefined}
             onNavigate={handleNavigate}
             initialStoryIndex={initialStoryIndex}
           />

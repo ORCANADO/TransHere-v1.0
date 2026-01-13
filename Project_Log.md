@@ -644,3 +644,22 @@
 - **StoryCircle:** Uses `hasUnseenStories` to determine ring color
 - **HomeStoriesBar:** Sorts by unseen status, calculates and passes initial index
 - **StoriesContainer:** Calculates initial index for model profile stories
+
+## [2026-01-11] - Phase 5.11: Story Chain Navigation Fix
+**Status:** Complete
+
+### Problem:
+- When navigating between unseen story groups, the system was jumping to seen groups instead of staying within the unseen chain
+- Chain arrays (`unseenGroups`, `seenGroups`) were recalculating in real-time as stories were viewed, causing groups to disappear from chains mid-navigation
+
+### Solution - Chain Snapshot Mechanism:
+- **Snapshot at Open Time:** When a story viewer opens, the chain group IDs are snapshotted into `activeChainGroupIds` state
+- **Navigation Uses Snapshot:** All neighbor calculations during navigation use the snapshot instead of current chain state
+- **Chain Isolation:** Users stay within the same chain (unseen or seen) throughout their navigation session, even if groups change status
+- **useEffect Protection:** The `useEffect` that recalculates neighbors only runs on initial open (when `activeChainGroupIds` is null), preventing it from overwriting snapshot-based neighbors during navigation
+
+### Implementation Details:
+- `getNeighborsForGroup` accepts optional `chainGroupIds` parameter for snapshot-based lookup
+- `handleNavigate` uses `activeChainGroupIds` snapshot to find neighbors
+- Snapshot is cleared when viewer closes, allowing fresh calculation on next open
+- Ensures consistent navigation experience: 3 unseen models → navigate through all 3 unseen models in sequence
