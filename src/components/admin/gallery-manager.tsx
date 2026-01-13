@@ -147,8 +147,8 @@ export function GalleryManager({
       });
 
       // Check content type before parsing
-      const contentType = uploadRes.headers.get("content-type") || "";
-      const isJson = contentType.includes("application/json");
+      const responseContentType = uploadRes.headers.get("content-type") || "";
+      const isJson = responseContentType.includes("application/json");
 
       if (!uploadRes.ok) {
         // Try to parse JSON error, fallback to status text
