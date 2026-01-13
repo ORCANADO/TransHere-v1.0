@@ -1,3 +1,4 @@
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
 
@@ -5,7 +6,7 @@ export const runtime = "edge";
 
 const ADMIN_KEY = process.env.ADMIN_KEY || "admin123";
 
-// Initialize S3Client for Cloudflare R2
+// Initialize S3Client for Cloudflare R2 (only for presigned URLs)
 function getS3Client() {
   const endpoint = process.env.R2_ENDPOINT 
     || `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
@@ -64,12 +65,8 @@ export async function POST(request: Request) {
 
     // Convert File to ArrayBuffer (Edge runtime compatible)
     const arrayBuffer = await file.arrayBuffer();
-    // Use Uint8Array instead of Buffer for Edge runtime compatibility
     const uint8Array = new Uint8Array(arrayBuffer);
 
-    // Upload directly to R2
-    const s3Client = getS3Client();
-    
     console.log("Attempting R2 upload:", {
       bucket: bucketName,
       key: uniqueFilename,
@@ -78,22 +75,35 @@ export async function POST(request: Request) {
       hasCredentials: !!process.env.R2_ACCESS_KEY_ID,
     });
     
-    try {
-      await s3Client.send(new PutObjectCommand({
-        Bucket: bucketName,
-        Key: uniqueFilename,
-        Body: uint8Array,
-        ContentType: contentType,
-        CacheControl: 'public, max-age=31536000, immutable',
-      }));
-      console.log("R2 upload successful:", { bucket: bucketName, key: uniqueFilename });
-    } catch (r2Error) {
-      console.error("R2 upload failed:", r2Error);
-      // Re-throw with more context
+    // Generate presigned URL (this uses AWS SDK but doesn't trigger DOMParser)
+    const s3Client = getS3Client();
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: uniqueFilename,
+      ContentType: contentType,
+      CacheControl: 'public, max-age=31536000, immutable',
+    });
+    
+    const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 });
+    
+    // Upload using fetch (avoids AWS SDK DOMParser issues)
+    const uploadResponse = await fetch(presignedUrl, {
+      method: 'PUT',
+      body: uint8Array,
+      headers: {
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      },
+    });
+    
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
       throw new Error(
-        `R2 upload failed: ${r2Error instanceof Error ? r2Error.message : String(r2Error)}`
+        `R2 upload failed: ${uploadResponse.status} ${uploadResponse.statusText} - ${errorText.substring(0, 200)}`
       );
     }
+    
+    console.log("R2 upload successful:", { bucket: bucketName, key: uniqueFilename });
 
     // Construct public URL
     const publicDomain = (targetBucket === 'models' || targetBucket === 'trans-image-directory')
@@ -110,29 +120,12 @@ export async function POST(request: Request) {
       publicUrl,
     });
   } catch (error) {
-    // Extract error message safely (avoid DOMParser issues from AWS SDK)
+    // Extract error message safely
     let errorMessage = "Internal Server Error";
-    let errorCode: string | undefined;
     
     if (error instanceof Error) {
       errorMessage = error.message || "Internal Server Error";
-      // Check if it's an AWS SDK error
-      if ('$metadata' in error || 'Code' in error || 'name' in error) {
-        // AWS SDK error - extract safe information
-        const awsError = error as any;
-        errorCode = awsError.Code || awsError.name || undefined;
-        errorMessage = awsError.message || awsError.Message || errorMessage;
-        
-        // Log AWS-specific error details
-        console.error("AWS SDK error:", {
-          code: errorCode,
-          message: errorMessage,
-          bucket: bucketName,
-          key: uniqueFilename,
-        });
-      } else {
-        console.error("General error:", errorMessage);
-      }
+      console.error("Upload error:", errorMessage);
     } else {
       errorMessage = String(error);
       console.error("Unknown error type:", error);
@@ -142,7 +135,6 @@ export async function POST(request: Request) {
       { 
         success: false,
         error: errorMessage,
-        ...(errorCode && { code: errorCode }),
       },
       { status: 500 }
     );
