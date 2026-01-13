@@ -355,7 +355,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
   return (
     <>
       {/* Horizontal Scrollable Container - fully transparent, no background bar */}
-      <div className="w-full overflow-x-auto scrollbar-hide bg-transparent backdrop-blur-none relative">
+      <div className="w-full overflow-x-auto scrollbar-hide bg-transparent backdrop-blur-none relative h-24">
         <div className="flex gap-3 py-4 px-1">
           {modelsWithRecentGroups.map(({ model, recentGroup, displayGroup }, index) => (
             <div
@@ -368,6 +368,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
               <StoryCircle
                 group={displayGroup}
                 onClick={() => handleRecentGroupClick(recentGroup.id)}
+                index={index}
               />
             </div>
           ))}

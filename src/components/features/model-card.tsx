@@ -9,6 +9,7 @@ import { Star } from "lucide-react";
 import { cn, getImageUrl } from "@/lib/utils";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useViewedModels } from "@/hooks/use-viewed-models";
+import { VerifiedBadge } from "@/components/ui/verified-badge";
 
 interface ModelCardProps {
   name: string;
@@ -56,14 +57,14 @@ export function ModelCard({ name, image, tags, slug, priority, isOnline, is_veri
         "group-hover:border-[#00FF85]/30",
         "group-hover:shadow-[0_0_20px_rgba(0,255,133,0.15),0_0_40px_rgba(0,255,133,0.08)]"
       )}>
-        <div className="relative aspect-[3/4]">
+        <div className="relative aspect-[3/4] bg-card">
           {/* Profile Image: Visual Memory + Monochrome-First aesthetic */}
           <Image
             src={imageUrl}
             alt={name}
             fill
             className={cn(
-              "object-cover",
+              "object-cover transition-opacity duration-300",
               // Smooth transition for grayscale fade-in (500ms)
               "transition-[filter] duration-500 ease-out",
               // Visual Memory: Viewed models show full color, unviewed are muted (80% grayscale)
@@ -72,8 +73,9 @@ export function ModelCard({ name, image, tags, slug, priority, isOnline, is_veri
                 ? "grayscale-0 contrast-100" 
                 : "grayscale-[0.80] contrast-[1.1] group-hover:grayscale-0 group-hover:contrast-100 group-focus-within:grayscale-0 group-focus-within:contrast-100"
             )}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            sizes="(max-width: 768px) 45vw, (max-width: 1024px) 30vw, 225px"
             priority={priority}
+            placeholder="empty"
           />
           {/* Vignette overlay for unviewed profiles - dark edges to signal "unseen" */}
           <div 
@@ -132,16 +134,7 @@ export function ModelCard({ name, image, tags, slug, priority, isOnline, is_veri
             <div className="flex items-center justify-center gap-2 mb-2">
               <h3 className="text-lg font-bold text-white text-center tracking-tight">{name}</h3>
               {is_verified && (
-                <span className="relative inline-flex items-center justify-center flex-shrink-0">
-                  {/* Verified Badge - Custom SVG from public/verified-badge.svg */}
-                  <img
-                    src="/verified-badge.svg"
-                    alt="Verified"
-                    className="w-5 h-5 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]"
-                    width={20}
-                    height={20}
-                  />
-                </span>
+                <VerifiedBadge size={20} />
               )}
             </div>
             {/* Tags - limited to 2-3, first tag always visible (left-aligned) with pill shape and right fade */}

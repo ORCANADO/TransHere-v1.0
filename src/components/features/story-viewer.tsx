@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { X, Share2, Check, Link2, ChevronLeft, ChevronRight } from "lucide-react";
+import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { StoryGroup } from "@/types";
 import { getImageUrl } from "@/lib/utils";
@@ -711,7 +712,7 @@ export function StoryViewer({
         >
       {/* Dark overlay - the page content behind is already blurred via CSS */}
       <div 
-        className="absolute inset-0 bg-[#050A14]/40"
+        className="absolute inset-0 bg-background"
         aria-hidden="true"
       />
 
@@ -783,7 +784,8 @@ export function StoryViewer({
                   height={40}
                   className="object-cover w-full h-full pointer-events-none"
                   draggable={false}
-                  unoptimized
+                  sizes="40px"
+                  priority
                 />
               )}
             </div>
@@ -792,13 +794,7 @@ export function StoryViewer({
                 {modelName || group.title || "Recent"}
               </span>
               {isVerified && (
-                <img
-                  src="/verified-badge.svg"
-                  alt="Verified"
-                  className="w-4 h-4 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)] flex-shrink-0"
-                  width={16}
-                  height={16}
-                />
+                <VerifiedBadge size={16} />
               )}
               {/* Date Display - Relative for Recent, Absolute for Pinned */}
               {/* TEMPORARY FIX: Hide date for pinned stories in model profile */}
@@ -821,7 +817,8 @@ export function StoryViewer({
                   height={40}
                   className="object-cover w-full h-full pointer-events-none"
                   draggable={false}
-                  unoptimized
+                  sizes="40px"
+                  priority
                 />
               )}
             </div>
@@ -830,13 +827,7 @@ export function StoryViewer({
                 {modelName || group.title || "Recent"}
               </span>
               {isVerified && (
-                <img
-                  src="/verified-badge.svg"
-                  alt="Verified"
-                  className="w-4 h-4 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)] flex-shrink-0"
-                  width={16}
-                  height={16}
-                />
+                <VerifiedBadge size={16} />
               )}
               {/* Date Display - Relative for Recent, Absolute for Pinned */}
               {/* TEMPORARY FIX: Hide date for pinned stories in model profile */}
@@ -1017,18 +1008,18 @@ export function StoryViewer({
                     );
                   })()
                 ) : (
-                  <div className="relative w-full h-full">
+                  <div className="relative w-full h-full bg-background">
                     {mediaUrl && (
                       <Image
                         key={currentStory?.id}
                         src={mediaUrl}
                         alt={`Story ${currentStoryIndex + 1}`}
                         fill
-                        className="object-contain pointer-events-none"
+                        className="object-contain pointer-events-none transition-opacity duration-300"
                         draggable={false}
                         sizes="100vw"
                         priority
-                        unoptimized
+                        placeholder="empty"
                       />
                     )}
                   </div>

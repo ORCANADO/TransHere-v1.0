@@ -58,7 +58,7 @@ function VideoPlayer({ mp4Url, webmUrl, posterUrl, isLocked = false }: VideoPlay
   }, []);
 
   return (
-    <div ref={containerRef} className="relative w-full h-full bg-black">
+    <div ref={containerRef} className="relative w-full h-full bg-card">
       <video
         ref={videoRef}
         className={cn(
@@ -234,7 +234,7 @@ export function ProfileGallery({ items, name, socialLink, modelId, redirectUrl }
         
         return (
           <div 
-            className="relative w-full h-full overflow-hidden group cursor-pointer"
+            className="relative w-full h-full overflow-hidden group cursor-pointer bg-card"
             onClick={handleLockedClick}
           >
             <VideoPlayer
@@ -271,15 +271,17 @@ export function ProfileGallery({ items, name, socialLink, modelId, redirectUrl }
       if (slide.url) {
         return (
           <div 
-            className="relative w-full h-full overflow-hidden group cursor-pointer"
+            className="relative w-full h-full overflow-hidden group cursor-pointer bg-card"
             onClick={handleLockedClick}
           >
             <Image
               src={slide.url}
               alt={`${name} - Exclusive content`}
               fill
-              className="object-cover scale-105 transition-all duration-500 group-hover:scale-110"
-              sizes={isDesktop ? "(min-width: 1024px) 66vw, 100vw" : "100vw"}
+              className="object-cover scale-105 transition-all duration-500 group-hover:scale-110 transition-opacity duration-300"
+              sizes="(max-width: 1024px) 100vw, 450px"
+              priority={index === 0}
+              placeholder="empty"
             />
             {/* Frosted Glass Midnight Overlay */}
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center">
@@ -323,14 +325,15 @@ export function ProfileGallery({ items, name, socialLink, modelId, redirectUrl }
     // Default: Image
     if (slide.url) {
       return (
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-full bg-card">
           <Image
             src={slide.url}
             alt={`${name} - Image ${index + 1}`}
             fill
-            className="object-cover"
-            sizes={isDesktop ? "(min-width: 1024px) 66vw, 100vw" : "100vw"}
+            className="object-cover transition-opacity duration-300"
+            sizes="(max-width: 1024px) 100vw, 450px"
             priority={index === 0}
+            placeholder="empty"
           />
         </div>
       );
@@ -354,7 +357,7 @@ export function ProfileGallery({ items, name, socialLink, modelId, redirectUrl }
           {allSlides.map((slide, index) => (
             <div
               key={slide.key}
-              className="h-full gallery-slide"
+              className="h-full gallery-slide bg-card"
             >
               {renderMedia(slide, index, false)}
             </div>
@@ -429,7 +432,7 @@ export function ProfileGallery({ items, name, socialLink, modelId, redirectUrl }
           <div 
             key={slide.key} 
             className={cn(
-              "w-full rounded-xl overflow-hidden",
+              "w-full rounded-xl overflow-hidden bg-card",
               // Use aspect ratio based on media type for consistent layout
               slide.type === 'video' ? "aspect-video" : "aspect-[3/4]"
             )}

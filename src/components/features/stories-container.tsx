@@ -206,6 +206,7 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
               <StoryCircle
                 group={group}
                 onClick={() => handleStoryClick(group.id)}
+                index={index}
               />
             </div>
           ))}

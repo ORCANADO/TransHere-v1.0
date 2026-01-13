@@ -11,6 +11,7 @@ import { headers } from "next/headers";
 import { DICTIONARY, getLanguage, translateTags } from "@/lib/i18n";
 import Link from "next/link";
 import type { GalleryItem } from "@/types";
+import { VerifiedBadge } from "@/components/ui/verified-badge";
 
 // Lazy load ProfileGallery - below the fold content
 const ProfileGallery = dynamic(() => import("@/components/features/profile-gallery").then(mod => ({ default: mod.ProfileGallery })), {
@@ -243,13 +244,7 @@ export default async function ModelPage({ params }: PageProps) {
                   <div className="flex items-center gap-3 flex-wrap lg:flex-nowrap">
                     <h1 className="text-3xl font-bold lg:text-[1.6875rem]">{model.name}</h1>
                     {model.is_verified && (
-                      <img
-                        src="/verified-badge.svg"
-                        alt="Verified"
-                        className="w-6 h-6 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)] flex-shrink-0"
-                        width={24}
-                        height={24}
-                      />
+                      <VerifiedBadge size={24} />
                     )}
                     {/* Mobile: New Badge inline with name (same row) */}
                     {model.is_new && (
@@ -337,8 +332,8 @@ export default async function ModelPage({ params }: PageProps) {
 
         {/* Gallery Block - order-1 on Mobile (TOP), order-2 (Center) on Desktop */}
         <div className="order-1 lg:order-2 lg:col-span-6 lg:h-screen lg:overflow-y-auto scrollbar-hide pt-10 lg:pt-4 relative">
-          {/* Dark obsidian gradient fade below header */}
-          <div className="absolute top-8 left-0 right-0 h-16 pointer-events-none z-10" style={{
+          {/* Dark obsidian gradient fade below header - Mobile only */}
+          <div className="absolute top-8 left-0 right-0 h-16 pointer-events-none z-10 lg:hidden" style={{
             background: 'linear-gradient(to bottom, rgba(5, 10, 20, 1) 0%, rgba(5, 10, 20, 0.9) 20%, rgba(5, 10, 20, 0.6) 40%, rgba(5, 10, 20, 0.3) 60%, rgba(5, 10, 20, 0.15) 80%, rgba(5, 10, 20, 0) 100%)'
           }} />
           <ProfileGallery 

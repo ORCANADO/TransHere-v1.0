@@ -2,7 +2,6 @@
 
 import { useQueryState } from 'nuqs';
 import { MapPin, Sparkles, Star, LucideIcon } from 'lucide-react';
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 interface FixedHeaderProps {
@@ -34,7 +33,7 @@ export function FixedHeader({ userCity, nav, header }: FixedHeaderProps) {
   const isYou = userCity.toLowerCase() === 'you' || userCity === 'Unknown';
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex flex-col bg-background/60 backdrop-blur-2xl shadow-lg shadow-black/10 border-b border-white/10">
+    <div className="fixed top-0 left-0 right-0 z-50 flex flex-col bg-background/60 backdrop-blur-2xl shadow-lg shadow-black/10 border-b border-white/10 h-24">
       {/* Top Row: Brand Name */}
       <div className="flex items-center justify-between lg:justify-center relative px-4 py-3">
         <h1 className="text-xl font-bold tracking-tighter text-foreground lg:absolute lg:left-1/2 lg:-translate-x-1/2">
@@ -42,13 +41,9 @@ export function FixedHeader({ userCity, nav, header }: FixedHeaderProps) {
         </h1>
         {feed === 'near' && (
           <span className="text-xs font-medium text-muted-foreground flex items-center gap-1 lg:absolute lg:right-4">
-            <Image
-              src="/Page-logo.svg"
-              alt="TransHere Logo"
-              width={18}
-              height={18}
-              className="w-[18px] h-[18px] animate-[logo-pulse_2s_ease-in-out_infinite]"
-              priority
+            <MapPin 
+              size={18} 
+              className="text-[#00FF85] animate-[logo-pulse_2s_ease-in-out_infinite]" 
             />
             {isYou ? (
               `${header.modelsNear} ${header.unknownCity}`

@@ -8,9 +8,10 @@ import { useViewedStories } from "@/hooks/use-viewed-stories";
 interface StoryCircleProps {
   group: StoryGroup;
   onClick: () => void;
+  index?: number;
 }
 
-export function StoryCircle({ group, onClick }: StoryCircleProps) {
+export function StoryCircle({ group, onClick, index }: StoryCircleProps) {
   const { hasUnseenStories } = useViewedStories();
   const coverUrl = getImageUrl(group.cover_url);
   const displayTitle = group.title || "Recent";
@@ -38,15 +39,16 @@ export function StoryCircle({ group, onClick }: StoryCircleProps) {
         {/* Glass border container */}
         <div className="w-full h-full rounded-full p-[2px] bg-background/90 backdrop-blur-sm">
           {/* Image Circle with glass overlay */}
-          <div className="relative w-full h-full rounded-full overflow-hidden bg-white/5 backdrop-blur-sm border border-white/10">
+          <div className="relative w-full h-full rounded-full overflow-hidden bg-card backdrop-blur-sm border border-white/10">
             {coverUrl ? (
               <Image
                 src={coverUrl}
                 alt={displayTitle}
                 fill
                 className="w-full h-full object-cover rounded-full"
-                sizes="76px"
-                unoptimized
+                sizes="72px"
+                priority={index !== undefined && index < 5}
+                placeholder="empty"
               />
             ) : (
               // Fallback gradient: Cyber Violet to Electric Emerald with glass effect
