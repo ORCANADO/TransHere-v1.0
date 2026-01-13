@@ -22,6 +22,9 @@ function getS3Client() {
 
 // POST - Proxy upload to R2 (avoids CORS issues)
 export async function POST(request: Request) {
+  let bucketName: string | undefined;
+  let uniqueFilename: string | undefined;
+  
   try {
     // Security check
     const { searchParams } = new URL(request.url);
@@ -46,7 +49,6 @@ export async function POST(request: Request) {
 
     // Determine bucket and path
     const targetBucket = bucket || 'stories';
-    let uniqueFilename: string;
     if (targetBucket === 'models' || targetBucket === 'trans-image-directory') {
       uniqueFilename = filename;
     } else {
@@ -54,7 +56,6 @@ export async function POST(request: Request) {
     }
 
     // Determine bucket name
-    let bucketName: string;
     if (targetBucket === 'models' || targetBucket === 'trans-image-directory') {
       bucketName = process.env.R2_BUCKET_NAME || 'trans-image-directory';
     } else {
@@ -102,8 +103,8 @@ export async function POST(request: Request) {
     console.error("Error details:", {
       message: errorMessage,
       stack: errorStack,
-      bucketName,
-      uniqueFilename,
+      ...(bucketName && { bucketName }),
+      ...(uniqueFilename && { uniqueFilename }),
     });
     
     return NextResponse.json(
