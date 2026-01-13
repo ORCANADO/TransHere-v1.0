@@ -1,22 +1,42 @@
 'use client';
 import { useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 
 type ClickType = 'social' | 'content';
 
+interface AnalyticsParams {
+  modelId?: string;
+  modelSlug?: string;
+  pagePath?: string;
+}
+
 export function useAnalytics() {
-  const sendEvent = async (modelId: string, eventType: string) => {
+  const pathname = usePathname();
+
+  const sendEvent = useCallback(async (
+    eventType: string, 
+    params?: AnalyticsParams
+  ) => {
     try {
       // Use absolute URL to avoid routing issues
       const apiUrl = typeof window !== 'undefined' 
         ? `${window.location.origin}/api/analytics`
         : '/api/analytics';
 
+      // Get page path from params or use current pathname
+      const pagePath = params?.pagePath || pathname || '/';
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ modelId, eventType }),
+        body: JSON.stringify({
+          modelId: params?.modelId,
+          modelSlug: params?.modelSlug,
+          eventType,
+          pagePath,
+        }),
       });
 
       if (!response.ok) {
@@ -29,16 +49,16 @@ export function useAnalytics() {
         console.error('Analytics failed', e);
       }
     }
-  };
+  }, [pathname]);
 
-  const trackView = useCallback(async (modelId: string) => {
-    await sendEvent(modelId, 'view');
-  }, []);
+  const trackView = useCallback(async (params?: AnalyticsParams) => {
+    await sendEvent('view', params);
+  }, [sendEvent]);
 
-  const trackClick = useCallback(async (modelId: string, type: ClickType) => {
+  const trackClick = useCallback(async (type: ClickType, params?: AnalyticsParams) => {
     const eventType = type === 'social' ? 'click_social' : 'click_content';
-    await sendEvent(modelId, eventType);
-  }, []);
+    await sendEvent(eventType, params);
+  }, [sendEvent]);
 
   return { trackView, trackClick };
 }

@@ -86,10 +86,11 @@ interface ProfileGalleryProps {
   name: string;
   socialLink: string;
   modelId: string;
+  modelSlug?: string;
   redirectUrl?: string; // Optional: specific redirect URL for locked VIP teaser (falls back to socialLink)
 }
 
-export function ProfileGallery({ items, name, socialLink, modelId, redirectUrl }: ProfileGalleryProps) {
+export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, redirectUrl }: ProfileGalleryProps) {
   const [current, setCurrent] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -115,7 +116,11 @@ export function ProfileGallery({ items, name, socialLink, modelId, redirectUrl }
   }, []);
 
   const handleUnlockClick = async () => {
-    await trackClick(modelId, 'content');
+    await trackClick('content', {
+      modelId,
+      modelSlug,
+      pagePath: modelSlug ? `/model/${modelSlug}` : undefined,
+    });
   };
 
   // Filter valid items (must have media_url)

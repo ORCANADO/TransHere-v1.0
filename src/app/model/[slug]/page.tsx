@@ -213,7 +213,7 @@ export default async function ModelPage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden overflow-y-auto">
       {/* Track View Event */}
-      <ModelViewTracker modelId={model.id} />
+      <ModelViewTracker modelId={model.id} modelSlug={slug} />
       
       {/* Navigation Header - Fixed at top (Mobile only) */}
       <ProfileHeaderClient />
@@ -305,7 +305,8 @@ export default async function ModelPage({ params }: PageProps) {
               <ChatButton 
                 href={socialLink}
                 modelId={model.id} 
-                modelName={model.name} 
+                modelName={model.name}
+                modelSlug={slug}
                 variant="inline"
                 label={buttonLabel}
               />
@@ -341,6 +342,7 @@ export default async function ModelPage({ params }: PageProps) {
             name={model.name}
             socialLink={socialLink}
             modelId={model.id}
+            modelSlug={slug}
             redirectUrl={socialLink}
           />
         </div>

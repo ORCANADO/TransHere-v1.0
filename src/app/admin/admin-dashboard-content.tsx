@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { AnalyticsDashboard } from "@/components/admin/analytics-dashboard";
 
 const ADMIN_SECRET = "admin123"; // Hardcoded secret key
 
@@ -15,12 +15,6 @@ interface Model {
   slug: string;
 }
 
-interface AnalyticsEvent {
-  id: string;
-  model_id: string;
-  event_type: string;
-  created_at: string;
-}
 
 export default function AdminDashboardContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -51,9 +45,6 @@ export default function AdminDashboardContent() {
   const [galleryPoster, setGalleryPoster] = useState<File | null>(null);
   const [galleryUploading, setGalleryUploading] = useState(false);
 
-  // Analytics State
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsEvent[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -98,31 +89,6 @@ export default function AdminDashboardContent() {
 
     fetchModels();
   }, [isAuthenticated]);
-
-  // Fetch analytics data
-  useEffect(() => {
-    if (!isAuthenticated || activeTab !== "analytics") return;
-
-    const fetchAnalytics = async () => {
-      setLoading(true);
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from("analytics_events")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-        setAnalyticsData(data || []);
-      } catch (err) {
-        console.error("Error fetching analytics:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAnalytics();
-  }, [isAuthenticated, activeTab]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -421,39 +387,6 @@ export default function AdminDashboardContent() {
     }
   };
 
-  // Calculate analytics stats
-  const totalEvents = analyticsData.length;
-  const totalClicks = analyticsData.filter((e) => e.event_type === "click").length;
-  const uniqueModels = new Set(analyticsData.map((e) => e.model_id)).size;
-
-  // Group by model for bar chart
-  const viewsPerModel = analyticsData
-    .filter((e) => e.event_type === "view")
-    .reduce((acc, e) => {
-      acc[e.model_id] = (acc[e.model_id] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-  const modelNames = models.reduce((acc, m) => {
-    acc[m.id] = m.name;
-    return acc;
-  }, {} as Record<string, string>);
-
-  const barChartData = Object.entries(viewsPerModel).map(([modelId, count]) => ({
-    name: modelNames[modelId] || modelId.slice(0, 8),
-    views: count,
-  }));
-
-  // Group by date for line chart
-  const trafficOverTime = analyticsData.reduce((acc, e) => {
-    const date = new Date(e.created_at).toLocaleDateString();
-    acc[date] = (acc[date] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const lineChartData = Object.entries(trafficOverTime)
-    .map(([date, count]) => ({ date, events: count }))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   // Access Denied Screen
   if (!isAuthenticated) {
@@ -764,57 +697,8 @@ export default function AdminDashboardContent() {
 
           {/* Analytics Dashboard Tab */}
           <TabsContent value="analytics" className="space-y-6 mt-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-card border border-border rounded-lg p-6">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Total Events</h3>
-                <p className="text-3xl font-bold">{totalEvents}</p>
-              </div>
-              <div className="bg-card border border-border rounded-lg p-6">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Total Clicks</h3>
-                <p className="text-3xl font-bold">{totalClicks}</p>
-              </div>
-              <div className="bg-card border border-border rounded-lg p-6">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Active Models</h3>
-                <p className="text-3xl font-bold">{uniqueModels}</p>
-              </div>
-            </div>
-
-            {/* Charts */}
-            {loading ? (
-              <div className="text-center py-12 text-muted-foreground">Loading analytics...</div>
-            ) : (
-              <div className="space-y-6">
-                {/* Bar Chart - Views per Model */}
-                <div className="bg-card border border-border rounded-lg p-6">
-                  <h3 className="text-xl font-semibold mb-4">Views per Model</h3>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={barChartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="views" fill="#8884d8" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-
-                {/* Line Chart - Traffic over Time */}
-                <div className="bg-card border border-border rounded-lg p-6">
-                  <h3 className="text-xl font-semibold mb-4">Traffic over Time</h3>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={lineChartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="events" stroke="#82ca9d" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
+            {isAuthenticated && (
+              <AnalyticsDashboard adminKey={localStorage.getItem("admin_key") || ADMIN_SECRET} />
             )}
           </TabsContent>
         </Tabs>

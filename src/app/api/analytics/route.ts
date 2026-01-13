@@ -10,19 +10,28 @@ const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { modelId, eventType } = body;
+    const { 
+      modelId, 
+      eventType, 
+      modelSlug, 
+      pagePath 
+    } = body;
 
-    // Validate required fields
-    if (!modelId || !eventType) {
+    // Validate required fields (modelId and eventType are required)
+    if (!eventType) {
       return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
+        { success: false, error: 'Missing required field: eventType' },
         { status: 400 }
       );
     }
 
-    // Extract geolocation from headers
-    const cityHeader = request.headers.get('cf-ipcity') || request.headers.get('x-vercel-ip-city');
-    const countryHeader = request.headers.get('cf-ipcountry') || request.headers.get('x-vercel-ip-country');
+    // Extract geolocation from headers (prefer middleware headers, fallback to Cloudflare/Vercel)
+    const cityHeader = request.headers.get('x-user-city') 
+      || request.headers.get('cf-ipcity') 
+      || request.headers.get('x-vercel-ip-city');
+    const countryHeader = request.headers.get('x-user-country')
+      || request.headers.get('cf-ipcountry') 
+      || request.headers.get('x-vercel-ip-country');
     
     // Decode city to handle special characters (e.g., São Paulo)
     let city: string | null = null;
@@ -39,6 +48,13 @@ export async function POST(request: Request) {
     // Set to null if invalid to avoid breaking database constraint
     const country = (countryHeader && countryHeader.length === 2) ? countryHeader.toUpperCase() : null;
 
+    // Extract additional headers
+    const referrer = request.headers.get('referer') || request.headers.get('referrer') || null;
+    const userAgent = request.headers.get('user-agent') || null;
+    
+    // Get page path from request or body
+    const currentPagePath = pagePath || new URL(request.url).pathname;
+
     // Use direct Supabase client for Edge compatibility (no cookies needed for anon access)
     const supabase = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -52,10 +68,14 @@ export async function POST(request: Request) {
     );
 
     const { error: insertError } = await supabase.from('analytics_events').insert({
-      model_id: modelId,
+      model_id: modelId || null,
       event_type: eventType,
+      model_slug: modelSlug || null,
+      page_path: currentPagePath,
       city: city,
       country: country,
+      referrer: referrer,
+      user_agent: userAgent,
     });
 
     if (insertError) {

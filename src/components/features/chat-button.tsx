@@ -7,15 +7,20 @@ interface ChatButtonProps {
   href: string;
   modelId: string;
   modelName: string;
+  modelSlug?: string;
   variant?: 'fixed' | 'inline';
   label?: string;
 }
 
-export function ChatButton({ href, modelId, modelName, variant = 'fixed', label }: ChatButtonProps) {
+export function ChatButton({ href, modelId, modelName, modelSlug, variant = 'fixed', label }: ChatButtonProps) {
   const { trackClick } = useAnalytics();
 
   const handleClick = async () => {
-    await trackClick(modelId, 'social');
+    await trackClick('social', {
+      modelId,
+      modelSlug,
+      pagePath: modelSlug ? `/model/${modelSlug}` : undefined,
+    });
   };
 
   // Render label exactly as passed (parent page constructs full string)
