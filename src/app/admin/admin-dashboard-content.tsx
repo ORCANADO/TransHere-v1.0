@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { AnalyticsDashboard } from "@/components/admin/analytics-dashboard";
 
-const ADMIN_SECRET = "admin123"; // Hardcoded secret key
+const ADMIN_SECRET = "orca2026"; // Admin secret key - must match ADMIN_KEY in Cloudflare Pages env vars
 
 interface Model {
   id: string;
