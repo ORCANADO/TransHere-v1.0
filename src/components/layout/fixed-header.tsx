@@ -37,30 +37,20 @@ export function FixedHeader({ userCity, nav, header }: FixedHeaderProps) {
     <div className="fixed top-0 left-0 right-0 z-50 flex flex-col bg-background/60 backdrop-blur-2xl shadow-lg shadow-black/10 border-b border-white/10">
       {/* Top Row: Brand Name */}
       <div className="flex items-center justify-between lg:justify-center relative px-4 py-3">
-        <div className="flex items-center gap-2 lg:absolute lg:left-1/2 lg:-translate-x-1/2">
-          <h1 className="text-xl font-bold tracking-tighter text-foreground">
-            Tran<span className="text-primary">Spot</span>
-          </h1>
-          <Image
-            src="/Page-logo.svg"
-            alt="TranSpot Logo"
-            width={24}
-            height={24}
-            className="w-6 h-6"
-            priority
-          />
-        </div>
+        <h1 className="text-xl font-bold tracking-tighter text-foreground lg:absolute lg:left-1/2 lg:-translate-x-1/2">
+          Tran<span className="text-primary">Spot</span>
+        </h1>
         {feed === 'near' && (
-          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1 lg:absolute lg:right-4">
-            <MapPin size={12} />
-            {isYou ? (
-              `${header.modelsNear} ${header.unknownCity}`
-            ) : (
-              <>
-                {header.modelsNear} <span className="capitalize">{userCity}</span>
-              </>
-            )}
-          </span>
+          <div className="lg:absolute lg:right-4">
+            <Image
+              src="/Page-logo.svg"
+              alt="TranSpot Logo"
+              width={24}
+              height={24}
+              className="w-6 h-6"
+              priority
+            />
+          </div>
         )}
       </div>
 
