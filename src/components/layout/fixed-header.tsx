@@ -41,16 +41,23 @@ export function FixedHeader({ userCity, nav, header }: FixedHeaderProps) {
           Tran<span className="text-primary">Spot</span>
         </h1>
         {feed === 'near' && (
-          <div className="lg:absolute lg:right-4">
+          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1 lg:absolute lg:right-4">
             <Image
               src="/Page-logo.svg"
               alt="TranSpot Logo"
-              width={24}
-              height={24}
-              className="w-6 h-6"
+              width={12}
+              height={12}
+              className="w-3 h-3"
               priority
             />
-          </div>
+            {isYou ? (
+              `${header.modelsNear} ${header.unknownCity}`
+            ) : (
+              <>
+                {header.modelsNear} <span className="capitalize">{userCity}</span>
+              </>
+            )}
+          </span>
         )}
       </div>
 
