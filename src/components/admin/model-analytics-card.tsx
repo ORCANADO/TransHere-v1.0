@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Globe } from 'lucide-react';
+import { ChevronDown, ChevronRight, Globe, Image as ImageIcon } from 'lucide-react';
+import Image from 'next/image';
+import { getImageUrl } from '@/lib/utils';
 import type { ModelAnalytics } from '@/types/analytics';
 
 interface ModelAnalyticsCardProps {
@@ -24,6 +26,23 @@ export function ModelAnalyticsCard({ model }: ModelAnalyticsCardProps) {
           ) : (
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           )}
+          {/* Profile Picture */}
+          <div className="relative w-10 h-10 rounded-full overflow-hidden bg-white/5 flex-shrink-0 border-2 border-white/20">
+            {model.imageUrl ? (
+              <Image
+                src={getImageUrl(model.imageUrl)}
+                alt={model.modelName}
+                fill
+                className="object-cover"
+                sizes="40px"
+                unoptimized
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <ImageIcon className="w-5 h-5 text-muted-foreground" />
+              </div>
+            )}
+          </div>
           <div className="text-left">
             <h4 className="font-semibold text-white">{model.modelName}</h4>
             <p className="text-xs text-muted-foreground">/{model.modelSlug}</p>

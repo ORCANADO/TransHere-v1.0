@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    let { model_id, is_pinned, title, cover_url, media_url, media_type, duration } = body;
+    let { model_id, group_id, is_pinned, title, cover_url, media_url, media_type, duration } = body;
 
     if (!model_id || !media_url) {
       return NextResponse.json(
@@ -69,21 +69,28 @@ export async function POST(request: Request) {
       }
     );
 
-    // Check if a matching story group already exists
-    const { data: existingGroup } = await supabaseAdmin
-      .from("story_groups")
-      .select("id")
-      .eq("model_id", model_id)
-      .eq("is_pinned", is_pinned)
-      .maybeSingle();
-
     let groupId: string;
 
-    if (existingGroup) {
-      groupId = existingGroup.id;
-      
+    // If group_id is provided, use it directly (for pinned blocks)
+    if (group_id) {
+      // Verify the group exists and belongs to this model
+      const { data: group, error: groupError } = await supabaseAdmin
+        .from("story_groups")
+        .select("id")
+        .eq("id", group_id)
+        .eq("model_id", model_id)
+        .single();
+
+      if (groupError || !group) {
+        return NextResponse.json(
+          { error: "Invalid group_id or group does not belong to this model" },
+          { status: 400 }
+        );
+      }
+
+      groupId = group.id;
+
       // Update the group's cover_url if a new one was provided
-      // This ensures video posters get stored correctly
       if (cover_url) {
         const { error: updateError } = await supabaseAdmin
           .from("story_groups")
@@ -92,30 +99,53 @@ export async function POST(request: Request) {
         
         if (updateError) {
           console.warn("Warning: Failed to update cover_url on existing group:", updateError);
-          // Non-fatal - continue with story creation
         }
       }
     } else {
-      // Create new story group
-      const { data: newGroup, error: groupError } = await supabaseAdmin
+      // Original logic: Check if a matching story group already exists
+      const { data: existingGroup } = await supabaseAdmin
         .from("story_groups")
-        .insert({
-          model_id,
-          is_pinned: is_pinned || false,
-          title: title || (is_pinned ? "Pinned" : null),
-          cover_url: cover_url || media_url,
-        })
         .select("id")
-        .single();
+        .eq("model_id", model_id)
+        .eq("is_pinned", is_pinned)
+        .maybeSingle();
 
-      if (groupError) {
-        console.error("Error creating story group:", groupError);
-        return NextResponse.json(
-          { error: "Failed to create story group", details: groupError.message },
-          { status: 500 }
-        );
+      if (existingGroup) {
+        groupId = existingGroup.id;
+        
+        // Update the group's cover_url if a new one was provided
+        if (cover_url) {
+          const { error: updateError } = await supabaseAdmin
+            .from("story_groups")
+            .update({ cover_url })
+            .eq("id", groupId);
+          
+          if (updateError) {
+            console.warn("Warning: Failed to update cover_url on existing group:", updateError);
+          }
+        }
+      } else {
+        // Create new story group
+        const { data: newGroup, error: groupError } = await supabaseAdmin
+          .from("story_groups")
+          .insert({
+            model_id,
+            is_pinned: is_pinned || false,
+            title: title || (is_pinned ? "Pinned" : null),
+            cover_url: cover_url || media_url,
+          })
+          .select("id")
+          .single();
+
+        if (groupError) {
+          console.error("Error creating story group:", groupError);
+          return NextResponse.json(
+            { error: "Failed to create story group", details: groupError.message },
+            { status: 500 }
+          );
+        }
+        groupId = newGroup.id;
       }
-      groupId = newGroup.id;
     }
 
     // Insert the story with explicit posted_date for reliable chronological ordering

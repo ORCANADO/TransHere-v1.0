@@ -730,6 +730,40 @@
   - Updated `AnalyticsEvent` interface in `src/types/analytics.ts` to include all new fields
   - All fields are nullable to support backward compatibility
 
+### [Current Date] - Admin Dashboard Enhancements & iOS 26 Date Picker
+- **Pinned Blocks Management:**
+  - Added ability to upload stories directly to pinned blocks via "Add story" button
+  - Implemented cover photo upload functionality for pinned blocks (hover to change)
+  - Added drag-and-drop reordering for stories within pinned blocks
+  - Added drag-and-drop reordering for pinned blocks themselves (vertical)
+  - Created migration `016_add_stories_sort_order.sql` to support story ordering
+  - Created API endpoint `/api/admin/stories/reorder` for story reordering
+  - Updated `PinnedBlocksManager` component with full drag-and-drop support
+  - Stories API now accepts optional `group_id` parameter for direct story assignment
+
+- **Analytics Dashboard Custom Date Range:**
+  - Added "Custom Range" option to time period filter
+  - Implemented custom date range selection with start and end dates
+  - Updated `TimePeriod` type to include `'custom'` option
+  - Modified dashboard API to accept `startDate` and `endDate` query parameters
+  - Added validation message when custom dates are not selected
+
+- **iOS 26 Style Date Picker Component:**
+  - Created custom `DatePicker` component (`src/components/ui/date-picker.tsx`)
+  - Implemented glassmorphism styling with backdrop blur
+  - Used Midnight Spectrum color palette (Electric Emerald for selected dates)
+  - Added smooth animations and transitions
+  - Features: month/year navigation, "Today" and "Clear" buttons
+  - Fixed timezone issues by using local date formatting instead of UTC
+  - Replaced native HTML date inputs in analytics dashboard with custom picker
+
+- **UI/UX Improvements:**
+  - Updated model profile photos in admin dashboard to circular shape
+  - Added profile pictures to analytics dashboard model cards
+  - Updated verified badge styling to match main page
+  - Added gray border around model profile pictures in dev dashboard
+  - Enhanced checkbox styling in ModelBasicInfo to match iOS 26 aesthetic
+
 ### Version 1.0 Status:
 **✅ OFFICIALLY COMPLETE - READY FOR GLOBAL DEPLOYMENT**
 
@@ -742,3 +776,5 @@ All planned features implemented, tested, and polished. The platform is producti
 - Mobile-first responsive design
 - Zero-cost infrastructure (Cloudflare Pages + R2)
 - Enhanced analytics tracking with comprehensive field logging
+- Full-featured admin dashboard with drag-and-drop management
+- iOS 26 style UI components with glassmorphism effects

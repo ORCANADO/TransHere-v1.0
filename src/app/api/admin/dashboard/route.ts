@@ -13,7 +13,7 @@ export const runtime = 'edge';
 const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
 
 // Helper to get date range based on period
-function getDateRange(period: TimePeriod): { start: Date; end: Date } {
+function getDateRange(period: TimePeriod, startDate?: string, endDate?: string): { start: Date; end: Date } {
   const end = new Date();
   const start = new Date();
   
@@ -35,6 +35,19 @@ function getDateRange(period: TimePeriod): { start: Date; end: Date } {
       break;
     case 'all':
       start.setFullYear(2020); // Far past date
+      break;
+    case 'custom':
+      if (startDate && endDate) {
+        start.setTime(new Date(startDate).getTime());
+        end.setTime(new Date(endDate).getTime());
+        // Set end date to end of day
+        end.setHours(23, 59, 59, 999);
+        // Set start date to beginning of day
+        start.setHours(0, 0, 0, 0);
+      } else {
+        // Fallback to last 7 days if custom dates not provided
+        start.setDate(start.getDate() - 7);
+      }
       break;
   }
   
@@ -68,6 +81,8 @@ export async function GET(request: Request) {
     const adminKey = url.searchParams.get('key');
     const period = (url.searchParams.get('period') || '7days') as TimePeriod;
     const country = url.searchParams.get('country') || null;
+    const startDate = url.searchParams.get('startDate') || undefined;
+    const endDate = url.searchParams.get('endDate') || undefined;
     
     // Verify admin access
     if (!adminKey || adminKey !== ADMIN_KEY) {
@@ -86,7 +101,7 @@ export async function GET(request: Request) {
       }
     );
 
-    const { start, end } = getDateRange(period);
+    const { start, end } = getDateRange(period, startDate, endDate);
     
     // Build base query
     let query = supabaseAdmin
@@ -111,10 +126,10 @@ export async function GET(request: Request) {
     // Fetch models to join with analytics data
     const { data: models } = await supabaseAdmin
       .from('models')
-      .select('id, name, slug');
+      .select('id, name, slug, image_url');
 
     const modelMap = new Map(
-      (models || []).map(m => [m.id, { name: m.name, slug: m.slug }])
+      (models || []).map(m => [m.id, { name: m.name, slug: m.slug, image_url: m.image_url }])
     );
 
     // Process events into dashboard data
@@ -144,7 +159,7 @@ export async function GET(request: Request) {
 function processEvents(
   events: any[], 
   period: TimePeriod,
-  modelMap: Map<string, { name: string; slug: string }>
+  modelMap: Map<string, { name: string; slug: string; image_url: string | null }>
 ): DashboardData {
   // Calculate overview stats
   const visits = events.filter(e => e.event_type === 'view').length;
@@ -184,6 +199,7 @@ function processEvents(
     modelId: string;
     modelSlug: string;
     modelName: string;
+    imageUrl: string | null;
     visits: number;
     clicks: number;
     countries: Map<string, number>;
@@ -201,6 +217,7 @@ function processEvents(
       modelId: event.model_id,
       modelSlug: modelInfo.slug,
       modelName: modelInfo.name,
+      imageUrl: modelInfo.image_url,
       visits: 0,
       clicks: 0,
       countries: new Map(),
@@ -230,6 +247,7 @@ function processEvents(
       modelId: model.modelId,
       modelSlug: model.modelSlug,
       modelName: model.modelName,
+      imageUrl: model.imageUrl,
       visits: model.visits,
       clicks: model.clicks,
       conversionRate: model.visits > 0 ? (model.clicks / model.visits) * 100 : 0,

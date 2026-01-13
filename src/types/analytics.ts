@@ -13,7 +13,7 @@ export interface AnalyticsEvent {
 }
 
 // Time period filter options
-export type TimePeriod = 'hour' | 'today' | '7days' | '30days' | '90days' | 'all';
+export type TimePeriod = 'hour' | 'today' | '7days' | '30days' | '90days' | 'all' | 'custom';
 
 // Aggregated stats
 export interface OverviewStats {
@@ -30,6 +30,7 @@ export interface ModelAnalytics {
   modelId: string;
   modelSlug: string;
   modelName: string;
+  imageUrl?: string | null;
   visits: number;
   clicks: number;
   conversionRate: number;

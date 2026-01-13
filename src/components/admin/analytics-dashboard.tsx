@@ -5,6 +5,7 @@ import { Eye, MousePointer, Percent, Globe, RefreshCw, Calendar } from 'lucide-r
 import { StatCard } from './stat-card';
 import { AnalyticsChart } from './analytics-chart';
 import { ModelAnalyticsCard } from './model-analytics-card';
+import { DatePicker } from '@/components/ui/date-picker';
 import type { DashboardData, TimePeriod } from '@/types/analytics';
 
 interface AnalyticsDashboardProps {
@@ -18,6 +19,7 @@ const TIME_PERIODS: { value: TimePeriod; label: string }[] = [
   { value: '30days', label: 'Last 30 Days' },
   { value: '90days', label: 'Last 90 Days' },
   { value: 'all', label: 'All Time' },
+  { value: 'custom', label: 'Custom Range' },
 ];
 
 export function AnalyticsDashboard({ adminKey }: AnalyticsDashboardProps) {
@@ -27,6 +29,8 @@ export function AnalyticsDashboard({ adminKey }: AnalyticsDashboardProps) {
   const [period, setPeriod] = useState<TimePeriod>('7days');
   const [country, setCountry] = useState<string>('all');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -37,6 +41,8 @@ export function AnalyticsDashboard({ adminKey }: AnalyticsDashboardProps) {
         key: adminKey,
         period,
         ...(country !== 'all' && { country }),
+        ...(period === 'custom' && startDate && { startDate }),
+        ...(period === 'custom' && endDate && { endDate }),
       });
       
       const res = await fetch(`/api/admin/dashboard?${params}`);
@@ -53,7 +59,7 @@ export function AnalyticsDashboard({ adminKey }: AnalyticsDashboardProps) {
     } finally {
       setLoading(false);
     }
-  }, [adminKey, period, country]);
+  }, [adminKey, period, country, startDate, endDate]);
 
   useEffect(() => {
     fetchData();
@@ -92,45 +98,74 @@ export function AnalyticsDashboard({ adminKey }: AnalyticsDashboardProps) {
           )}
         </div>
         
-        <div className="flex flex-wrap gap-3">
-          {/* Time Period Filter */}
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-            <select
-              value={period}
-              onChange={(e) => setPeriod(e.target.value as TimePeriod)}
-              className="pl-10 pr-4 py-2 bg-card border border-white/10 rounded-lg text-white text-sm appearance-none cursor-pointer hover:border-white/20 transition-colors min-w-[150px]"
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap gap-3">
+            {/* Time Period Filter */}
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <select
+                value={period}
+                onChange={(e) => setPeriod(e.target.value as TimePeriod)}
+                className="pl-10 pr-4 py-2 bg-card border border-white/10 rounded-lg text-white text-sm appearance-none cursor-pointer hover:border-white/20 transition-colors min-w-[150px]"
+              >
+                {TIME_PERIODS.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </div>
+            
+            {/* Custom Date Range */}
+            {period === 'custom' && (
+              <>
+                <DatePicker
+                  value={startDate}
+                  onChange={setStartDate}
+                  placeholder="Start date"
+                  max={endDate || undefined}
+                  className="min-w-[150px]"
+                />
+                <DatePicker
+                  value={endDate}
+                  onChange={setEndDate}
+                  placeholder="End date"
+                  min={startDate || undefined}
+                  className="min-w-[150px]"
+                />
+              </>
+            )}
+            
+            {/* Country Filter */}
+            <div className="relative">
+              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <select
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                className="pl-10 pr-4 py-2 bg-card border border-white/10 rounded-lg text-white text-sm appearance-none cursor-pointer hover:border-white/20 transition-colors min-w-[150px]"
+              >
+                <option value="all">All Countries</option>
+                {data?.availableCountries.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+            
+            {/* Refresh Button */}
+            <button
+              onClick={fetchData}
+              disabled={loading}
+              className="p-2 bg-card border border-white/10 rounded-lg text-white hover:border-white/20 transition-colors disabled:opacity-50"
+              aria-label="Refresh data"
             >
-              {TIME_PERIODS.map(({ value, label }) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
+              <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+            </button>
           </div>
           
-          {/* Country Filter */}
-          <div className="relative">
-            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-            <select
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-card border border-white/10 rounded-lg text-white text-sm appearance-none cursor-pointer hover:border-white/20 transition-colors min-w-[150px]"
-            >
-              <option value="all">All Countries</option>
-              {data?.availableCountries.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-          
-          {/* Refresh Button */}
-          <button
-            onClick={fetchData}
-            disabled={loading}
-            className="p-2 bg-card border border-white/10 rounded-lg text-white hover:border-white/20 transition-colors disabled:opacity-50"
-            aria-label="Refresh data"
-          >
-            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
+          {/* Custom date range validation message */}
+          {period === 'custom' && (!startDate || !endDate) && (
+            <p className="text-sm text-yellow-400">
+              Please select both start and end dates
+            </p>
+          )}
         </div>
       </div>
 

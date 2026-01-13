@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { 
   Pin, 
   Plus, 
@@ -13,7 +13,9 @@ import {
   Film,
   Save,
   Loader2,
-  X
+  X,
+  Upload,
+  Camera
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn, getImageUrl } from '@/lib/utils';
@@ -35,13 +37,41 @@ export function PinnedBlocksManager({
   onUpdate 
 }: PinnedBlocksManagerProps) {
   const [groups, setGroups] = useState<StoryGroupAdmin[]>(
-    [...initialGroups].sort((a, b) => a.sort_order - b.sort_order)
+    [...initialGroups].sort((a, b) => a.sort_order - b.sort_order).map(g => ({
+      ...g,
+      stories: [...(g.stories || [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    }))
   );
+
+  // Sync state when props update (but preserve local drag changes)
+  useEffect(() => {
+    const hasLocalChanges = Object.values(hasOrderChanges).some(Boolean);
+    if (!hasLocalChanges) {
+      setGroups(
+        [...initialGroups].sort((a, b) => a.sort_order - b.sort_order).map(g => ({
+          ...g,
+          stories: [...(g.stories || [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+        }))
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialGroups]);
   const [editingGroup, setEditingGroup] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newBlockTitle, setNewBlockTitle] = useState('');
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState<string | null>(null); // groupId that's uploading
+  const [uploadingCover, setUploadingCover] = useState<string | null>(null); // groupId that's uploading cover
+  const [uploadProgress, setUploadProgress] = useState<string>('');
+  const [draggedStory, setDraggedStory] = useState<{ groupId: string; storyId: string } | null>(null);
+  const [draggedBlock, setDraggedBlock] = useState<string | null>(null);
+  const [hasOrderChanges, setHasOrderChanges] = useState<{ [groupId: string]: boolean }>({});
+  const [hasBlockOrderChanges, setHasBlockOrderChanges] = useState(false);
+  const [savingOrder, setSavingOrder] = useState<string | null>(null); // groupId that's saving order
+  const [savingBlockOrder, setSavingBlockOrder] = useState(false);
+  const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+  const coverInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   const createBlock = async () => {
     if (!newBlockTitle.trim()) return;
@@ -136,6 +166,7 @@ export function PinnedBlocksManager({
     }));
     
     setGroups(newGroups.map((g, i) => ({ ...g, sort_order: i })));
+    setHasBlockOrderChanges(true);
     
     // Save to server
     try {
@@ -145,9 +176,74 @@ export function PinnedBlocksManager({
         body: JSON.stringify({ items: updates }),
       });
       
-      await res.json();
+      const json = await res.json();
+      if (json.success) {
+        setHasBlockOrderChanges(false);
+        onUpdate();
+      }
     } catch (err) {
       console.error('Reorder error:', err);
+    }
+  };
+
+  const handleBlockDragStart = (groupId: string) => {
+    setDraggedBlock(groupId);
+  };
+
+  const handleBlockDragOver = (e: React.DragEvent, targetGroupId: string) => {
+    e.preventDefault();
+    if (!draggedBlock || draggedBlock === targetGroupId) return;
+    
+    const draggedIndex = groups.findIndex(g => g.id === draggedBlock);
+    const targetIndex = groups.findIndex(g => g.id === targetGroupId);
+    
+    if (draggedIndex === -1 || targetIndex === -1) return;
+    
+    const newGroups = [...groups];
+    const [removed] = newGroups.splice(draggedIndex, 1);
+    newGroups.splice(targetIndex, 0, removed);
+    
+    // Update sort_order
+    newGroups.forEach((group, index) => {
+      group.sort_order = index;
+    });
+    
+    setGroups(newGroups);
+    setHasBlockOrderChanges(true);
+  };
+
+  const handleBlockDragEnd = () => {
+    setDraggedBlock(null);
+  };
+
+  const saveBlockOrder = async () => {
+    if (!hasBlockOrderChanges) return;
+    
+    setSavingBlockOrder(true);
+    try {
+      const res = await fetch(`/api/admin/story-groups/reorder?key=${adminKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: groups.map((group, index) => ({
+            id: group.id,
+            sort_order: index,
+          })),
+        }),
+      });
+      
+      const json = await res.json();
+      if (json.success) {
+        setHasBlockOrderChanges(false);
+        onUpdate();
+      } else {
+        alert('Failed to save block order: ' + json.error);
+      }
+    } catch (err) {
+      console.error('Save block order error:', err);
+      alert('Failed to save block order');
+    } finally {
+      setSavingBlockOrder(false);
     }
   };
 
@@ -170,6 +266,221 @@ export function PinnedBlocksManager({
       }
     } catch (err) {
       console.error('Delete story error:', err);
+    }
+  };
+
+  const uploadFile = async (file: File, filename: string): Promise<string> => {
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    const contentType = ext === 'webm' || ext === 'mp4' 
+      ? (ext === 'webm' ? 'video/webm' : 'video/mp4')
+      : (file.type || 'image/webp');
+
+    setUploadProgress(`Getting upload URL for ${file.name}...`);
+    const presignRes = await fetch(`/api/upload?key=${adminKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename,
+        contentType,
+      }),
+    });
+
+    if (!presignRes.ok) {
+      throw new Error('Failed to get upload URL');
+    }
+
+    const { uploadUrl, key } = await presignRes.json();
+
+    setUploadProgress(`Uploading ${file.name}...`);
+    const uploadRes = await fetch(uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      },
+    });
+
+    if (!uploadRes.ok) {
+      throw new Error('Failed to upload file');
+    }
+
+    return key;
+  };
+
+  const handleUpload = async (groupId: string, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    
+    setUploading(groupId);
+    setUploadProgress('Starting upload...');
+    
+    try {
+      const timestamp = Date.now();
+      const file = files[0];
+      const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "-");
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'webp';
+      
+      let mediaUrl: string;
+      let coverUrl: string;
+      let mediaType: 'image' | 'video';
+      let duration: number;
+
+      if (ext === 'webm' || ext === 'mp4') {
+        const filename = `stories/${timestamp}-${cleanName}.${ext}`;
+        mediaUrl = await uploadFile(file, filename);
+        coverUrl = mediaUrl; // Placeholder - would need separate poster upload
+        mediaType = 'video';
+        duration = 15;
+      } else {
+        const filename = `stories/${timestamp}-${cleanName}.${ext}`;
+        mediaUrl = await uploadFile(file, filename);
+        coverUrl = mediaUrl;
+        mediaType = 'image';
+        duration = 5;
+      }
+
+      setUploadProgress('Creating story...');
+      const res = await fetch(`/api/admin/stories?key=${adminKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model_id: modelId,
+          group_id: groupId,
+          is_pinned: true,
+          media_url: mediaUrl,
+          cover_url: coverUrl,
+          media_type: mediaType,
+          duration: duration,
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        onUpdate();
+        setUploadProgress('');
+      } else {
+        alert('Failed to create story: ' + json.error);
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Upload failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    } finally {
+      setUploading(null);
+      setUploadProgress('');
+    }
+  };
+
+  const handleCoverUpload = async (groupId: string, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    
+    setUploadingCover(groupId);
+    setUploadProgress('Uploading cover photo...');
+    
+    try {
+      const timestamp = Date.now();
+      const file = files[0];
+      const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "-");
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'webp';
+      const filename = `stories/${timestamp}-${cleanName}-cover.${ext}`;
+      
+      const coverUrl = await uploadFile(file, filename);
+
+      setUploadProgress('Updating cover...');
+      const res = await fetch(`/api/admin/story-groups/${groupId}?key=${adminKey}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cover_url: coverUrl,
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        setGroups(groups.map(g => 
+          g.id === groupId 
+            ? { ...g, cover_url: coverUrl }
+            : g
+        ));
+        onUpdate();
+        setUploadProgress('');
+      } else {
+        alert('Failed to update cover: ' + json.error);
+      }
+    } catch (err) {
+      console.error('Cover upload error:', err);
+      alert('Upload failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    } finally {
+      setUploadingCover(null);
+      setUploadProgress('');
+    }
+  };
+
+  const handleStoryDragStart = (groupId: string, storyId: string) => {
+    setDraggedStory({ groupId, storyId });
+  };
+
+  const handleStoryDragOver = (e: React.DragEvent, groupId: string, targetStoryId: string) => {
+    e.preventDefault();
+    if (!draggedStory || draggedStory.groupId !== groupId || draggedStory.storyId === targetStoryId) return;
+    
+    const group = groups.find(g => g.id === groupId);
+    if (!group || !group.stories) return;
+    
+    const draggedIndex = group.stories.findIndex(s => s.id === draggedStory.storyId);
+    const targetIndex = group.stories.findIndex(s => s.id === targetStoryId);
+    
+    if (draggedIndex === -1 || targetIndex === -1) return;
+    
+    const newStories = [...group.stories];
+    const [removed] = newStories.splice(draggedIndex, 1);
+    newStories.splice(targetIndex, 0, removed);
+    
+    // Update sort_order
+    newStories.forEach((story, index) => {
+      story.sort_order = index;
+    });
+    
+    setGroups(groups.map(g => 
+      g.id === groupId 
+        ? { ...g, stories: newStories }
+        : g
+    ));
+    setHasOrderChanges({ ...hasOrderChanges, [groupId]: true });
+  };
+
+  const handleStoryDragEnd = () => {
+    setDraggedStory(null);
+  };
+
+  const saveStoryOrder = async (groupId: string) => {
+    const group = groups.find(g => g.id === groupId);
+    if (!group || !group.stories || !hasOrderChanges[groupId]) return;
+    
+    setSavingOrder(groupId);
+    try {
+      const res = await fetch(`/api/admin/stories/reorder?key=${adminKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: group.stories.map((story, index) => ({
+            id: story.id,
+            sort_order: index,
+          })),
+        }),
+      });
+      
+      const json = await res.json();
+      if (json.success) {
+        setHasOrderChanges({ ...hasOrderChanges, [groupId]: false });
+        onUpdate();
+      } else {
+        alert('Failed to save order: ' + json.error);
+      }
+    } catch (err) {
+      console.error('Save order error:', err);
+      alert('Failed to save order');
+    } finally {
+      setSavingOrder(null);
     }
   };
 
@@ -207,17 +518,51 @@ export function PinnedBlocksManager({
         </div>
       ) : (
         <div className="space-y-3">
+          {/* Save block order button */}
+          {hasBlockOrderChanges && (
+            <div className="flex justify-end">
+              <button
+                onClick={saveBlockOrder}
+                disabled={savingBlockOrder}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors",
+                  savingBlockOrder
+                    ? "bg-white/10 text-muted-foreground cursor-not-allowed"
+                    : "bg-[#00FF85] text-black hover:bg-[#00FF85]/90"
+                )}
+              >
+                {savingBlockOrder ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving Block Order...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Save Block Order
+                  </>
+                )}
+              </button>
+            </div>
+          )}
           {groups.map((group, index) => (
             <div
               key={group.id}
-              className="bg-background border border-white/10 rounded-xl overflow-hidden"
+              draggable
+              onDragStart={() => handleBlockDragStart(group.id)}
+              onDragOver={(e) => handleBlockDragOver(e, group.id)}
+              onDragEnd={handleBlockDragEnd}
+              className={cn(
+                "bg-background border border-white/10 rounded-xl overflow-hidden transition-opacity",
+                draggedBlock === group.id && "opacity-50"
+              )}
             >
               {/* Block Header */}
-              <div className="flex items-center gap-4 p-4 border-b border-white/10">
-                <GripVertical className="w-5 h-5 text-muted-foreground cursor-grab" />
+              <div className="flex items-center gap-4 p-4 border-b border-white/10 cursor-move">
+                <GripVertical className="w-5 h-5 text-muted-foreground" />
                 
                 {/* Cover */}
-                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-white/5 flex-shrink-0">
+                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-white/5 flex-shrink-0 group/cover">
                   {group.cover_url ? (
                     <Image
                       src={getImageUrl(group.cover_url)}
@@ -232,6 +577,32 @@ export function PinnedBlocksManager({
                       <ImageIcon className="w-5 h-5 text-muted-foreground" />
                     </div>
                   )}
+                  {/* Cover change button */}
+                  <button
+                    onClick={() => coverInputRefs.current[group.id]?.click()}
+                    disabled={uploadingCover === group.id}
+                    className={cn(
+                      "absolute inset-0 bg-black/50 opacity-0 group-hover/cover:opacity-100 transition-opacity flex items-center justify-center",
+                      uploadingCover === group.id && "opacity-100"
+                    )}
+                    title="Change cover photo"
+                  >
+                    {uploadingCover === group.id ? (
+                      <Loader2 className="w-4 h-4 text-white animate-spin" />
+                    ) : (
+                      <Camera className="w-4 h-4 text-white" />
+                    )}
+                  </button>
+                  <input
+                    ref={(el) => {
+                      coverInputRefs.current[group.id] = el;
+                    }}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleCoverUpload(group.id, e.target.files)}
+                    disabled={uploadingCover === group.id}
+                  />
                 </div>
                 
                 {/* Title */}
@@ -303,61 +674,166 @@ export function PinnedBlocksManager({
               {/* Stories Preview */}
               <div className="p-4">
                 {group.stories && group.stories.length > 0 ? (
-                  <div className="flex gap-2 overflow-x-auto pb-2">
-                    {group.stories.map((story) => (
-                      <div
-                        key={story.id}
-                        className="relative w-16 h-20 rounded-lg overflow-hidden bg-white/5 flex-shrink-0 group"
-                      >
-                        {story.media_type === 'video' ? (
-                          <video
-                            src={getImageUrl(story.media_url)}
-                            poster={story.poster_url ? getImageUrl(story.poster_url) : undefined}
-                            className="absolute inset-0 w-full h-full object-cover"
-                            muted
-                            playsInline
-                          />
-                        ) : (
-                          <Image
-                            src={getImageUrl(story.media_url)}
-                            alt="Story"
-                            fill
-                            className="object-cover"
-                            sizes="64px"
-                            unoptimized
-                          />
-                        )}
-                        
-                        {/* Delete overlay */}
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <button
-                            onClick={() => deleteStory(story.id, group.id)}
-                            className="p-1 bg-red-500 rounded text-white"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
+                  <div className="space-y-3">
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                      {group.stories.map((story) => (
+                        <div
+                          key={story.id}
+                          draggable
+                          onDragStart={() => handleStoryDragStart(group.id, story.id)}
+                          onDragOver={(e) => handleStoryDragOver(e, group.id, story.id)}
+                          onDragEnd={handleStoryDragEnd}
+                          className={cn(
+                            "relative w-16 h-20 rounded-lg overflow-hidden bg-white/5 flex-shrink-0 group cursor-move",
+                            draggedStory?.groupId === group.id && draggedStory?.storyId === story.id && "opacity-50"
+                          )}
+                        >
+                          {story.media_type === 'video' ? (
+                            <video
+                              src={getImageUrl(story.media_url)}
+                              poster={story.poster_url ? getImageUrl(story.poster_url) : undefined}
+                              className="absolute inset-0 w-full h-full object-cover"
+                              muted
+                              playsInline
+                            />
+                          ) : (
+                            <Image
+                              src={getImageUrl(story.media_url)}
+                              alt="Story"
+                              fill
+                              className="object-cover"
+                              sizes="64px"
+                              unoptimized
+                            />
+                          )}
+                          
+                          {/* Drag handle */}
+                          <div className="absolute top-1 left-1 bg-black/50 rounded p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <GripVertical className="w-3 h-3 text-white" />
+                          </div>
+                          
+                          {/* Delete overlay */}
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button
+                              onClick={() => deleteStory(story.id, group.id)}
+                              className="p-1 bg-red-500 rounded text-white"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                          
+                          {/* Type indicator */}
+                          {story.media_type === 'video' && (
+                            <Film className="absolute top-1 right-1 w-3 h-3 text-white" />
+                          )}
                         </div>
-                        
-                        {/* Type indicator */}
-                        {story.media_type === 'video' && (
-                          <Film className="absolute top-1 right-1 w-3 h-3 text-white" />
-                        )}
-                      </div>
-                    ))}
+                      ))}
                     
-                    {/* Add story button */}
-                    <button className="w-16 h-20 rounded-lg border-2 border-dashed border-white/20 flex items-center justify-center hover:border-white/40 transition-colors flex-shrink-0">
-                      <Plus className="w-5 h-5 text-muted-foreground" />
-                    </button>
+                      {/* Add story button */}
+                      <button
+                        onClick={() => fileInputRefs.current[group.id]?.click()}
+                        disabled={uploading === group.id}
+                        className={cn(
+                          "w-16 h-20 rounded-lg border-2 border-dashed flex items-center justify-center transition-colors flex-shrink-0",
+                          uploading === group.id
+                            ? "border-white/10 cursor-not-allowed"
+                            : "border-white/20 hover:border-white/40 cursor-pointer"
+                        )}
+                      >
+                        {uploading === group.id ? (
+                          <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+                        ) : (
+                          <Plus className="w-5 h-5 text-muted-foreground" />
+                        )}
+                      </button>
+                      <input
+                        ref={(el) => {
+                          fileInputRefs.current[group.id] = el;
+                        }}
+                        type="file"
+                        accept="image/*,video/*"
+                        className="hidden"
+                        onChange={(e) => handleUpload(group.id, e.target.files)}
+                        disabled={uploading === group.id}
+                      />
+                    </div>
+                    {/* Save order button */}
+                    {hasOrderChanges[group.id] && (
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => saveStoryOrder(group.id)}
+                          disabled={savingOrder === group.id}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                            savingOrder === group.id
+                              ? "bg-white/10 text-muted-foreground cursor-not-allowed"
+                              : "bg-[#00FF85] text-black hover:bg-[#00FF85]/90"
+                          )}
+                        >
+                          {savingOrder === group.id ? (
+                            <>
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="w-3 h-3" />
+                              Save Order
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No stories in this block. Add stories using the Story Manager.
-                  </p>
+                  <div className="flex flex-col items-center gap-3 py-4">
+                    <p className="text-sm text-muted-foreground text-center">
+                      No stories in this block.
+                    </p>
+                    <button
+                      onClick={() => fileInputRefs.current[group.id]?.click()}
+                      disabled={uploading === group.id}
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors",
+                        uploading === group.id
+                          ? "border-white/10 text-muted-foreground cursor-not-allowed"
+                          : "border-white/20 text-white hover:border-white/40 hover:bg-white/5"
+                      )}
+                    >
+                      {uploading === group.id ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span className="text-sm">Uploading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4" />
+                          <span className="text-sm">Add Story</span>
+                        </>
+                      )}
+                    </button>
+                    <input
+                      ref={(el) => {
+                        fileInputRefs.current[group.id] = el;
+                      }}
+                      type="file"
+                      accept="image/*,video/*"
+                      className="hidden"
+                      onChange={(e) => handleUpload(group.id, e.target.files)}
+                      disabled={uploading === group.id}
+                    />
+                  </div>
                 )}
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Upload Progress */}
+      {uploadProgress && (
+        <div className="fixed bottom-4 right-4 bg-card border border-white/10 rounded-lg px-4 py-3 shadow-lg z-50">
+          <p className="text-sm text-white">{uploadProgress}</p>
         </div>
       )}
 

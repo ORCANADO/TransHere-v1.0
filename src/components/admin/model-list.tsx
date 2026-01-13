@@ -6,7 +6,6 @@ import {
   Plus, 
   Trash2, 
   Edit, 
-  CheckCircle, 
   Pin,
   Image as ImageIcon,
   Film,
@@ -14,6 +13,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn, getImageUrl } from '@/lib/utils';
+import { VerifiedBadge } from '@/components/ui/verified-badge';
 import type { ModelWithCounts } from '@/types/admin';
 
 interface ModelListProps {
@@ -141,7 +141,7 @@ export function ModelList({ adminKey, onEditModel, onAddModel }: ModelListProps)
               className="flex items-center gap-4 p-4 bg-card border border-white/10 rounded-xl hover:border-white/20 transition-colors"
             >
               {/* Thumbnail */}
-              <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-white/5 flex-shrink-0">
+              <div className="relative w-16 h-16 rounded-full overflow-hidden bg-white/5 flex-shrink-0 border-2 border-white/20">
                 {model.image_url ? (
                   <Image
                     src={getImageUrl(model.image_url)}
@@ -163,7 +163,7 @@ export function ModelList({ adminKey, onEditModel, onAddModel }: ModelListProps)
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-semibold text-white truncate">{model.name}</h3>
                   {model.is_verified && (
-                    <CheckCircle className="w-4 h-4 text-[#00FF85]" fill="currentColor" />
+                    <VerifiedBadge size={16} />
                   )}
                   {model.is_new && (
                     <span className="px-2 py-0.5 bg-[#7A27FF]/20 text-[#7A27FF] text-xs rounded-full">

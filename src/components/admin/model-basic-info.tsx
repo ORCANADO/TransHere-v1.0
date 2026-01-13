@@ -264,36 +264,78 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved }: ModelBasicIn
         </div>
       </div>
 
-      {/* Toggles */}
-      <div className="flex flex-wrap gap-6">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={formData.is_verified}
-            onChange={(e) => handleChange('is_verified', e.target.checked)}
-            className="w-4 h-4 rounded border-white/20 bg-background text-[#00FF85] focus:ring-[#00FF85] focus:ring-offset-2 focus:ring-offset-background cursor-pointer"
-          />
-          <span className="text-white">Verified</span>
+      {/* Toggles - iOS 26 Style */}
+      <div className="flex flex-wrap gap-3">
+        <label className="group relative flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 backdrop-blur-[2px] bg-white/[0.02] border border-white/10 hover:bg-white/[0.04] hover:border-white/15 active:scale-[0.98]">
+          <div className="relative">
+            <input
+              type="checkbox"
+              checked={formData.is_verified}
+              onChange={(e) => handleChange('is_verified', e.target.checked)}
+              className="sr-only"
+            />
+            <div className={cn(
+              "w-5 h-5 rounded-md border-2 transition-all duration-200 flex items-center justify-center",
+              formData.is_verified
+                ? "bg-[#00FF85] border-[#00FF85] shadow-[0_0_12px_rgba(0,255,133,0.3)]"
+                : "bg-white/[0.05] border-white/20 group-hover:border-white/30"
+            )}>
+              {formData.is_verified && (
+                <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+          </div>
+          <span className="text-sm font-medium text-white select-none">Verified</span>
         </label>
         
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={formData.is_new}
-            onChange={(e) => handleChange('is_new', e.target.checked)}
-            className="w-4 h-4 rounded border-white/20 bg-background text-[#7A27FF] focus:ring-[#7A27FF] focus:ring-offset-2 focus:ring-offset-background cursor-pointer"
-          />
-          <span className="text-white">New</span>
+        <label className="group relative flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 backdrop-blur-[2px] bg-white/[0.02] border border-white/10 hover:bg-white/[0.04] hover:border-white/15 active:scale-[0.98]">
+          <div className="relative">
+            <input
+              type="checkbox"
+              checked={formData.is_new}
+              onChange={(e) => handleChange('is_new', e.target.checked)}
+              className="sr-only"
+            />
+            <div className={cn(
+              "w-5 h-5 rounded-md border-2 transition-all duration-200 flex items-center justify-center",
+              formData.is_new
+                ? "bg-[#7A27FF] border-[#7A27FF] shadow-[0_0_12px_rgba(122,39,255,0.3)]"
+                : "bg-white/[0.05] border-white/20 group-hover:border-white/30"
+            )}>
+              {formData.is_new && (
+                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+          </div>
+          <span className="text-sm font-medium text-white select-none">New</span>
         </label>
         
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={formData.is_pinned}
-            onChange={(e) => handleChange('is_pinned', e.target.checked)}
-            className="w-4 h-4 rounded border-white/20 bg-background text-[#D4AF37] focus:ring-[#D4AF37] focus:ring-offset-2 focus:ring-offset-background cursor-pointer"
-          />
-          <span className="text-white">Pinned to Top</span>
+        <label className="group relative flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 backdrop-blur-[2px] bg-white/[0.02] border border-white/10 hover:bg-white/[0.04] hover:border-white/15 active:scale-[0.98]">
+          <div className="relative">
+            <input
+              type="checkbox"
+              checked={formData.is_pinned}
+              onChange={(e) => handleChange('is_pinned', e.target.checked)}
+              className="sr-only"
+            />
+            <div className={cn(
+              "w-5 h-5 rounded-md border-2 transition-all duration-200 flex items-center justify-center",
+              formData.is_pinned
+                ? "bg-[#D4AF37] border-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.3)]"
+                : "bg-white/[0.05] border-white/20 group-hover:border-white/30"
+            )}>
+              {formData.is_pinned && (
+                <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+          </div>
+          <span className="text-sm font-medium text-white select-none">Pinned to Top</span>
         </label>
       </div>
 
