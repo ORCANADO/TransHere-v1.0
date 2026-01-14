@@ -8,7 +8,7 @@ import { ChatButton } from "@/components/features/chat-button";
 import { StoriesContainer } from "@/components/features/stories-container";
 import { createClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
-import { DICTIONARY, getLanguage, translateTags } from "@/lib/i18n";
+import { DICTIONARY, getLanguage } from "@/lib/i18n";
 import Link from "next/link";
 import type { GalleryItem } from "@/types";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
@@ -42,7 +42,6 @@ export default async function ModelPage({ params }: PageProps) {
       id,
       name,
       image_url,
-      tags,
       is_verified,
       is_new,
       social_link,
@@ -193,9 +192,6 @@ export default async function ModelPage({ params }: PageProps) {
       }]
     : [];
 
-  // Translate tags based on user's language
-  const translatedTags = translateTags(model.tags || [], lang);
-
   // Select bio based on user's language
   const displayBio = (lang === 'es' && model.bio_es)
     ? model.bio_es
@@ -267,21 +263,7 @@ export default async function ModelPage({ params }: PageProps) {
                   )}
                 </div>
 
-                {/* Tags - Mobile: Break out of parent padding for edge-to-edge scroll */}
-                <div className="overflow-x-auto scrollbar-hide -mx-4 lg:mx-0 w-[calc(100%+2rem)] lg:w-auto">
-                  <div className="flex gap-2 lg:flex-wrap lg:px-0 pl-2">
-                    {translatedTags.map((tag: string, index: number) => (
-                      <span 
-                        key={index} 
-                        className={`flex-shrink-0 inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-[#7A27FF]/30 backdrop-blur-xl text-white border border-[#7A27FF]/40 transition-all duration-300 hover:bg-[#7A27FF]/40 hover:border-[#7A27FF]/60 ${index === translatedTags.length - 1 ? "mr-4" : ""}`}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Stories - Mobile: Between Tags and Bio */}
+                {/* Stories - Mobile: Between Name and Bio */}
                 <div className="lg:hidden">
                   <StoriesContainer 
                     groups={filteredStoryGroups} 
@@ -315,7 +297,7 @@ export default async function ModelPage({ params }: PageProps) {
         </div>
 
         {/* Stories Block - Desktop Only (Right Column) */}
-        {/* Mobile stories are now inside Profile Info section, between Tags and Bio */}
+        {/* Mobile stories are now inside Profile Info section, between Name and Bio */}
         <div className="hidden lg:block lg:order-3 lg:col-span-3 lg:sticky lg:top-0 lg:self-start lg:h-screen lg:overflow-hidden lg:flex lg:flex-col lg:pt-3 lg:pb-3">
           <div className="lg:flex-1 lg:min-h-0 lg:overflow-hidden lg:flex lg:flex-col bg-background/30 backdrop-blur-xl rounded-2xl border border-white/10">
             <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto scrollbar-hide lg:p-4 [&>div]:!mt-0 [&>div]:!border-0 [&>div]:!rounded-none [&>div]:!bg-transparent [&>div]:!backdrop-blur-none">

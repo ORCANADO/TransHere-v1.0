@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Allow: /model/*
+Disallow: /?tag=*
+Disallow: /?feed=*
+Disallow: /admin

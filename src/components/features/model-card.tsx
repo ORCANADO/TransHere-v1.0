@@ -61,7 +61,7 @@ export function ModelCard({ name, image, tags, slug, priority, isOnline, is_veri
           {/* Profile Image: Visual Memory + Monochrome-First aesthetic */}
           <Image
             src={imageUrl}
-            alt={name}
+            alt={`Model ${name} profile photo`}
             fill
             className={cn(
               "object-cover transition-opacity duration-300",

@@ -281,7 +281,7 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
           >
             <Image
               src={slide.url}
-              alt={`${name} - Exclusive content`}
+              alt={`Model ${name} profile photo`}
               fill
               className="object-cover scale-105 transition-all duration-500 group-hover:scale-110 transition-opacity duration-300"
               sizes="(max-width: 1024px) 100vw, 450px"
@@ -333,7 +333,7 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
         <div className="relative w-full h-full bg-card">
           <Image
             src={slide.url}
-            alt={`${name} - Image ${index + 1}`}
+            alt={`Model ${name} gallery image ${index + 1}`}
             fill
             className="object-cover transition-opacity duration-300"
             sizes="(max-width: 1024px) 100vw, 450px"
