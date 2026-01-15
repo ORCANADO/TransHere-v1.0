@@ -106,7 +106,11 @@ Do not use `useRouter().push` for external links.
 - **External Links:** ALL buttons that lead to OnlyFans/Fansly MUST use a standard `<a>` tag or `window.open` with `target="_blank"` and `rel="noopener noreferrer"`.
 - **Copy-Go Protocol:** High-intent conversion buttons (specifically "Respond to Story") MUST trigger a clipboard write of the context URL (Deep Link) *simultaneously* with the external navigation.
     - *Goal:* User lands in DMs -> Pastes -> Model knows exactly which story they are replying to.
-- **Telemetry:** Every conversion click MUST trigger `trackClick(modelId, type)` before the user leaves.
+- **Telemetry:** 
+    - Every conversion click MUST trigger `trackClick(modelId, type)` or `logTrackingEvent(payload)` before/after the user leaves.
+    - **Bot Filtering:** ALWAYS use `isBot(userAgent)` from `@/lib/bot-detection` to skip logging for crawlers.
+    - **Performance:** Use Next.js `after()` for non-blocking analytics logging in Route Handlers.
+    - **Caching:** Use `getTrackingLinkCached` with `unstable_cache` for tracking attribution lookups.
 
 ### 2.13 Stories Logic
 - Story Viewer must use `nuqs` for state management (`?story=ID&si=INDEX`) to ensure shareability and resume playback.

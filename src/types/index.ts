@@ -52,3 +52,6 @@ export interface Model {
 
 // Analytics types
 export * from './analytics';
+
+// Tracking types
+export * from './tracking';
