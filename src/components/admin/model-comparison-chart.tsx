@@ -27,12 +27,8 @@ import type {
 /**
  * Custom Tooltip for Model Comparison
  */
-function ModelComparisonTooltip({
-    active,
-    payload,
-    label,
-    models,
-}: TooltipProps<number, string> & { models: ChartModelInfo[] }) {
+function ModelComparisonTooltip(props: TooltipProps<number, string> & { models: ChartModelInfo[] }) {
+    const { active, payload, label, models } = props;
     if (!active || !payload || payload.length === 0) {
         return null;
     }
@@ -167,7 +163,7 @@ export function ModelComparisonChart({
             </div>
 
             {/* Chart */}
-            <div style={{ height }}>
+            <div style={{ height, minHeight: height }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                         data={chartData}

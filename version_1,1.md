@@ -385,6 +385,21 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
     - **iOS 26 Date Picker:** Custom glassmorphism calendar with theme-aware colors.
     - **Filter Refinement:** Optimized icon visibility and stacking contexts (z-index) for better usability.
 
+### Phase 6.2: Analytics Dashboard Stabilization & Data Scaling (v1.1.6)
+**Goal:** Ensure 100% data integrity for the admin dashboard and prepare the infrastructure for thousands of daily views.
+**Status:** [x] Complete
+
+- [x] **Data Integrity Fixes:**
+    - **Descending Order Fetch:** Modified API to fetch raw events in `DESC` order. This ensures that even with the 1000-row limit, the dashboard displays the most *recent* data rather than data from weeks ago.
+    - **Source Join Resolution:** Fixed the relation name typo in the SQL join (`tracking_subtags`) to restore correct traffic source attribution (e.g., "Instagram", "X").
+    - **UTC Consistency:** Standardized all date calculations to strict UTC to prevent "empty days" due to local/server timezone offsets.
+- [x] **UI/UX Robustness:**
+    - **Chart Dimension Stability:** Fixed Recharts rendering errors by enforcing `min-height` on chart containers.
+    - **Large Number Handling:** Updated StatCards to support dynamic formatting for views/clicks (K/M shorthand).
+- [x] **Scaling Strategy:**
+    - Identified the transition path from raw event processing to materialized view querying for the v1.2 roadmap.
+    - Implemented a temporary fetch limit increase (10,000 rows) as a bridge during the mock-data verification phase.
+
 **Next Steps:**
 - Deploy to production environment
 - Monitor analytics and conversion rates

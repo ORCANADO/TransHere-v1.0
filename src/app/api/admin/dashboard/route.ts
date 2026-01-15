@@ -18,10 +18,11 @@ export const runtime = 'edge';
 
 const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
 
-// Helper to get date range based on period
+// Helper to get date range based on period (UTC focused)
 function getDateRange(period: TimePeriod, startDate?: string, endDate?: string): { start: Date; end: Date } {
-  const end = new Date();
-  const start = new Date();
+  const now = new Date();
+  const end = new Date(now);
+  const start = new Date(now);
 
   switch (period) {
     case 'hour':
@@ -40,20 +41,16 @@ function getDateRange(period: TimePeriod, startDate?: string, endDate?: string):
       start.setDate(start.getDate() - 90);
       break;
     case 'all':
-      start.setFullYear(2020); // Far past date
+      start.setFullYear(2020);
       break;
     case 'custom':
       if (startDate && endDate) {
-        start.setTime(new Date(startDate).getTime());
-        end.setTime(new Date(endDate).getTime());
-        // Set end date to end of day
-        end.setHours(23, 59, 59, 999);
-        // Set start date to beginning of day
-        start.setHours(0, 0, 0, 0);
-      } else {
-        // Fallback to last 7 days if custom dates not provided
-        start.setDate(start.getDate() - 7);
+        return {
+          start: new Date(startDate),
+          end: new Date(endDate)
+        };
       }
+      start.setDate(start.getDate() - 7);
       break;
   }
 
@@ -109,8 +106,8 @@ function generateModelComparisonData(
     }
 
     const stats = modelMap.get(event.model_slug)!;
-    if (event.event_type === 'view') stats.views++;
-    if (event.event_type === 'click_social' || event.event_type === 'click_content') stats.clicks++;
+    if (event.event_type === 'page_view') stats.views++;
+    if (event.event_type === 'link_click') stats.clicks++;
   });
 
   // Generate data points for all dates in range
@@ -178,8 +175,8 @@ function generateComparisonData(
         currentMap.set(dateKey, { views: 0, clicks: 0 });
       }
       const stats = currentMap.get(dateKey)!;
-      if (event.event_type === 'view') stats.views++;
-      if (event.event_type === 'click_social' || event.event_type === 'click_content') stats.clicks++;
+      if (event.event_type === 'page_view') stats.views++;
+      if (event.event_type === 'link_click') stats.clicks++;
     } else if (eventDate >= previousStart && eventDate <= previousEnd) {
       // For previous period, we need to map it to the corresponding day index
       // But here we just count totals per date key
@@ -188,8 +185,8 @@ function generateComparisonData(
         previousMap.set(prevDateKey, { views: 0, clicks: 0 });
       }
       const stats = previousMap.get(prevDateKey)!;
-      if (event.event_type === 'view') stats.views++;
-      if (event.event_type === 'click_social' || event.event_type === 'click_content') stats.clicks++;
+      if (event.event_type === 'page_view') stats.views++;
+      if (event.event_type === 'link_click') stats.clicks++;
     }
   });
 
@@ -276,7 +273,8 @@ export async function GET(request: Request) {
       .select('*')
       .gte('created_at', fetchStart.toISOString())
       .lte('created_at', end.toISOString())
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false })
+      .limit(10000);
 
     // Apply filters
     if (country && country !== 'all') {
@@ -292,7 +290,8 @@ export async function GET(request: Request) {
     }
 
     // Execute events query
-    const { data: rawEvents, error } = await query;
+    const { data: rawData, error } = await query;
+    const rawEvents = (rawData || []).reverse();
 
     if (error) {
       console.error('Analytics fetch error:', error);
@@ -332,12 +331,13 @@ export async function GET(request: Request) {
     // Fetch Sources
     const { data: sources } = await supabaseAdmin
       .from('traffic_sources')
-      .select('*, subtags:traffic_source_subtags(*)');
+      .select('*, subtags:tracking_subtags(*)');
 
     // Process events into dashboard data - REUSING/UPDATING processEvents logic inline or separate?
     // The requirement says "Add this function... and update the response". 
     // It seems to replace the logic.
     // Let's rebuild the response construction based on the prompt's request.
+
 
     // 1. Overview
     // Filter events for the CURRENT period for overview/stats
@@ -346,25 +346,27 @@ export async function GET(request: Request) {
       return d >= start && d <= end;
     });
 
-    const visits = currentPeriodEvents.filter(e => e.event_type === 'view').length;
-    const clicks = currentPeriodEvents.filter(e => e.event_type === 'click_social' || e.event_type === 'click_content').length;
+    const foundTypes = new Set(currentPeriodEvents.map(e => e.event_type));
+
+    // Updated event types to match 020 migration ('page_view', 'link_click')
+    const visits = currentPeriodEvents.filter(e => e.event_type === 'page_view').length;
+    const clicks = currentPeriodEvents.filter(e => e.event_type === 'link_click').length;
     const uniqueCountries = new Set(currentPeriodEvents.map(e => e.country).filter(Boolean)).size;
-    const mainLayoutVisits = currentPeriodEvents.filter(e => e.event_type === 'view' && !e.is_tracking_link).length; // Assuming is_tracking_link exists or similar logic
-    const trackingLinkVisits = currentPeriodEvents.filter(e => e.event_type === 'view' && e.is_tracking_link).length;
+    const mainLayoutVisits = currentPeriodEvents.filter(e => e.event_type === 'page_view' && !e.is_tracking_visit).length;
+    const trackingLinkVisits = currentPeriodEvents.filter(e => e.event_type === 'page_view' && e.is_tracking_visit).length;
 
     const overview: OverviewStats & { mainLayoutVisits: number; trackingLinkVisits: number } = {
       totalVisits: visits,
       totalClicks: clicks,
       conversionRate: visits > 0 ? (clicks / visits) * 100 : 0,
       uniqueCountries,
-      visitsChange: 0, // TODO: Implement change calc
+      visitsChange: 0,
       clicksChange: 0,
       mainLayoutVisits,
       trackingLinkVisits,
     };
 
     // 2. Chart Data (Current vs Previous)
-    // generateComparisonData handles dates internally if we pass all events (including buffer)
     const chartData = generateComparisonData(events, start, end);
 
     // 3. Model Comparison Data
@@ -377,7 +379,6 @@ export async function GET(request: Request) {
     const sourceMap = new Map<string, { name: string; views: number; clicks: number }>();
     currentPeriodEvents.forEach(e => {
       if (!e.source_id) return;
-      // Find source name
       const source = sources?.find(s => s.id === e.source_id);
       const name = source ? source.name : 'Unknown';
 
@@ -385,8 +386,8 @@ export async function GET(request: Request) {
         sourceMap.set(e.source_id, { name, views: 0, clicks: 0 });
       }
       const stats = sourceMap.get(e.source_id)!;
-      if (e.event_type === 'view') stats.views++;
-      if (e.event_type === 'click_social' || e.event_type === 'click_content') stats.clicks++;
+      if (e.event_type === 'page_view') stats.views++;
+      if (e.event_type === 'link_click') stats.clicks++;
     });
 
     const sourceBreakdown = Array.from(sourceMap.entries()).map(([id, stats]) => ({
@@ -403,8 +404,8 @@ export async function GET(request: Request) {
       if (!e.country) return;
       if (!countryMap.has(e.country)) countryMap.set(e.country, { views: 0, clicks: 0 });
       const stats = countryMap.get(e.country)!;
-      if (e.event_type === 'view') stats.views++;
-      if (e.event_type === 'click_social' || e.event_type === 'click_content') stats.clicks++;
+      if (e.event_type === 'page_view') stats.views++;
+      if (e.event_type === 'link_click') stats.clicks++;
     });
 
     const countryBreakdown = Array.from(countryMap.entries()).map(([country, stats]) => ({
@@ -414,8 +415,6 @@ export async function GET(request: Request) {
     })).sort((a, b) => b.visits - a.visits);
 
     // 6. Model Analytics (Individual Cards)
-    // We compute this for ALL models (or top ones), regardless of filter, 
-    // unless models are filtered, then just those.
     const modelDataMap = new Map<string, {
       id: string;
       slug: string;
@@ -431,7 +430,6 @@ export async function GET(request: Request) {
       if (!e.model_id) return;
       const modelInfo = modelMap.get(e.model_id);
       if (!modelInfo) return;
-      // If filtering by models, strictly adhere (already filtered events, but good to be safe)
 
       if (!modelDataMap.has(e.model_id)) {
         modelDataMap.set(e.model_id, {
@@ -447,8 +445,8 @@ export async function GET(request: Request) {
       }
       const stats = modelDataMap.get(e.model_id)!;
 
-      if (e.event_type === 'view') stats.visits++;
-      if (e.event_type === 'click_social' || e.event_type === 'click_content') stats.clicks++;
+      if (e.event_type === 'page_view') stats.visits++;
+      if (e.event_type === 'link_click') stats.clicks++;
 
       if (e.country) {
         stats.countries.set(e.country, (stats.countries.get(e.country) || 0) + 1);
@@ -457,9 +455,10 @@ export async function GET(request: Request) {
       const dateKey = e.created_at.slice(0, 10);
       if (!stats.dailyData.has(dateKey)) stats.dailyData.set(dateKey, { views: 0, clicks: 0 });
       const daily = stats.dailyData.get(dateKey)!;
-      if (e.event_type === 'view') daily.views++;
-      if (e.event_type === 'click_social' || e.event_type === 'click_content') daily.clicks++;
+      if (e.event_type === 'page_view') daily.views++;
+      if (e.event_type === 'link_click') daily.clicks++;
     });
+
 
     const modelAnalytics = Array.from(modelDataMap.values()).map(m => ({
       modelSlug: m.slug,
@@ -481,7 +480,8 @@ export async function GET(request: Request) {
     const { data: allCountriesData } = await supabaseAdmin
       .from('analytics_events')
       .select('country')
-      .not('country', 'is', null); // Simplified query for countries
+      .not('country', 'is', null)
+      .limit(10000);
 
     const availableCountries = [...new Set(allCountriesData?.map((e: any) => e.country).filter(Boolean))].sort() as string[];
 
@@ -513,6 +513,15 @@ export async function GET(request: Request) {
       availableCountries,
       availableSources,
       availableModels,
+      debug: {
+        now: new Date().toISOString(),
+        start: start.toISOString(),
+        end: end.toISOString(),
+        rawEventCount: rawEvents?.length || 0,
+        processedEventCount: events.length,
+        currentPeriodCount: currentPeriodEvents.length,
+        sampleEvent: currentPeriodEvents[0] || events[0] || null
+      }
     });
 
   } catch (error: any) {

@@ -39,11 +39,8 @@ function calculateDelta(current: number, previous: number): string {
 /**
  * Custom Tooltip Component with Delta Calculation
  */
-function CustomTooltip({
-    active,
-    payload,
-    label
-}: TooltipProps<number, string>) {
+function CustomTooltip(props: TooltipProps<number, string>) {
+    const { active, payload, label } = props;
     if (!active || !payload || payload.length < 2) {
         return null;
     }
@@ -156,7 +153,7 @@ export function ComparisonChart({
                 </h3>
             )}
 
-            <div style={{ height }}>
+            <div style={{ height, minHeight: height }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                         data={chartData}

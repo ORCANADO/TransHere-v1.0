@@ -111,6 +111,10 @@ Do not use `useRouter().push` for external links.
     - **Bot Filtering:** ALWAYS use `isBot(userAgent)` from `@/lib/bot-detection` to skip logging for crawlers.
     - **Performance:** Use Next.js `after()` for non-blocking analytics logging in Route Handlers.
     - **Caching:** Use `getTrackingLinkCached` with `unstable_cache` for tracking attribution lookups.
+    - **API Limits & Scaling:** Supabase PostgREST has a 1000 row default limit. 
+        - ALWAYS fetch in `DESC` order to prioritize recent data.
+        - For high-volume dashboarding, query materialized views (`analytics_daily_stats`) instead of raw logs to avoid truncation.
+        - Use `page_view` and `link_click` as consistent event types.
 
 ### 2.13 Stories Logic
 - Story Viewer must use `nuqs` for state management (`?story=ID&si=INDEX`) to ensure shareability and resume playback.

@@ -896,3 +896,20 @@ All planned features implemented, tested, and polished. The platform is producti
 - **API Optimization:**
   - **Performance:** Replaced complex SQL joins with efficient in-memory mapping to resolve `500 Internal Server Error` on Supabase joins.
   - **Data Generation:** Added server-side logic (`generateModelComparisonData`) to process multi-dimensional analytics datasets.
+
+### [2026-01-15] - Phase 6.2: Dashboard Stability & Data Scaling (v1.1.6)
+**Status:** Complete
+
+- **Data Integrity Fixes:**
+  - **Resolved "Vanishing Data" Bug:** Identified that Supabase PostgREST defaults to 1000 rows. Dashboard was fetching the *oldest* 1000 events (out of range). Fixed by switching to `DESC` ordering to prioritize the most recent data.
+  - **Traffic Attribution Fixed:** Corrected the database relation name in the API fetch (`tracking_subtags`) which was causing all traffic sources to appear as "Unknown".
+  - **UTC Standardization:** Standardized all date-range calculations to strict UTC to ensure consistency between frontend filters and database storage.
+- **UI/UX Robustness:**
+  - **Chart Layout Fix:** Resolved Recharts dimension errors (-1 width/height) by enforcing `min-height` on parent containers.
+  - **StatCard Scalability:** Added shorthand formatting (K/M) for large numbers to handle thousands/millions of events comfortably.
+- **Mock Data Excellence:**
+  - Created `023_comprehensive_mock_data.sql` to generate a realistic mix of Organic and Tracking Link traffic.
+  - Verified 100% accurate attribution in the dashboard across Countries, Sources, and Models.
+- **Verification:**
+  - Created `check-all-tables.ts` utility to audit database state independently of the API.
+  - Verified 10k event processing capacity locally.
