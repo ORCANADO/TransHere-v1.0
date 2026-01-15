@@ -853,4 +853,6 @@ All planned features implemented, tested, and polished. The platform is producti
 - **Caching Layer:** Implemented `src/lib/tracking-cache.ts` using Next.js 15 `unstable_cache`.
 - **Server Actions:** Created `logTrackingEvent` and `incrementTrackingLinkClicks` for non-blocking analytics.
 - **Route Handler:** Implemented `/model/[slug]/[trackingSlug]/route.ts` with Edge Runtime and `after()` callback.
+  - *Verification Note:* Discovered `after()` does not trigger in Edge runtime on localhost. System verified by temporarily switching to Node runtime locally.
+- **Bot Filtering:** Validated that HEAD requests are skipped while GET requests are logged in the partitioned table.
 - **Architecture:** Standardized 1-hour TTL for tracking links and 307 redirects for method preservation.

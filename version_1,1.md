@@ -367,6 +367,7 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
 - [x] **Caching Layer:** Leveraged Next.js 15 `unstable_cache` with 1-hour TTL for lightning-fast tracking link lookups.
 - [x] **Event Logging:** Built a non-blocking analytics engine using Next.js `after()` for asynchronous database writes.
 - [x] **Route Handler:** Created `/model/[slug]/[trackingSlug]` edge route for sub-100ms redirects with full attribution.
+  - *Technical Note:* Next.js `after()` does not execute in Edge runtime on **localhost**. For local verification of analytics logging, temporarily comment out `runtime = 'edge'` in the route handler. Re-enable before deployment.
 
 **Next Steps:**
 - Deploy to production environment
