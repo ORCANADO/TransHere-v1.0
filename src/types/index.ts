@@ -54,4 +54,4 @@ export interface Model {
 export * from './analytics';
 
 // Tracking types
-export * from './tracking';
+export * from './tracking';export * from './charts';
