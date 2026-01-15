@@ -805,6 +805,7 @@
 - **Persistence & Synchronization:**
   - Integrated `useAdminTheme` hook into the main admin layout to ensure theme preferences persist across refreshes.
   - Verified cross-tab/refresh synchronization of theme states.
+  - **Analytics Refresh FIX:** Updated `/api/admin/refresh-views` to correctly use `ADMIN_KEY` from environment variables and implemented a robust fallback mechanism in the PostgreSQL refresh function to handle initial population of materialized views.
 - **Documentation:**
   - Updated `version_1,1.md` and `.cursorrules` with the new Admin Design System standards.
 

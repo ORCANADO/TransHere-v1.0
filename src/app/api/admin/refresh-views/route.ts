@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'edge';
 
-const ADMIN_KEY = process.env.ADMIN_SECRET || 'admin123';
+const ADMIN_KEY = process.env.ADMIN_KEY || process.env.ADMIN_SECRET || 'admin123';
 
 /**
  * Verify admin authorization
