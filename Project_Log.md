@@ -901,7 +901,7 @@ All planned features implemented, tested, and polished. The platform is producti
 **Status:** Complete
 
 - **Data Integrity Fixes:**
-  - **Resolved "Vanishing Data" Bug:** Identified that Supabase PostgREST defaults to 1000 rows. Dashboard was fetching the *oldest* 1000 events (out of range). Fixed by switching to `DESC` ordering to prioritize the most recent data.
+  - **Resolved "Vanishing Data" Bug:** Identified that Supabase PostgREST defaults to 1000 rows. Dashboard was fetching only the first 1000 events. Implemented **recursive pagination (chunked fetching)** in the API to support datasets up to 10k+ events, ensuring full visibility of large traffic periods. Switch to `DESC` ordering was also maintained to prioritize recent data.
   - **Traffic Attribution Fixed:** Corrected the database relation name in the API fetch (`tracking_subtags`) which was causing all traffic sources to appear as "Unknown".
   - **UTC Standardization:** Standardized all date-range calculations to strict UTC to ensure consistency between frontend filters and database storage.
 - **UI/UX Robustness:**

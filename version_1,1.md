@@ -396,9 +396,8 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
 - [x] **UI/UX Robustness:**
     - **Chart Dimension Stability:** Fixed Recharts rendering errors by enforcing `min-height` on chart containers.
     - **Large Number Handling:** Updated StatCards to support dynamic formatting for views/clicks (K/M shorthand).
-- [x] **Scaling Strategy:**
     - Identified the transition path from raw event processing to materialized view querying for the v1.2 roadmap.
-    - Implemented a temporary fetch limit increase (10,000 rows) as a bridge during the mock-data verification phase.
+    - Implemented **recursive pagination (chunked fetching)** in the dashboard API that bypasses the 1,000-row limit, supporting up to 10,000 events per range.
 
 **Next Steps:**
 - Deploy to production environment

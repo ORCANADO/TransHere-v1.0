@@ -113,7 +113,8 @@ Do not use `useRouter().push` for external links.
     - **Caching:** Use `getTrackingLinkCached` with `unstable_cache` for tracking attribution lookups.
     - **API Limits & Scaling:** Supabase PostgREST has a 1000 row default limit. 
         - ALWAYS fetch in `DESC` order to prioritize recent data.
-        - For high-volume dashboarding, query materialized views (`analytics_daily_stats`) instead of raw logs to avoid truncation.
+        - **Recursive Pagination:** For dashboards, implement a `while` loop with `.range(from, to)` to fetch chunks until the full range (capped at 10,000) is retrieved.
+        - **Materialized Views:** For high-volume analytics (>10k events), transition to querying materialized views (`analytics_daily_stats`) instead of raw logs.
         - Use `page_view` and `link_click` as consistent event types.
 
 ### 2.13 Stories Logic

@@ -268,35 +268,51 @@ export async function GET(request: Request) {
     const fetchStart = new Date(start.getTime() - periodDuration - (24 * 60 * 60 * 1000)); // Add buffer
 
     // Build base query
-    let query = supabaseAdmin
+    let queryBuilder = supabaseAdmin
       .from('analytics_events')
       .select('*')
       .gte('created_at', fetchStart.toISOString())
       .lte('created_at', end.toISOString())
-      .order('created_at', { ascending: false })
-      .limit(10000);
+      .order('created_at', { ascending: false });
 
-    // Apply filters
+    // Apply filters to queryBuilder
     if (country && country !== 'all') {
-      query = query.eq('country', country);
+      queryBuilder = queryBuilder.eq('country', country);
     }
-
     if (sourceId) {
-      query = query.eq('source_id', sourceId);
+      queryBuilder = queryBuilder.eq('source_id', sourceId);
     }
-
     if (subtagId) {
-      query = query.eq('subtag_id', subtagId);
+      queryBuilder = queryBuilder.eq('subtag_id', subtagId);
     }
 
-    // Execute events query
-    const { data: rawData, error } = await query;
-    const rawEvents = (rawData || []).reverse();
+    // Execute paginated fetch to bypass Supabase 1000-row limit
+    let allEvents: any[] = [];
+    let from = 0;
+    let hasMore = true;
+    const MAX_EVENTS = 10000;
 
-    if (error) {
-      console.error('Analytics fetch error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    while (hasMore && allEvents.length < MAX_EVENTS) {
+      const { data, error } = await queryBuilder
+        .range(from, from + 999);
+
+      if (error) {
+        console.error('Analytics fetch error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      if (!data || data.length === 0) {
+        hasMore = false;
+      } else {
+        allEvents = [...allEvents, ...data];
+        from += 1000;
+        if (data.length < 1000) hasMore = false;
+      }
     }
+
+    const rawEvents = allEvents.reverse();
+
+
 
     // Fetch models to join with analytics data
     const { data: modelsData } = await supabaseAdmin
