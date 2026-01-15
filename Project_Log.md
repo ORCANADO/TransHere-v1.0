@@ -844,3 +844,13 @@ All planned features implemented, tested, and polished. The platform is producti
 - Full-featured admin dashboard with drag-and-drop management
 - iOS 26 style UI components with glassmorphism effects
 - **Complete R2 file lifecycle management (upload, delete, cleanup)**
+
+## [2026-01-15] - Phase 6: Tracking & Analytics Upgrade (v1.1)
+**Status:** Complete
+
+- **Type Definitions:** Unified tracking interfaces in `src/types/tracking.ts` and exported via barrel.
+- **Bot Detection:** Created `src/lib/bot-detection.ts` for filtering crawler traffic.
+- **Caching Layer:** Implemented `src/lib/tracking-cache.ts` using Next.js 15 `unstable_cache`.
+- **Server Actions:** Created `logTrackingEvent` and `incrementTrackingLinkClicks` for non-blocking analytics.
+- **Route Handler:** Implemented `/model/[slug]/[trackingSlug]/route.ts` with Edge Runtime and `after()` callback.
+- **Architecture:** Standardized 1-hour TTL for tracking links and 307 redirects for method preservation.
