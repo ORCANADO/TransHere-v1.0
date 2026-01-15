@@ -369,6 +369,22 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
 - [x] **Route Handler:** Created `/model/[slug]/[trackingSlug]` edge route for sub-100ms redirects with full attribution.
   - *Technical Note:* Next.js `after()` does not execute in Edge runtime on **localhost**. For local verification of analytics logging, temporarily comment out `runtime = 'edge'` in the route handler. Re-enable before deployment.
 
+### Phase 6.1: Admin Design System - Solar Spectrum (v1.1.5)
+**Goal:** Create a premium, OS-level administration experience with light mode "Solar Spectrum" and iOS 26 Liquid Glass aesthetics.
+**Status:** [x] Complete
+
+- [x] **Light Mode Architecture:**
+    - Implemented `.admin-light-mode` theme switch with custom variable overrides.
+    - Colors: Perceptually uniform OKLCH palette optimized for light backgrounds.
+    - Theme Persistence: `useAdminTheme` hook ensures settings survive page refreshes and tab switches.
+- [x] **3D Liquid Glass Aesthetics:**
+    - **Reflective Borders:** Dual-tone borders (white highlight / dark shadow) to simulate physical edge refraction.
+    - **Physical Depth:** Multi-layered shadows and subtle gradients to create a floating 3D effect for cards.
+    - **Interactive Haptics:** Transform-based hover effects for interactive elements.
+- [x] **Component Modernization:**
+    - **iOS 26 Date Picker:** Custom glassmorphism calendar with theme-aware colors.
+    - **Filter Refinement:** Optimized icon visibility and stacking contexts (z-index) for better usability.
+
 **Next Steps:**
 - Deploy to production environment
 - Monitor analytics and conversion rates

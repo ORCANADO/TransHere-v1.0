@@ -791,13 +791,23 @@
   - Gallery Manager: Updated to use `models` bucket for gallery uploads
   - Admin Dashboard: Updated `uploadFileToR2` to support bucket parameter
   - Gallery uploads now use model-slug paths (e.g., `valentina-aguirre/timestamp-file.webp`)
+### [Current Date] - Admin UI Light Mode & 3D Aesthetics (Solar Spectrum)
+**Status:** Complete
+- **Theme Foundation:**
+  - Created `src/app/admin/admin-theme.css` with comprehensive OKLCH token system for "Solar Spectrum" light mode.
+  - Implemented semantic variable mapping to support Shadcn/UI components in both themes.
+- **Aesthetic Refinement (3D Glass):**
+  - Developed "Liquid Glass" effect for content cards with reflective borders and multi-layered depth shadows.
+  - Enhanced card interactions with 3D lift transforms on hover.
+- **Component Modernization:**
+  - Refactored `DatePicker` to be fully theme-aware with premium glassmorphism styling.
+  - Optimized filter icons with `z-index` and standardized color classes for light mode visibility.
+- **Persistence & Synchronization:**
+  - Integrated `useAdminTheme` hook into the main admin layout to ensure theme preferences persist across refreshes.
+  - Verified cross-tab/refresh synchronization of theme states.
+- **Documentation:**
+  - Updated `version_1,1.md` and `.cursorrules` with the new Admin Design System standards.
 
-- **Cleanup Utility:**
-  - Created `/api/admin/cleanup` endpoint for finding and deleting orphaned R2 files
-  - GET endpoint: Analyzes orphaned files (files in R2 without Supabase records)
-  - POST endpoint: Deletes orphaned files (requires `?confirm=true` for safety)
-  - Handles pagination for large buckets
-  - Batch deletion with 1000-object limit per batch
 
 - **Bucket Detection Logic:**
   - Smart bucket detection based on URL domain or path pattern

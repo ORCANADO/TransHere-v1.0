@@ -223,6 +223,20 @@ Do not use `useRouter().push` for external links.
   - Conditional classes based on `isViewed(slug)` state
   - Vignette overlay fades out on hover/viewed with `transition-opacity duration-500`
 
+### 2.20 Admin Design System - Solar Spectrum (Light Mode)
+- **Theme Switcher:** Use `.admin-light-mode` class on `document.body` for theme activation.
+- **Color Philosophy:** Use OKLCH color space for perceptually uniform gradients and high-contrast text.
+- **Glassmorphism (iOS 26 Liquid Glass):**
+    - **Backdrop:** `backdrop-blur(24px) saturate(140%)`.
+    - **Reflective Borders:** 
+        - Top/Left: Translucent white (`oklch(100% 0 0 / 0.6)`) to catch highlights.
+        - Bottom/Right: Subtle shadow (`oklch(85% 0.01 250 / 0.2)`) to simulate thickness.
+    - **3D Depth:** Multi-layered `box-shadow` combining soft ambient occlusion with direct drop shadows.
+- **Layout Standards:**
+    - Cards MUST use `liquid-glass-elevated` or equivalent overrides in light mode.
+    - Text MUST prioritize accessibility with dark primary/secondary contrast ratios.
+- **Persistence:** Always use `useAdminTheme` hook in the main layout to ensure theme state is synchronized with `localStorage`.
+
 ### 2.19 Story Visual Memory System
 - **Hook:** `useViewedStories` in `src/hooks/use-viewed-stories.ts`
   - Storage key: `'transpot-viewed-story-ids'` (tracks individual story IDs, not group IDs)

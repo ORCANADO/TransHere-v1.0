@@ -35,7 +35,7 @@ export function AnalyticsDashboard({ adminKey }: AnalyticsDashboardProps) {
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const params = new URLSearchParams({
         key: adminKey,
@@ -44,14 +44,14 @@ export function AnalyticsDashboard({ adminKey }: AnalyticsDashboardProps) {
         ...(period === 'custom' && startDate && { startDate }),
         ...(period === 'custom' && endDate && { endDate }),
       });
-      
+
       const res = await fetch(`/api/admin/dashboard?${params}`);
       const json = await res.json();
-      
+
       if (!res.ok) {
         throw new Error(json.error || 'Failed to fetch analytics');
       }
-      
+
       setData(json);
       setLastUpdated(new Date());
     } catch (err) {
@@ -75,7 +75,7 @@ export function AnalyticsDashboard({ adminKey }: AnalyticsDashboardProps) {
     return (
       <div className="p-8 text-center">
         <p className="text-red-400 mb-4">Error: {error}</p>
-        <button 
+        <button
           onClick={fetchData}
           className="px-4 py-2 bg-[#7A27FF] text-white rounded-lg hover:bg-[#7A27FF]/80 transition-colors"
         >
@@ -97,23 +97,23 @@ export function AnalyticsDashboard({ adminKey }: AnalyticsDashboardProps) {
             </p>
           )}
         </div>
-        
+
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-3">
             {/* Time Period Filter */}
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
               <select
                 value={period}
                 onChange={(e) => setPeriod(e.target.value as TimePeriod)}
-                className="pl-10 pr-4 py-2 bg-card border border-white/10 rounded-lg text-white text-sm appearance-none cursor-pointer hover:border-white/20 transition-colors min-w-[150px]"
+                className="pl-10 pr-4 py-2 bg-card border border-border rounded-lg text-foreground text-sm appearance-none cursor-pointer hover:border-border/80 transition-colors min-w-[150px]"
               >
                 {TIME_PERIODS.map(({ value, label }) => (
                   <option key={value} value={value}>{label}</option>
                 ))}
               </select>
             </div>
-            
+
             {/* Custom Date Range */}
             {period === 'custom' && (
               <>
@@ -133,14 +133,14 @@ export function AnalyticsDashboard({ adminKey }: AnalyticsDashboardProps) {
                 />
               </>
             )}
-            
+
             {/* Country Filter */}
             <div className="relative">
-              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
               <select
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-card border border-white/10 rounded-lg text-white text-sm appearance-none cursor-pointer hover:border-white/20 transition-colors min-w-[150px]"
+                className="pl-10 pr-4 py-2 bg-card border border-border rounded-lg text-foreground text-sm appearance-none cursor-pointer hover:border-border/80 transition-colors min-w-[150px]"
               >
                 <option value="all">All Countries</option>
                 {data?.availableCountries.map((c) => (
@@ -148,18 +148,18 @@ export function AnalyticsDashboard({ adminKey }: AnalyticsDashboardProps) {
                 ))}
               </select>
             </div>
-            
+
             {/* Refresh Button */}
             <button
               onClick={fetchData}
               disabled={loading}
-              className="p-2 bg-card border border-white/10 rounded-lg text-white hover:border-white/20 transition-colors disabled:opacity-50"
+              className="p-2 bg-card border border-border rounded-lg text-foreground hover:border-border/80 transition-colors disabled:opacity-50"
               aria-label="Refresh data"
             >
               <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
             </button>
           </div>
-          
+
           {/* Custom date range validation message */}
           {period === 'custom' && (!startDate || !endDate) && (
             <p className="text-sm text-yellow-400">
@@ -214,26 +214,25 @@ export function AnalyticsDashboard({ adminKey }: AnalyticsDashboardProps) {
           </div>
 
           {/* Chart */}
-          <AnalyticsChart 
-            data={data.chartData} 
-            title="Traffic Over Time" 
+          <AnalyticsChart
+            data={data.chartData}
+            title="Traffic Over Time"
           />
 
           {/* Country Breakdown */}
           {data.countryBreakdown.length > 0 && (
-            <div className="bg-card border border-white/10 rounded-xl p-4 lg:p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Top Countries</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div className="bg-card border border-border rounded-xl p-4 lg:p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Globe className="w-5 h-5" /> Top Countries
+              </h3>
+              <div className="flex flex-wrap gap-3">
                 {data.countryBreakdown.slice(0, 10).map(({ country, visits, clicks }) => (
-                  <div 
+                  <div
                     key={country}
-                    className="p-3 bg-white/5 rounded-lg"
+                    className="px-4 py-2 bg-muted/50 border border-border rounded-full flex items-center gap-2"
                   >
-                    <p className="font-medium text-white">{country}</p>
-                    <div className="flex justify-between mt-1 text-sm">
-                      <span className="text-[#7A27FF]">{visits} views</span>
-                      <span className="text-[#00FF85]">{clicks} clicks</span>
-                    </div>
+                    <span className="font-semibold text-foreground">{country}:</span>
+                    <span className="text-[#7A27FF]">{visits}</span>
                   </div>
                 ))}
               </div>
@@ -249,7 +248,7 @@ export function AnalyticsDashboard({ adminKey }: AnalyticsDashboardProps) {
               {data.modelAnalytics.map((model) => (
                 <ModelAnalyticsCard key={model.modelSlug} model={model} />
               ))}
-              
+
               {data.modelAnalytics.length === 0 && (
                 <div className="bg-card border border-white/10 rounded-xl p-8 text-center">
                   <p className="text-muted-foreground">

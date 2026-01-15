@@ -6,20 +6,20 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  
+
   /* ==========================================================================
      EDITORIAL FASHION TYPOGRAPHY SYSTEM (Brand_Identity.md §4.2)
      
      Serif (Headlines/Brand Moments): Expressive, high-contrast, romantic
      Sans (Body/Utility): Neutral, legible, efficient
      ========================================================================== */
-  
+
   /* Sans: Montserrat → Inter → DM Sans → System fallbacks */
   --font-sans: var(--font-montserrat), "Inter", "DM Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  
+
   /* Serif: Playfair Display → Cormorant Garamond → Georgia → System fallbacks */
   --font-serif: var(--font-playfair), "Cormorant Garamond", "Playfair Display", Georgia, Cambria, "Times New Roman", ui-serif, serif;
-  
+
   /* Mono: System monospace stack */
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --color-sidebar-ring: var(--sidebar-ring);
@@ -116,59 +116,64 @@
      Rationale: Pure black (#000000) can be harsh. Obsidian Navy offers a cinematic 
      backdrop that makes user photos pop, mimicking the experience of watching a movie. */
   --background: #050A14;
-  
+
   /* #F0F4F8 - Titanium White: High contrast text */
   --foreground: #F0F4F8;
-  
+
   /* #0A1221 - Deep Charcoal Navy: Elevated surfaces */
   --card: #0A1221;
   --card-foreground: #F0F4F8;
-  
+
   /* Popover - Same as card for consistency */
   --popover: #0A1221;
   --popover-foreground: #F0F4F8;
-  
+
   /* ========== PRIMARY ACTION: ELECTRIC EMERALD ========== */
   /* #00FF85 - Electric Emerald: High-energy CTA color */
   --primary: #00FF85;
   --primary-foreground: #050A14;
-  
+
   /* ========== SECONDARY: CYBER VIOLET ========== */
   /* #7A27FF - Cyber Violet: Interactive accents, gradients */
   --secondary: #7A27FF;
   --secondary-foreground: #F0F4F8;
-  
+
   /* ========== MUTED STATES ========== */
   /* Subtle surfaces for disabled/inactive elements */
   --muted: #0D1520;
   /* #94A3B8 - Slate: Secondary text, captions */
   --muted-foreground: #94A3B8;
-  
+
   /* ========== ACCENT: RICH GOLD ========== */
   /* #D4AF37 - Rich Gold: Premium badges, special highlights */
   --accent: #D4AF37;
   --accent-foreground: #050A14;
-  
+
   /* ========== UTILITY COLORS ========== */
   /* Destructive - Error states */
   --destructive: #EF4444;
-  
+
   /* Border - Subtle separation */
   --border: rgba(255, 255, 255, 0.08);
-  
+
   /* Input - Slightly more visible */
   --input: rgba(255, 255, 255, 0.10);
-  
+
   /* #D4AF37 - Rich Gold: Focus ring for accessibility */
   --ring: #D4AF37;
-  
+
   /* ========== CHART COLORS - NOCTURNAL PALETTE ========== */
-  --chart-1: #00FF85;  /* Electric Emerald */
-  --chart-2: #D4AF37;  /* Rich Gold */
-  --chart-3: #7A27FF;  /* Cyber Violet */
-  --chart-4: #00C9A7;  /* Teal accent */
-  --chart-5: oklch(60% 0.20 30);   /* Warm coral */
-  
+  --chart-1: #00FF85;
+  /* Electric Emerald */
+  --chart-2: #D4AF37;
+  /* Rich Gold */
+  --chart-3: #7A27FF;
+  /* Cyber Violet */
+  --chart-4: #00C9A7;
+  /* Teal accent */
+  --chart-5: oklch(60% 0.20 30);
+  /* Warm coral */
+
   /* ========== SIDEBAR ========== */
   --sidebar: oklch(8% 0.025 265);
   --sidebar-foreground: oklch(96% 0.01 250);
@@ -184,10 +189,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
-  
+
   /* Story Viewer: Blur the page content when story is open */
   /* Target the main content wrapper, not the fixed story viewer */
   body.story-open #main-content {
@@ -196,11 +202,11 @@
     transition: filter 0.3s ease-out, transform 0.3s ease-out;
     pointer-events: none;
   }
-  
+
   body.story-open {
     overflow: hidden;
   }
-  
+
   /* ==========================================================================
      EDITORIAL HEADING SYSTEM
      
@@ -209,37 +215,55 @@
      - font-medium (500): Sleek rather than heavy
      - text-foreground: High contrast on dark backgrounds
      ========================================================================== */
-  
-  h1, h2, h3, h4 {
+
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: var(--font-serif);
     font-weight: 500;
-    letter-spacing: -0.025em; /* tracking-tight */
+    letter-spacing: -0.025em;
+    /* tracking-tight */
     color: var(--foreground);
   }
-  
+
   /* Responsive heading sizes with luxury proportions */
   h1 {
-    font-size: clamp(2rem, 5vw, 3.5rem);     /* 32px → 56px */
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    /* 32px → 56px */
     line-height: 1.1;
   }
-  
+
   h2 {
-    font-size: clamp(1.5rem, 4vw, 2.5rem);   /* 24px → 40px */
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    /* 24px → 40px */
     line-height: 1.15;
   }
-  
+
   h3 {
-    font-size: clamp(1.25rem, 3vw, 1.75rem); /* 20px → 28px */
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
+    /* 20px → 28px */
     line-height: 1.2;
   }
-  
+
   h4 {
-    font-size: clamp(1.125rem, 2.5vw, 1.5rem); /* 18px → 24px */
+    font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+    /* 18px → 24px */
     line-height: 1.25;
   }
-  
+
   /* Body text defaults to Sans */
-  p, span, div, li, td, th, label, input, textarea, select, button {
+  p,
+  span,
+  div,
+  li,
+  td,
+  th,
+  label,
+  input,
+  textarea,
+  select,
+  button {
     font-family: var(--font-sans);
   }
 }
@@ -299,14 +323,14 @@
   /* Gold Glow: Subtle outer shadow for premium/featured badges */
   /* Uses #D4AF37 (Rich Gold) at 30% opacity */
   .gold-glow {
-    box-shadow: 
+    box-shadow:
       0 0 20px -5px oklch(78% 0.13 85 / 0.3),
       0 0 8px -2px oklch(78% 0.13 85 / 0.2);
   }
 
   /* Gold Glow Intense: For hover states and featured items */
   .gold-glow-intense {
-    box-shadow: 
+    box-shadow:
       0 0 30px -5px oklch(78% 0.13 85 / 0.5),
       0 0 15px -3px oklch(78% 0.13 85 / 0.35),
       inset 0 0 0 1px oklch(78% 0.13 85 / 0.15);
@@ -317,7 +341,7 @@
     background-color: oklch(85% 0.24 155);
     color: oklch(6% 0.025 265);
     font-weight: 600;
-    box-shadow: 
+    box-shadow:
       0 4px 14px -3px oklch(85% 0.24 155 / 0.4),
       0 2px 6px -2px oklch(85% 0.24 155 / 0.2);
     transition: all 0.2s ease-out;
@@ -325,7 +349,7 @@
 
   .emerald-button:hover {
     background-color: oklch(88% 0.26 155);
-    box-shadow: 
+    box-shadow:
       0 8px 25px -4px oklch(85% 0.24 155 / 0.55),
       0 4px 12px -3px oklch(85% 0.24 155 / 0.35),
       0 0 0 2px oklch(85% 0.24 155 / 0.15);
@@ -334,21 +358,21 @@
 
   .emerald-button:active {
     transform: translateY(0);
-    box-shadow: 
+    box-shadow:
       0 2px 8px -2px oklch(85% 0.24 155 / 0.4),
       0 1px 4px -1px oklch(85% 0.24 155 / 0.2);
   }
 
   /* Emerald Glow: For emerald-themed elements */
   .emerald-glow {
-    box-shadow: 
+    box-shadow:
       0 0 20px -5px oklch(85% 0.24 155 / 0.35),
       0 0 8px -2px oklch(85% 0.24 155 / 0.2);
   }
 
   /* Violet Glow: For secondary/accent elements */
   .violet-glow {
-    box-shadow: 
+    box-shadow:
       0 0 20px -5px oklch(48% 0.30 295 / 0.4),
       0 0 8px -2px oklch(48% 0.30 295 / 0.25);
   }
@@ -361,6 +385,7 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
@@ -395,13 +420,16 @@
   }
 
   @keyframes glow {
-    0%, 100% {
-      box-shadow: 
+
+    0%,
+    100% {
+      box-shadow:
         0 10px 25px -3px oklch(85% 0.24 155 / 0.3),
         0 4px 6px -4px oklch(85% 0.24 155 / 0.15);
     }
+
     50% {
-      box-shadow: 
+      box-shadow:
         0 15px 35px -3px oklch(85% 0.24 155 / 0.5),
         0 6px 10px -4px oklch(85% 0.24 155 / 0.25);
     }
@@ -413,13 +441,16 @@
   }
 
   @keyframes glow-gold {
-    0%, 100% {
-      box-shadow: 
+
+    0%,
+    100% {
+      box-shadow:
         0 8px 20px -3px oklch(78% 0.13 85 / 0.25),
         0 3px 5px -3px oklch(78% 0.13 85 / 0.1);
     }
+
     50% {
-      box-shadow: 
+      box-shadow:
         0 12px 30px -3px oklch(78% 0.13 85 / 0.4),
         0 5px 8px -3px oklch(78% 0.13 85 / 0.2);
     }
@@ -427,12 +458,151 @@
 
   /* Logo Pulse Animation - Proximity indicator */
   @keyframes logo-pulse {
-    0%, 100% {
+
+    0%,
+    100% {
       transform: scale(1);
     }
+
     50% {
       transform: scale(1.3);
     }
   }
 }
 
+/* ============================================
+   TRANSHERE v1.1 - THEME TOGGLE SYSTEM
+   Support for admin light/dark mode switching
+   ============================================ */
+
+/* === THEME TOGGLE TRANSITION ROOT === */
+/* Enables smooth color transitions when switching themes */
+:root {
+  --theme-transition-duration: 0.3s;
+  --theme-transition-timing: ease;
+}
+
+/* Global transition for theme switching */
+.theme-transitioning,
+.theme-transitioning * {
+  transition:
+    background-color var(--theme-transition-duration) var(--theme-transition-timing),
+    border-color var(--theme-transition-duration) var(--theme-transition-timing),
+    color var(--theme-transition-duration) var(--theme-transition-timing),
+    box-shadow var(--theme-transition-duration) var(--theme-transition-timing),
+    opacity var(--theme-transition-duration) var(--theme-transition-timing) !important;
+}
+
+/* === LIQUID GLASS BASE UTILITIES === */
+/* Available in both themes, with theme-specific overrides */
+
+@layer utilities {
+
+  /* Base liquid glass - works in dark mode by default */
+  .liquid-glass {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    position: relative;
+  }
+
+  .liquid-glass-elevated {
+    backdrop-filter: blur(30px) saturate(200%);
+    -webkit-backdrop-filter: blur(30px) saturate(200%);
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .liquid-glass-subtle {
+    backdrop-filter: blur(10px) saturate(150%);
+    -webkit-backdrop-filter: blur(10px) saturate(150%);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .liquid-glass-button {
+    backdrop-filter: blur(15px) saturate(160%);
+    -webkit-backdrop-filter: blur(15px) saturate(160%);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    transition: all 0.2s ease;
+  }
+
+  .liquid-glass-button:hover {
+    background: rgba(255, 255, 255, 0.18);
+    transform: translateY(-1px);
+  }
+
+  /* Specular highlight mixin - adds top edge reflection */
+  .specular-highlight::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.6) 20%,
+        rgba(255, 255, 255, 0.8) 50%,
+        rgba(255, 255, 255, 0.6) 80%,
+        transparent 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Depth perception utilities */
+  .glass-depth-1 {
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-depth-2 {
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+
+  .glass-depth-3 {
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* === ADMIN THEME DETECTION === */
+/* Body class-based theme detection for admin dashboard */
+
+body.admin-light-mode {
+  /* Light mode is now active via admin-theme.css import */
+}
+
+/* Ensure dark mode works when light mode is NOT active */
+body:not(.admin-light-mode) .admin-header,
+body:not(.admin-light-mode) .admin-content {
+  /* Inherit from .dark theme variables */
+}
+
+/* === REDUCED MOTION SUPPORT === */
+@media (prefers-reduced-motion: reduce) {
+
+  .theme-transitioning,
+  .theme-transitioning *,
+  .liquid-glass-button,
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* === HIGH CONTRAST MODE SUPPORT === */
+@media (prefers-contrast: high) {
+  .admin-light-mode {
+    --admin-border-default: oklch(70% 0.02 250 / 0.8);
+    --admin-border-strong: oklch(60% 0.025 250 / 0.9);
+    --glass-surface-1: oklch(100% 0 0 / 0.9);
+    --glass-surface-2: oklch(100% 0 0 / 0.95);
+  }
+}
