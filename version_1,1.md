@@ -415,10 +415,24 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
     - **Timezone Bug Fix:** Switched from UTC-based `new Date()` parsing to local date parsing for the display label, resolving the common "selected day is one day behind" issue.
     - **Auto-Close:** Added global scroll and resize listeners to automatically close the picker when the page moves, preventing visual detachment.
 
+### Phase 6.4: Tracking Link Management & Integration (v1.1.8)
+**Goal:** Integrate per-model tracking link management and resolve production hydration/API issues.
+**Status:** [x] Complete
+
+- [x] **Tracking Link Manager:**
+    - Integrated `TrackingLinkManager` into the main Admin Dashboard (`/admin`).
+    - Implemented modal-based lifecycle management for links (Create, Edit, Copy, Archive).
+    - Added support for **Custom Traffic Sources** with automated slug generation.
+- [x] **Stability & Fixes:**
+    - **Hydration Sync:** Resolved a critical hydration mismatch in the admin panel by implementing a client-side mount check.
+    - **API Recovery:** Fixed 500 errors on link and source creation by correcting table column naming (`click_count`) and slug requirements.
+    - **Type Integrity:** Standardized `TrackingLink` types across the API and frontend to match the database schema.
+- [x] **Verification:**
+    - Successfully performed end-to-end manual verification of the tracking link creation and archival flows.
+
 **Next Steps:**
-- Final production deployment of v1.1 series.
-- Monitor dashboard performance with full 10k event datasets.
-- Begin architectural planning for v1.2 (Real-time Analytics).
+- Final production deployment of v1.1.
+- Monitor tracking link performance and attribution accuracy.
 
 ---
 

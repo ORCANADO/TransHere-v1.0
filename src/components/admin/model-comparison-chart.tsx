@@ -27,7 +27,7 @@ import type {
 /**
  * Custom Tooltip for Model Comparison
  */
-function ModelComparisonTooltip(props: TooltipProps<number, string> & { models: ChartModelInfo[] }) {
+function ModelComparisonTooltip(props: any) {
     const { active, payload, label, models } = props;
     if (!active || !payload || payload.length === 0) {
         return null;
@@ -47,8 +47,8 @@ function ModelComparisonTooltip(props: TooltipProps<number, string> & { models: 
 
             {/* Model Values */}
             <div className="space-y-2">
-                {sortedPayload.map((entry, index) => {
-                    const model = models.find(m => m.slug === entry.dataKey);
+                {sortedPayload.map((entry: any) => {
+                    const model = (models as ChartModelInfo[]).find(m => m.slug === entry.dataKey);
                     return (
                         <div key={entry.dataKey} className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2 min-w-0">

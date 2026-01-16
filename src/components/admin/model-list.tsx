@@ -1,20 +1,22 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  Search, 
-  Plus, 
-  Trash2, 
-  Edit, 
+import {
+  Search,
+  Plus,
+  Trash2,
+  Edit,
   Pin,
   Image as ImageIcon,
   Film,
-  RefreshCw
+  RefreshCw,
+  Link2
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn, getImageUrl } from '@/lib/utils';
 import { VerifiedBadge } from '@/components/ui/verified-badge';
 import type { ModelWithCounts } from '@/types/admin';
+import { TrackingLinkManager } from '@/app/admin/components/TrackingLinkManager';
 
 interface ModelListProps {
   adminKey: string;
@@ -27,16 +29,21 @@ export function ModelList({ adminKey, onEditModel, onAddModel }: ModelListProps)
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [selectedModelForLinks, setSelectedModelForLinks] = useState<{
+    id: string;
+    slug: string;
+    name: string;
+  } | null>(null);
 
   const fetchModels = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ key: adminKey });
       if (search) params.set('search', search);
-      
+
       const res = await fetch(`/api/admin/models?${params}`);
       const json = await res.json();
-      
+
       if (json.success) {
         setModels(json.data);
       }
@@ -52,7 +59,7 @@ export function ModelList({ adminKey, onEditModel, onAddModel }: ModelListProps)
     const timer = setTimeout(() => {
       fetchModels();
     }, search ? 300 : 0); // Immediate fetch if no search, debounce if searching
-    
+
     return () => clearTimeout(timer);
   }, [fetchModels, search]);
 
@@ -67,7 +74,7 @@ export function ModelList({ adminKey, onEditModel, onAddModel }: ModelListProps)
         method: 'DELETE',
       });
       const json = await res.json();
-      
+
       if (json.success) {
         setModels(models.filter(m => m.id !== modelId));
         setDeleteConfirm(null);
@@ -89,7 +96,7 @@ export function ModelList({ adminKey, onEditModel, onAddModel }: ModelListProps)
         <h2 className="text-xl font-bold text-white">
           Models ({models.length})
         </h2>
-        
+
         <div className="flex gap-3 w-full sm:w-auto">
           {/* Search */}
           <div className="relative flex-1 sm:flex-initial">
@@ -102,7 +109,7 @@ export function ModelList({ adminKey, onEditModel, onAddModel }: ModelListProps)
               className="pl-10 pr-4 py-2 bg-card border border-white/10 rounded-lg text-white text-sm w-full sm:w-64 placeholder:text-muted-foreground focus:outline-none focus:border-[#00FF85]/50"
             />
           </div>
-          
+
           {/* Refresh */}
           <button
             onClick={fetchModels}
@@ -112,7 +119,7 @@ export function ModelList({ adminKey, onEditModel, onAddModel }: ModelListProps)
           >
             <RefreshCw className={cn("w-5 h-5", loading && "animate-spin")} />
           </button>
-          
+
           {/* Add Model */}
           <button
             onClick={onAddModel}
@@ -157,7 +164,7 @@ export function ModelList({ adminKey, onEditModel, onAddModel }: ModelListProps)
                   </div>
                 )}
               </div>
-              
+
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -186,11 +193,11 @@ export function ModelList({ adminKey, onEditModel, onAddModel }: ModelListProps)
                   </span>
                 </div>
               </div>
-              
+
               {/* Tags */}
               <div className="hidden lg:flex gap-1 flex-wrap max-w-[200px]">
                 {model.tags.slice(0, 3).map((tag) => (
-                  <span 
+                  <span
                     key={tag}
                     className="px-2 py-0.5 bg-white/5 text-xs text-muted-foreground rounded"
                   >
@@ -203,9 +210,21 @@ export function ModelList({ adminKey, onEditModel, onAddModel }: ModelListProps)
                   </span>
                 )}
               </div>
-              
+
               {/* Actions */}
               <div className="flex gap-2">
+                <button
+                  onClick={() => setSelectedModelForLinks({
+                    id: model.id,
+                    slug: model.slug,
+                    name: model.name,
+                  })}
+                  className="p-2 bg-[#7A27FF]/10 border border-[#7A27FF]/30 rounded-lg text-[#7A27FF] hover:bg-[#7A27FF]/20 transition-colors"
+                  aria-label={`Manage tracking links for ${model.name}`}
+                  title="Tracking Links"
+                >
+                  <Link2 className="w-4 h-4" />
+                </button>
                 <button
                   onClick={() => onEditModel(model.id)}
                   className="p-2 bg-white/5 rounded-lg text-white hover:bg-white/10 transition-colors"
@@ -230,6 +249,18 @@ export function ModelList({ adminKey, onEditModel, onAddModel }: ModelListProps)
           ))
         )}
       </div>
+
+      {/* Tracking Link Manager Modal */}
+      {selectedModelForLinks && (
+        <TrackingLinkManager
+          isOpen={!!selectedModelForLinks}
+          onClose={() => setSelectedModelForLinks(null)}
+          modelId={selectedModelForLinks.id}
+          modelSlug={selectedModelForLinks.slug}
+          modelName={selectedModelForLinks.name}
+          adminKey={adminKey}
+        />
+      )}
     </div>
   );
 }

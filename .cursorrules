@@ -116,6 +116,16 @@ Do not use `useRouter().push` for external links.
         - **Recursive Pagination:** For dashboards, implement a `while` loop with `.range(from, to)` to fetch chunks until the full range (capped at 10,000) is retrieved.
         - **Materialized Views:** For high-volume analytics (>10k events), transition to querying materialized views (`analytics_daily_stats`) instead of raw logs.
         - Use `page_view` and `link_click` as consistent event types.
+- **Tracking Link Management:**
+    - Per-model tracking links are managed via the `TrackingLinkManager` component.
+    - **Database Schema:**
+        - `tracking_links` table uses `click_count` (int) for denormalized counts.
+        - `tracking_sources` table handles traffic sources and MUST have a URL-friendly `slug`.
+        - `is_archived` boolean is used for soft-deleting tracking links.
+    - **API Routes:**
+        - `/api/admin/tracking-links`: Fetch/Create links for a model.
+        - `/api/admin/tracking-sources`: Manage traffic sources (global and custom).
+    - **Hydration:** Admin components must handle hydration carefully using `mounted` state checks.
 
 ### 2.13 Stories Logic
 - Story Viewer must use `nuqs` for state management (`?story=ID&si=INDEX`) to ensure shareability and resume playback.

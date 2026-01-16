@@ -8,7 +8,8 @@ import {
   BarChart3,
   Users,
   Upload,
-  Settings
+  Settings,
+  Link2
 } from 'lucide-react';
 import './admin-theme.css';
 import { ThemeToggle } from '@/components/admin/theme-toggle';
@@ -17,18 +18,39 @@ import { cn } from '@/lib/utils';
 import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
 import { ModelList } from '@/components/admin/model-list';
 import { ModelEditor } from '@/components/admin/model-editor';
+import { TrackingLinkManager } from '@/app/admin/components/TrackingLinkManager';
+import { createClient } from '@/lib/supabase/client';
+import { useEffect } from 'react';
 
-type Tab = 'analytics' | 'models' | 'upload' | 'settings';
+type Tab = 'analytics' | 'models' | 'tracking' | 'upload' | 'settings';
 
 function AdminContent() {
   const searchParams = useSearchParams();
   const adminKey = searchParams.get('key');
   const [activeTab, setActiveTab] = useState<Tab>('analytics');
+  const [mounted, setMounted] = useState(false);
   const [editingModelId, setEditingModelId] = useState<string | null>(null);
   const [isAddingModel, setIsAddingModel] = useState(false);
 
   // Initialize theme globally
   useAdminTheme();
+
+  const [models, setModels] = useState<{ id: string; name: string; slug: string }[]>([]);
+  const [isTrackingManagerOpen, setIsTrackingManagerOpen] = useState(false);
+  const [trackingModel, setTrackingModel] = useState<{ id: string; name: string; slug: string } | null>(null);
+
+  useEffect(() => {
+    const fetchModels = async () => {
+      const supabase = createClient();
+      const { data } = await supabase.from('models').select('id, name, slug').order('name');
+      if (data) setModels(data);
+    };
+    fetchModels();
+  }, []);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!adminKey) {
     return (
@@ -47,6 +69,7 @@ function AdminContent() {
   const tabs: { id: Tab; label: string; icon: typeof BarChart3 }[] = [
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'models', label: 'Models', icon: Users },
+    { id: 'tracking', label: 'Tracking Links', icon: Link2 },
     { id: 'upload', label: 'Quick Upload', icon: Upload },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -83,8 +106,10 @@ function AdminContent() {
     );
   }
 
+  if (!mounted) return null;
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" suppressHydrationWarning>
       {/* Admin Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -128,6 +153,42 @@ function AdminContent() {
             onEditModel={(id) => setEditingModelId(id)}
             onAddModel={() => setIsAddingModel(true)}
           />
+        )}
+
+        {activeTab === 'tracking' && (
+          <div className="bg-card border border-white/10 rounded-xl p-6 liquid-glass">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-white">Tracking Link Management</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Manage attribution links and traffic sources for all models.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {models.map((model) => (
+                <div
+                  key={model.id}
+                  className="p-4 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between"
+                >
+                  <div>
+                    <h3 className="font-medium text-white">{model.name}</h3>
+                    <p className="text-xs text-muted-foreground font-mono">/{model.slug}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setTrackingModel(model);
+                      setIsTrackingManagerOpen(true);
+                    }}
+                    className="mt-4 w-full py-2 bg-[#7A27FF]/20 text-[#7A27FF] border border-[#7A27FF]/30 rounded-lg hover:bg-[#7A27FF]/30 transition-colors text-sm font-medium"
+                  >
+                    Manage Links
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {activeTab === 'upload' && (
@@ -281,6 +342,17 @@ function AdminContent() {
           </div>
         )}
       </main>
+
+      {trackingModel && (
+        <TrackingLinkManager
+          isOpen={isTrackingManagerOpen}
+          onClose={() => setIsTrackingManagerOpen(false)}
+          modelId={trackingModel.id}
+          modelSlug={trackingModel.slug}
+          modelName={trackingModel.name}
+          adminKey={adminKey}
+        />
+      )}
     </div>
   );
 }

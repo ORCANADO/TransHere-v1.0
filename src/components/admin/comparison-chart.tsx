@@ -39,14 +39,14 @@ function calculateDelta(current: number, previous: number): string {
 /**
  * Custom Tooltip Component with Delta Calculation
  */
-function CustomTooltip(props: TooltipProps<number, string>) {
+function CustomTooltip(props: any) {
     const { active, payload, label } = props;
     if (!active || !payload || payload.length < 2) {
         return null;
     }
 
-    const currentData = payload.find(p => p.dataKey === 'current');
-    const previousData = payload.find(p => p.dataKey === 'previous');
+    const currentData = (payload as any[]).find(p => p.dataKey === 'current');
+    const previousData = (payload as any[]).find(p => p.dataKey === 'previous');
 
     const current = currentData?.value ?? 0;
     const previous = previousData?.value ?? 0;

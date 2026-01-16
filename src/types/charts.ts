@@ -76,17 +76,8 @@ export interface DashboardFilters {
     modelSlugs: string[];
 }
 
-/**
- * Time period options
- */
-export type TimePeriod =
-    | 'hour'
-    | 'today'
-    | '7days'
-    | '30days'
-    | '90days'
-    | 'all'
-    | 'custom';
+import type { TimePeriod } from './analytics';
+export type { TimePeriod };
 
 /**
  * Traffic source for filter dropdown

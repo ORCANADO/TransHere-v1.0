@@ -9,6 +9,7 @@ A high-performance, mobile-first landing page for X (Twitter) to OnlyFans/Fansly
 - **Category Filtering**: Top 15 most-used tags with frequency-based sorting
 - **Real-Time Sync**: Cross-tab/window synchronization for favorites and viewed content
 - **Dark Mode Luxury Branding**: Midnight Spectrum color palette
+- **Tracking Link Management**: Granular attribution per model/source with custom traffic source support
 - **Zero-Cost Infrastructure**: Cloudflare Pages + R2 + Supabase (Free Tier)
 
 ## Tech Stack

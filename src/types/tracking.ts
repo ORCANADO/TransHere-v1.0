@@ -3,15 +3,12 @@
 // ============================================
 
 /**
- * Traffic source (tag) for tracking attribution
+ * Traffic source for tracking attribution
  */
-export interface TrafficSource {
+export interface TrackingSource {
   id: string;
   name: string;
-  slug: string;
-  is_default: boolean;
-  is_deletable: boolean;
-  sort_order: number;
+  is_custom: boolean;
   created_at: string;
 }
 
@@ -22,10 +19,7 @@ export interface TrackingSubtag {
   id: string;
   source_id: string;
   name: string;
-  slug: string;
   created_at: string;
-  // Joined data
-  source?: TrafficSource;
 }
 
 /**
@@ -34,22 +28,51 @@ export interface TrackingSubtag {
 export interface TrackingLink {
   id: string;
   model_id: string;
-  source_id: string;
-  subtag_id: string | null;
   slug: string;
-  is_active: boolean;
-  is_archived: boolean;
-  archived_at: string | null;
+  source_id: string | null;
+  subtag_id: string | null;
+  preview_url: string | null;
   click_count: number;
+  is_archived: boolean;
   created_at: string;
-  // Joined data
-  source?: TrafficSource;
-  subtag?: TrackingSubtag | null;
-  model?: {
-    id: string;
-    name: string;
-    slug: string;
-  };
+  // Joined fields
+  source?: TrackingSource;
+  subtag?: TrackingSubtag;
+}
+
+export interface TrackingLinkWithDetails extends TrackingLink {
+  source_name: string | null;
+  subtag_name: string | null;
+}
+
+export interface CreateTrackingLinkPayload {
+  modelId: string;
+  sourceId: string;
+  subtagId?: string | null;
+  previewUrl?: string | null;
+}
+
+export interface UpdateTrackingLinkPayload {
+  sourceId?: string;
+  subtagId?: string | null;
+  previewUrl?: string | null;
+}
+
+export interface CreateCustomSourcePayload {
+  name: string;
+}
+
+// API Response types
+export interface TrackingLinksResponse {
+  links: TrackingLinkWithDetails[];
+  sources: TrackingSource[];
+  subtags: TrackingSubtag[];
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
 }
 
 /**
@@ -68,7 +91,7 @@ export interface CachedTrackingLink {
 /**
  * Analytics event types matching database constraint
  */
-export type AnalyticsEventType = 'page_view' | 'link_click';
+export type AnalyticsEventType = 'page_view' | 'link_click' | 'conversion' | 'story_view';
 
 /**
  * Payload for logging analytics events

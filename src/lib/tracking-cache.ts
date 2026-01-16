@@ -24,7 +24,7 @@ async function fetchTrackingLinkUncached(
   trackingSlug: string
 ): Promise<CachedTrackingLink | null> {
   const supabase = await createClient();
-  
+
   // Join tracking_links with models to get model_slug
   const { data, error } = await supabase
     .from('tracking_links')
@@ -42,15 +42,17 @@ async function fetchTrackingLinkUncached(
     .eq('is_archived', false)
     .eq('models.slug', modelSlug)
     .single();
-  
+
   if (error || !data) {
     return null;
   }
-  
+
   // Transform to CachedTrackingLink shape
+  const modelData = data.models as unknown as { slug: string };
+
   return {
     id: data.id,
-    model_slug: (data.models as { slug: string }).slug,
+    model_slug: modelData.slug,
     model_id: data.model_id,
     source_id: data.source_id,
     subtag_id: data.subtag_id,
@@ -87,10 +89,10 @@ export async function lookupTrackingLink(
   trackingSlug: string
 ): Promise<TrackingLinkLookupResult> {
   const data = await getTrackingLinkCached(modelSlug, trackingSlug);
-  
+
   // Base redirect URL (model profile page)
   const baseRedirectUrl = `/model/${modelSlug}`;
-  
+
   if (!data) {
     return {
       found: false,
@@ -98,7 +100,7 @@ export async function lookupTrackingLink(
       redirect_url: baseRedirectUrl,
     };
   }
-  
+
   if (!data.is_active) {
     // Link exists but is inactive - redirect without tracking
     return {
@@ -107,10 +109,10 @@ export async function lookupTrackingLink(
       redirect_url: baseRedirectUrl,
     };
   }
-  
+
   // Add ref parameter to track this was a tracking link visit
   const redirectUrl = `${baseRedirectUrl}?ref=${trackingSlug}`;
-  
+
   return {
     found: true,
     data,

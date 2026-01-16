@@ -47,11 +47,12 @@ export interface Model {
   bio_es?: string | null;
   social_link?: string;
   // Stories linked to the model
-  story_groups?: StoryGroup[]; 
+  story_groups?: StoryGroup[];
 }
 
 // Analytics types
 export * from './analytics';
 
 // Tracking types
-export * from './tracking';export * from './charts';
+export * from './tracking';
+export * from './charts';
