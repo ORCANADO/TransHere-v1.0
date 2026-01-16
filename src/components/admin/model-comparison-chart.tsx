@@ -39,9 +39,9 @@ function ModelComparisonTooltip(props: any) {
     );
 
     return (
-        <div className="liquid-glass-elevated rounded-xl p-4 min-w-[200px] max-w-[300px]">
+        <div className="bg-white/90 dark:bg-[#0A1221]/90 backdrop-blur-2xl rounded-2xl p-4 min-w-[200px] max-w-[300px] shadow-2xl border border-black/[0.05] dark:border-white/10">
             {/* Date Label */}
-            <p className="text-sm font-medium text-foreground mb-3 pb-2 border-b border-white/10">
+            <p className="text-sm font-semibold text-[#1D1D1F] dark:text-white mb-3 pb-2 border-b border-black/[0.05] dark:border-white/10">
                 {label}
             </p>
 
@@ -53,14 +53,14 @@ function ModelComparisonTooltip(props: any) {
                         <div key={entry.dataKey} className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2 min-w-0">
                                 <div
-                                    className="w-3 h-3 rounded-full flex-shrink-0"
+                                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                                     style={{ backgroundColor: entry.color }}
                                 />
-                                <span className="text-sm text-muted-foreground truncate">
+                                <span className="text-sm text-[#86868B] dark:text-muted-foreground truncate font-medium">
                                     {model?.name || entry.dataKey}
                                 </span>
                             </div>
-                            <span className="text-sm font-semibold text-foreground flex-shrink-0">
+                            <span className="text-sm font-bold text-[#1D1D1F] dark:text-white flex-shrink-0">
                                 {(entry.value as number).toLocaleString()}
                             </span>
                         </div>
@@ -82,14 +82,14 @@ function MetricToggle({
     onMetricChange: (metric: 'views' | 'clicks') => void;
 }) {
     return (
-        <div className="flex items-center gap-1 liquid-glass-subtle rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-black/[0.05] dark:bg-white/5 rounded-xl p-1 border border-black/[0.05] dark:border-white/5">
             <button
                 onClick={() => onMetricChange('views')}
                 className={cn(
-                    "px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200",
+                    "px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200",
                     metric === 'views'
-                        ? "bg-[#7A27FF] text-white shadow-lg"
-                        : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                        ? "bg-white dark:bg-[#007AFF] text-[#007AFF] dark:text-white shadow-sm"
+                        : "text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white"
                 )}
             >
                 Views
@@ -97,10 +97,10 @@ function MetricToggle({
             <button
                 onClick={() => onMetricChange('clicks')}
                 className={cn(
-                    "px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200",
+                    "px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200",
                     metric === 'clicks'
-                        ? "bg-[#00FF85] text-black shadow-lg"
-                        : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                        ? "bg-white dark:bg-[#AF52DE] text-[#AF52DE] dark:text-white shadow-sm"
+                        : "text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white"
                 )}
             >
                 Clicks
@@ -145,7 +145,7 @@ export function ModelComparisonChart({
                 )}
                 style={{ height }}
             >
-                <p className="text-muted-foreground">
+                <p className="text-[#86868B] dark:text-muted-foreground">
                     Select models to compare their performance
                 </p>
             </div>
@@ -153,10 +153,10 @@ export function ModelComparisonChart({
     }
 
     return (
-        <div className={cn("liquid-glass rounded-xl p-4 lg:p-6", className)}>
+        <div className={cn("rounded-2xl p-4 lg:p-6", className)}>
             {/* Header with Title and Toggle */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                <h3 className="text-lg font-semibold text-foreground">
+                <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-white">
                     {title}
                 </h3>
                 <MetricToggle metric={metric} onMetricChange={onMetricChange} />
@@ -179,20 +179,20 @@ export function ModelComparisonChart({
                         {/* X Axis - Minimalist */}
                         <XAxis
                             dataKey="label"
-                            stroke="#94A3B8"
-                            fontSize={12}
+                            stroke="#86868B"
+                            fontSize={11}
                             tickLine={false}
                             axisLine={false}
-                            tickMargin={10}
+                            tickMargin={12}
                         />
 
                         {/* Y Axis - Hidden axis line */}
                         <YAxis
-                            stroke="#94A3B8"
-                            fontSize={12}
+                            stroke="#86868B"
+                            fontSize={11}
                             tickLine={false}
                             axisLine={false}
-                            tickMargin={10}
+                            tickMargin={12}
                             tickFormatter={(value) => {
                                 if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
                                 if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
@@ -212,7 +212,7 @@ export function ModelComparisonChart({
                             formatter={(value: string) => {
                                 const model = models.find(m => m.slug === value);
                                 return (
-                                    <span className="text-sm text-muted-foreground">
+                                    <span className="text-xs font-semibold text-[#86868B] dark:text-muted-foreground mr-4">
                                         {model?.name || value}
                                     </span>
                                 );
@@ -242,8 +242,8 @@ export function ModelComparisonChart({
             </div>
 
             {/* Model Count Indicator */}
-            <div className="mt-4 pt-3 border-t border-white/10">
-                <p className="text-xs text-muted-foreground">
+            <div className="mt-4 pt-4 border-t border-black/[0.05] dark:border-white/10">
+                <p className="text-xs font-medium text-[#86868B] dark:text-muted-foreground">
                     Comparing {models.length} model{models.length !== 1 ? 's' : ''} •
                     Showing {metric === 'views' ? 'page views' : 'clicks'} over time
                 </p>

@@ -11,6 +11,8 @@ import { StatCard } from './stat-card';
 import { ComparisonChart } from './comparison-chart';
 import { ModelComparisonChart } from './model-comparison-chart';
 import { DashboardFiltersBar } from './dashboard-filters';
+import { ThemeToggle } from './theme-toggle';
+import { cn } from '@/lib/utils';
 import type {
   DashboardFilters,
   TimePeriod,
@@ -26,6 +28,7 @@ interface AnalyticsDashboardProps {
   adminKey: string;
   selectedModelIds: string[];
   onModelSelectionChange: (ids: string[]) => void;
+  onDataLoaded?: (data: DashboardData) => void;
 }
 
 interface DashboardData {
@@ -80,7 +83,8 @@ const DEFAULT_FILTERS: DashboardFilters = {
 export function AnalyticsDashboard({
   adminKey,
   selectedModelIds,
-  onModelSelectionChange
+  onModelSelectionChange,
+  onDataLoaded,
 }: AnalyticsDashboardProps) {
   // State
   const [data, setData] = useState<DashboardData | null>(null);
@@ -128,6 +132,7 @@ export function AnalyticsDashboard({
       }
 
       setData(json);
+      if (onDataLoaded) onDataLoaded(json as DashboardData);
       console.log('📊 Dashboard Data Received - Countries:', json.availableCountries?.length);
       setLastUpdated(new Date());
     } catch (err) {
@@ -135,7 +140,7 @@ export function AnalyticsDashboard({
     } finally {
       setLoading(false);
     }
-  }, [adminKey, filters]);
+  }, [adminKey, filters, selectedModelIds, onDataLoaded]);
 
   // Fetch on mount and filter changes
   useEffect(() => {
@@ -188,7 +193,7 @@ export function AnalyticsDashboard({
         <p className="text-red-400 mb-4">Error: {error}</p>
         <button
           onClick={fetchData}
-          className="px-4 py-2 bg-[#7A27FF] text-white rounded-lg hover:bg-[#7A27FF]/80 transition-colors"
+          className="px-4 py-2 bg-[#007AFF] text-white rounded-lg hover:bg-[#007AFF]/80 transition-colors"
         >
           Retry
         </button>
@@ -198,38 +203,43 @@ export function AnalyticsDashboard({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Analytics Dashboard</h1>
-          {lastUpdated && (
-            <p className="text-muted-foreground text-sm">
-              Last updated: {lastUpdated.toLocaleTimeString()}
+      {/* Sticky Filters Bar & Header Info */}
+      <div className="sticky top-0 z-30 -mx-4 lg:-mx-6 px-4 lg:px-6 py-4 bg-background/80 backdrop-blur-xl border-b border-[#E5E5EA] dark:border-white/10 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <DashboardFiltersBar
+            filters={{ ...filters, modelSlugs: currentModelSlugs }}
+            onFiltersChange={(newFilters) => {
+              const { modelSlugs: _, ...otherFilters } = newFilters;
+              setFilters(otherFilters);
+            }}
+            availableCountries={data?.availableCountries || []}
+            availableSources={data?.availableSources || []}
+            isLoading={loading}
+          />
+
+          {lastUpdated && !loading && (
+            <p className="text-[#86868B] dark:text-gray-400 text-xs font-medium">
+              Updated {lastUpdated.toLocaleTimeString()}
             </p>
           )}
         </div>
 
-        <button
-          onClick={fetchData}
-          disabled={loading}
-          className="self-start lg:self-auto p-2 liquid-glass-button rounded-lg text-foreground hover:bg-white/10 transition-colors disabled:opacity-50"
-          aria-label="Refresh data"
-        >
-          <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-        </button>
-      </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className="p-2.5 rounded-xl bg-black/[0.03] dark:bg-white/5 border border-transparent dark:border-white/10 hover:bg-black/[0.06] dark:hover:bg-white/10 transition-all disabled:opacity-50 active:scale-95"
+            aria-label="Refresh data"
+          >
+            <RefreshCw className={cn("w-5 h-5", loading ? 'animate-spin' : '')} />
+          </button>
 
-      {/* Filters Bar */}
-      <DashboardFiltersBar
-        filters={{ ...filters, modelSlugs: currentModelSlugs }}
-        onFiltersChange={(newFilters) => {
-          const { modelSlugs: _, ...otherFilters } = newFilters;
-          setFilters(otherFilters);
-        }}
-        availableCountries={data?.availableCountries || []}
-        availableSources={data?.availableSources || []}
-        isLoading={loading}
-      />
+          <div className="h-8 w-[1px] bg-[#E5E5EA] dark:bg-white/10 hidden md:block mx-1" />
+
+          <ThemeToggle showLabels className="hidden md:flex" />
+          <ThemeToggle className="md:hidden" />
+        </div>
+      </div>
 
       {/* Loading skeleton */}
       {loading && !data && (
@@ -248,26 +258,26 @@ export function AnalyticsDashboard({
         <div className="relative">
           {/* Refresh Overlay Spinner */}
           {loading && (
-            <div className="absolute inset-x-0 -top-4 bottom-0 z-10 flex items-center justify-center bg-background/20 backdrop-blur-[2px] transition-all duration-300 rounded-xl overflow-hidden">
-              <div className="bg-card/80 border border-white/10 p-4 rounded-full shadow-2xl scale-up-subtle">
-                <RefreshCw className="w-8 h-8 text-[#7A27FF] animate-spin" />
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/20 dark:bg-black/20 backdrop-blur-[2px] transition-all duration-300 rounded-2xl overflow-hidden">
+              <div className="bg-white/90 dark:bg-[#0A1221]/90 border border-[#E5E5EA] dark:border-white/10 p-5 rounded-3xl shadow-2xl scale-up-subtle">
+                <RefreshCw className="w-8 h-8 text-[#007AFF] animate-spin" />
               </div>
             </div>
           )}
 
           {/* Empty State: No data for filters */}
           {data.chartData.length === 0 && data.overview.totalVisits === 0 ? (
-            <div className="liquid-glass rounded-xl p-12 text-center flex flex-col items-center justify-center">
-              <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
-                <TrendingUp className="w-8 h-8 text-muted-foreground/30" />
+            <div className="bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-12 text-center flex flex-col items-center justify-center shadow-sm">
+              <div className="w-16 h-16 rounded-full bg-black/[0.04] dark:bg-white/5 flex items-center justify-center mb-4">
+                <TrendingUp className="w-8 h-8 text-[#86868B] dark:text-muted-foreground/30" />
               </div>
-              <h3 className="text-xl font-semibold text-white">No data found</h3>
-              <p className="text-muted-foreground mt-2 max-w-sm">
+              <h3 className="text-xl font-semibold text-[#1D1D1F] dark:text-white">No data found</h3>
+              <p className="text-[#86868B] dark:text-muted-foreground mt-2 max-w-sm">
                 No activity recorded for the selected period or filters. Try adjusting your filters or date range.
               </p>
               <button
                 onClick={() => fetchData()}
-                className="mt-6 px-4 py-2 bg-[#7A27FF] text-white rounded-lg hover:bg-[#7A27FF]/80 transition-colors"
+                className="mt-6 px-6 py-2.5 bg-[#007AFF] text-white rounded-xl font-bold hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-[#007AFF]/20"
               >
                 Refresh Data
               </button>
@@ -279,21 +289,23 @@ export function AnalyticsDashboard({
                 <StatCard
                   title="Total Page Views"
                   value={data.overview.totalVisits}
-                  icon={<Eye className="w-5 h-5 text-[#7A27FF]" />}
+                  icon={<Eye className="w-5 h-5 text-[#007AFF]" />}
                   change={data.overview.visitsChange}
+                  valueClassName="text-[#007AFF] dark:text-[#007AFF]"
                   subtitle={`${data.overview.mainLayoutVisits.toLocaleString()} organic • ${data.overview.trackingLinkVisits.toLocaleString()} from links`}
                 />
                 <StatCard
                   title="Total Clicks"
                   value={data.overview.totalClicks}
                   subtitle="OnlyFans/Fansly redirects"
-                  icon={<MousePointer className="w-5 h-5 text-[#00FF85]" />}
+                  icon={<MousePointer className="w-5 h-5 text-[#AF52DE]" />}
+                  valueClassName="text-[#AF52DE] dark:text-[#AF52DE]"
                   change={data.overview.clicksChange}
                 />
                 <StatCard
                   title="Conversion Rate"
                   value={`${data.overview.conversionRate.toFixed(2)}%`}
-                  subtitle="Clicks / Views"
+                  subtitle={<span className="flex items-center gap-1.5"><span className="text-[#AF52DE]">Clicks</span> / <span className="text-[#007AFF]">Views</span></span>}
                   icon={<Percent className="w-5 h-5 text-[#D4AF37]" />}
                 />
               </div>
@@ -308,6 +320,7 @@ export function AnalyticsDashboard({
                   onMetricChange={setComparisonMetric}
                   title={`Comparing ${currentModelSlugs.length} Models`}
                   height={350}
+                  className="bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-4 lg:p-6 shadow-sm"
                 />
               ) : (
                 /* Standard Comparison Chart - Current vs Previous */
@@ -315,15 +328,16 @@ export function AnalyticsDashboard({
                   data={data.chartData}
                   title="Traffic Over Time (Current vs Previous Period)"
                   height={300}
+                  className="bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-4 lg:p-6 shadow-sm"
                 />
               )}
 
               {/* Source Breakdown */}
               {data.sourceBreakdown && data.sourceBreakdown.length > 0 && (
-                <div className="liquid-glass rounded-xl p-4 lg:p-6">
+                <div className="bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-4 lg:p-6 shadow-sm">
                   <div className="flex items-center gap-2 mb-4">
-                    <TrendingUp className="w-5 h-5 text-[#7A27FF]" />
-                    <h3 className="text-lg font-semibold text-foreground">Traffic Sources</h3>
+                    <TrendingUp className="w-5 h-5 text-[#007AFF]" />
+                    <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-white">Traffic Sources</h3>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     {data.sourceBreakdown.map((source) => (
@@ -338,17 +352,19 @@ export function AnalyticsDashboard({
                               : [...prev.sources, { source: source.sourceName, subtags: [] }]
                           };
                         })}
-                        className={`p-3 rounded-lg text-left transition-all ${filters.sources.some(s => s.source === source.sourceName)
-                          ? 'bg-[#7A27FF]/20 ring-2 ring-[#7A27FF]'
-                          : 'bg-white/5 hover:bg-white/10'
-                          }`}
+                        className={cn(
+                          "p-4 rounded-xl text-left transition-all border",
+                          filters.sources.some(s => s.source === source.sourceName)
+                            ? 'bg-[#007AFF]/10 dark:bg-[#AF52DE]/20 border-[#007AFF]/30 dark:border-[#AF52DE]/40 ring-1 ring-[#007AFF]/20'
+                            : 'bg-black/[0.03] dark:bg-white/5 border-transparent hover:bg-black/[0.06] dark:hover:bg-white/10'
+                        )}
                       >
-                        <p className="font-medium text-foreground">{source.sourceName}</p>
+                        <p className="font-semibold text-[#1D1D1F] dark:text-white">{source.sourceName}</p>
                         <div className="flex justify-between mt-1 text-sm">
-                          <span className="text-[#7A27FF]">{source.totalViews.toLocaleString()} views</span>
-                          <span className="text-[#00FF85]">{source.totalClicks.toLocaleString()} clicks</span>
+                          <span className="text-[#007AFF] font-medium">{source.totalViews.toLocaleString()} views</span>
+                          <span className="text-[#AF52DE] font-medium">{source.totalClicks.toLocaleString()} clicks</span>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-[#86868B] dark:text-muted-foreground mt-1 font-medium">
                           {source.conversionRate.toFixed(1)}% CTR
                         </p>
                       </button>
@@ -359,8 +375,8 @@ export function AnalyticsDashboard({
 
               {/* Country Breakdown */}
               {data.countryBreakdown.length > 0 && (
-                <div className="liquid-glass rounded-xl p-4 lg:p-6">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Top Countries</h3>
+                <div className="bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-4 lg:p-6 shadow-sm">
+                  <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-white mb-4">Top Countries</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                     {data.countryBreakdown.slice(0, 10).map(({ country, visits, clicks }) => (
                       <button
@@ -369,15 +385,17 @@ export function AnalyticsDashboard({
                           ...prev,
                           country: prev.country === country ? null : country,
                         }))}
-                        className={`p-3 rounded-lg text-left transition-all ${filters.country === country
-                          ? 'bg-[#00FF85]/20 ring-2 ring-[#00FF85]'
-                          : 'bg-white/5 hover:bg-white/10'
-                          }`}
+                        className={cn(
+                          "p-4 rounded-xl text-left transition-all border",
+                          filters.country === country
+                            ? 'bg-[#007AFF]/10 dark:bg-[#007AFF]/20 border-[#007AFF]/30 dark:border-[#007AFF]/40 ring-1 ring-[#007AFF]/20'
+                            : 'bg-black/[0.03] dark:bg-white/5 border-transparent hover:bg-black/[0.06] dark:hover:bg-white/10'
+                        )}
                       >
-                        <p className="font-medium text-foreground">{country}</p>
+                        <p className="font-semibold text-[#1D1D1F] dark:text-white">{country}</p>
                         <div className="flex justify-between mt-1 text-sm">
-                          <span className="text-[#7A27FF]">{visits} views</span>
-                          <span className="text-[#00FF85]">{clicks} clicks</span>
+                          <span className="text-[#007AFF] font-medium">{visits} views</span>
+                          <span className="text-[#AF52DE] font-medium">{clicks} clicks</span>
                         </div>
                       </button>
                     ))}

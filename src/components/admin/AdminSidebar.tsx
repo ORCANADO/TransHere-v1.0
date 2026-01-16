@@ -16,9 +16,11 @@ interface AdminSidebarProps {
     models: { id: string; name: string; slug: string; image_url?: string }[];
     selectedModelIds: string[];
     onModelSelect: (modelId: string) => void;
+    onClearSelection: () => void;
     onAddModel: () => void;
     onSettingsClick?: () => void;
     isLoading?: boolean;
+    metrics?: Record<string, { views: number; clicks: number }>;
 }
 
 export function AdminSidebar({
@@ -27,9 +29,11 @@ export function AdminSidebar({
     models,
     selectedModelIds,
     onModelSelect,
+    onClearSelection,
     onAddModel,
     onSettingsClick,
     isLoading = false,
+    metrics,
 }: AdminSidebarProps) {
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -47,21 +51,37 @@ export function AdminSidebar({
             />
 
             <aside className={cn(
-                "h-screen bg-white/80 dark:bg-[#0A1221]/80 backdrop-blur-xl border-r border-white/20 dark:border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.1)] transition-all duration-300 flex flex-col overflow-hidden z-50",
-                "fixed lg:relative", // Overlay on mobile, relative on desktop
+                "h-screen transition-all duration-300 flex flex-col overflow-hidden z-50",
+                "fixed lg:relative",
+                // iOS 26 Liquid Glass - Creamy white for light mode, translucent for dark
+                "bg-[#F9F9FB] dark:bg-[#0A1221]/80",
+                "backdrop-blur-3xl dark:backdrop-blur-2xl",
+                "border-r border-[#E5E5EA] dark:border-white/10",
+                "shadow-[1px_0_0_rgba(0,0,0,0.02)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)]",
                 isCollapsed ? "-translate-x-full lg:translate-x-0 lg:w-0" : "translate-x-0 w-[280px]"
             )}>
                 {/* Header */}
-                <header className="flex items-center justify-between p-4 border-b border-white/10">
+                <header className="flex items-center justify-between p-4 border-b border-[#E5E5EA] dark:border-white/10">
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7A27FF] to-[#00FF85] flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">TH</span>
+                        <div className={cn(
+                            "w-8 h-8 rounded-xl",
+                            "bg-gradient-to-br from-[#7A27FF] via-[#9D4EFF] to-[#00FF85]",
+                            "shadow-lg shadow-[#7A27FF]/30",
+                            "flex items-center justify-center",
+                            "ring-1 ring-white/20"
+                        )}>
+                            <span className="text-white font-bold text-sm drop-shadow-sm">TH</span>
                         </div>
-                        <span className="font-semibold text-sm">TransHere</span>
+                        <span className="font-semibold text-sm text-black dark:text-white">TransHere</span>
                     </div>
                     <button
                         onClick={onToggleCollapse}
-                        className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                        className={cn(
+                            "p-1.5 rounded-lg transition-all",
+                            "hover:bg-black/[0.06] dark:hover:bg-white/10",
+                            "active:scale-95",
+                            "text-black/60 dark:text-gray-300"
+                        )}
                         aria-label="Toggle sidebar"
                     >
                         {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -73,17 +93,8 @@ export function AdminSidebar({
                     <SidebarModelList
                         models={models as Model[]}
                         selectedIds={selectedModelIds}
-                        onSelectionChange={(ids: string[]) => {
-                            // For sidebar select, we might want to just toggle individual
-                            // But SidebarModelList handles the logic. 
-                            // We need to map it back to onModelSelect
-                            // Actually, SidebarModelList is designed for the FULL list management.
-                            // Let's ensure it works with the toggleModel logic
-                            const added = ids.find(id => !selectedModelIds.includes(id));
-                            const removed = selectedModelIds.find(id => !ids.includes(id));
-                            if (added) onModelSelect(added);
-                            else if (removed) onModelSelect(removed);
-                        }}
+                        onModelToggle={onModelSelect}
+                        onClearSelection={onClearSelection}
                         onEditModel={(model: Model) => {
                             // Trigger edit from parent
                             (window as any).dispatchEvent(new CustomEvent('edit-model', { detail: model }));
@@ -92,6 +103,7 @@ export function AdminSidebar({
                             (window as any).dispatchEvent(new CustomEvent('manage-tracking', { detail: model }));
                         }}
                         isLoading={isLoading}
+                        metrics={metrics}
                     />
                 </div>
 

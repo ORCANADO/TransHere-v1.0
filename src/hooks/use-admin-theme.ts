@@ -59,6 +59,9 @@ export function useAdminTheme() {
         // Apply initial theme class without transition
         if (initialTheme === 'light') {
             document.body.classList.add(LIGHT_MODE_CLASS);
+            document.documentElement.classList.remove('dark');
+        } else {
+            document.documentElement.classList.add('dark');
         }
     }, []);
 
@@ -74,8 +77,10 @@ export function useAdminTheme() {
         // Apply or remove light mode class
         if (theme === 'light') {
             document.body.classList.add(LIGHT_MODE_CLASS);
+            document.documentElement.classList.remove('dark');
         } else {
             document.body.classList.remove(LIGHT_MODE_CLASS);
+            document.documentElement.classList.add('dark');
         }
 
         // Remove transition class after animation completes

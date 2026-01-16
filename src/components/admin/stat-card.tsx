@@ -6,13 +6,14 @@ import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 interface StatCardProps {
   title: string;
   value: string | number;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   change?: number;
   icon?: React.ReactNode;
   className?: string;
+  valueClassName?: string;
 }
 
-export function StatCard({ title, value, icon, change, subtitle }: StatCardProps) {
+export function StatCard({ title, value, icon, change, subtitle, className, valueClassName }: StatCardProps) {
   const formatValue = (val: string | number) => {
     if (typeof val === 'number') {
       return val.toLocaleString();
@@ -21,19 +22,28 @@ export function StatCard({ title, value, icon, change, subtitle }: StatCardProps
   };
 
   return (
-    <div className="liquid-glass rounded-xl p-6 glass-depth-1 hover:glass-depth-2 transition-all duration-300">
+    <div className={cn(
+      "rounded-2xl p-6 transition-all duration-300",
+      "bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10",
+      "shadow-sm hover:shadow-md hover:scale-[1.01] active:scale-[0.99]",
+      className
+    )}>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <p className="text-muted-foreground text-sm font-medium">{title}</p>
-          <p className="text-2xl lg:text-3xl font-bold text-white mt-1">
+          <p className="text-[#86868B] dark:text-gray-400 text-sm font-medium">{title}</p>
+          <p className={cn(
+            "text-2xl lg:text-3xl font-bold mt-1",
+            !valueClassName && "text-[#1D1D1F] dark:text-white",
+            valueClassName
+          )}>
             {formatValue(value)}
           </p>
           {subtitle && (
-            <p className="text-muted-foreground text-xs mt-1">{subtitle}</p>
+            <p className="text-[#86868B]/80 dark:text-muted-foreground/60 text-xs mt-1">{subtitle}</p>
           )}
         </div>
         {icon && (
-          <div className="p-2 bg-white/5 rounded-lg">
+          <div className="p-3 bg-black/[0.04] dark:bg-white/5 rounded-xl border border-black/[0.04] dark:border-white/5">
             {icon}
           </div>
         )}
@@ -42,7 +52,7 @@ export function StatCard({ title, value, icon, change, subtitle }: StatCardProps
       {change !== undefined && (
         <div className={cn(
           "flex items-center gap-1 mt-3 text-sm",
-          change > 0 && "text-[#00FF85]",
+          change > 0 && "text-[#34C759]",
           change < 0 && "text-red-400",
           change === 0 && "text-muted-foreground"
         )}>

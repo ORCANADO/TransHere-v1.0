@@ -791,13 +791,27 @@
   - Gallery Manager: Updated to use `models` bucket for gallery uploads
   - Admin Dashboard: Updated `uploadFileToR2` to support bucket parameter
   - Gallery uploads now use model-slug paths (e.g., `valentina-aguirre/timestamp-file.webp`)
-### [2026-01-16] - Phase 6.5: Admin Dashboard Overhaul & UX Polishing (v1.1.9)
+### [2026-01-16] - Phase 6.5: Admin Dashboard UI Overhaul & Metric Color Standardization
 **Status:** Complete
 
-- **Loading & Empty States:**
-    - Implemented a reusable `Skeleton` UI component for layout-adaptive loading states.
-    - Added comprehensive empty states for metrics, model lists, and search results ("No models found").
-    - Integrated visual loading spinners for data refreshes in the `AnalyticsDashboard`.
+- **Admin Dashboard UI Refresh:**
+    - Fully implemented the **iOS 26 Liquid Glass aesthetic** for Light Mode.
+    - Optimized StatCards, breakdown sections, and tables with sophisticated glassmorphism effects (backdrop blur, saturation, and subtle specular highlights).
+    - Unified the "Midnight Spectrum" (Dark) and "Solar Spectrum" (Light) palettes for a premium, theme-agnostic experience.
+- **Metric Color Standardization:**
+    - Established a definitive color coding for key metrics: **Views = Apple Blue (#007AFF)** and **Clicks = Apple Purple (#AF52DE)**.
+    - Applied this scheme consistently across all dashboard components, including Chart lines, StatCard values, Sidebar indicators, and breakdown pills.
+    - Updated all iconography and text labels to match this visual hierarchy, improving data readability at a glance.
+- **Theme Engine Refinement:**
+    - Replaced the legacy Sidebar theme switch with a clean, segmented iOS-style `ThemeToggle`.
+    - Fixed a critical CSS specificity bug in `admin-theme.css` that was blocking custom metric colors in light mode.
+    - Transitioned to an inheritance-based default coloring system, allowing Tailwind's functional classes to correctly override themes.
+- **Layout Improvements:**
+    - Standardized loader spinners and button selection states to use the core brand blue (`#007AFF`).
+    - Standardized "Clear all" buttons and refresh indicators for a cohesive "pro" interface feel.
+    - Verified all changes via browser subagent in both Light and Dark modes to ensure perfect visual fidelity.
+
+- **Status:** v1.1.9 Admin UI is 100% complete and verified. Ready for Phase 7 implementation.
 - **Responsive Redesign (Mobile-First):**
     - Refactored `AdminSidebar` to use an overlay mode on mobile with a frosted glass backdrop.
     - Added a hamburger menu toggle in the main dashboard header for small viewports.

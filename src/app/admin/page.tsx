@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useCallback, useEffect } from 'react';
 import {
   Shield,
   AlertTriangle,
@@ -17,7 +17,6 @@ import { ModelEditor } from '@/components/admin/model-editor';
 import { TrackingLinkManager } from '@/app/admin/components/TrackingLinkManager';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { createClient } from '@/lib/supabase/client';
-import { useEffect } from 'react';
 import type { Model } from '@/types';
 
 
@@ -39,6 +38,18 @@ function AdminContent() {
   const [isModelsLoading, setIsModelsLoading] = useState(true);
   const [isTrackingManagerOpen, setIsTrackingManagerOpen] = useState(false);
   const [trackingModel, setTrackingModel] = useState<{ id: string; name: string; slug: string } | null>(null);
+  const [modelMetrics, setModelMetrics] = useState<Record<string, { views: number; clicks: number }>>({});
+
+  const handleDataLoaded = useCallback((data: any) => {
+    // Transform analytics data for sidebar
+    if (data.modelAnalytics) {
+      const metricsMap: Record<string, { views: number; clicks: number }> = {};
+      data.modelAnalytics.forEach((m: any) => {
+        metricsMap[m.modelSlug] = { views: m.visits, clicks: m.clicks };
+      });
+      setModelMetrics(metricsMap);
+    }
+  }, []); // Empty dependency array as setModelMetrics is stable
 
   useEffect(() => {
     const fetchModels = async () => {
@@ -186,40 +197,21 @@ function AdminContent() {
           models={models}
           selectedModelIds={selectedIds}
           onModelSelect={toggleModel}
+          onClearSelection={() => selectMultiple([])}
           onAddModel={() => setIsAddingModel(true)}
           isLoading={isModelsLoading}
+          metrics={modelMetrics}
         />
 
         {/* Main Content Area */}
         <main className="h-screen overflow-y-auto relative">
-          {/* Header */}
-          <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-white/10">
-            <div className="px-4 lg:px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleToggleCollapse}
-                  className="p-2 rounded-lg hover:bg-white/10 transition-colors"
-                  aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                >
-                  <ChevronRight className={cn("w-5 h-5 transition-transform", !isSidebarCollapsed && "rotate-180")} />
-                </button>
-                <Shield className="w-6 h-6 text-[#00FF85]" />
-                <span className="font-bold text-white hidden sm:inline">Analytics Dashboard</span>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <ThemeToggle showLabels className="hidden md:flex" />
-                <ThemeToggle className="md:hidden" />
-              </div>
-            </div>
-          </header>
-
           {/* Analytics Dashboard - Always Visible */}
           <div className="p-4 lg:p-6">
             <AnalyticsDashboard
               adminKey={adminKey}
               selectedModelIds={selectedIds}
               onModelSelectionChange={selectMultiple}
+              onDataLoaded={handleDataLoaded}
             />
           </div>
         </main>

@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { Settings, ChevronDown, Plus, Moon, Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminTheme } from '@/hooks/use-admin-theme';
+import { ThemeToggle } from '@/components/admin/theme-toggle';
 import {
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger
 } from '@/components/ui/collapsible';
-import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 
 interface SidebarSettingsProps {
@@ -40,44 +40,44 @@ export function SidebarSettings({ onAddModel }: SidebarSettingsProps) {
     if (!mounted) return null;
 
     return (
-        <div className="border-t border-white/10">
+        <div className="border-t border-[#E5E5EA] dark:border-white/10 bg-[#F9F9FB] dark:bg-transparent">
             <Collapsible open={isOpen} onOpenChange={handleToggle}>
                 <CollapsibleTrigger asChild>
-                    <button className="flex items-center justify-between w-full p-4 hover:bg-white/5 transition-colors group">
+                    <button className={cn(
+                        "flex items-center justify-between w-full p-4 transition-all group",
+                        "hover:bg-[#E8E8ED] dark:hover:bg-white/5",
+                        "active:scale-[0.99]"
+                    )}>
                         <div className="flex items-center gap-2">
-                            <Settings className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                            <span className="font-medium text-sm">Settings</span>
+                            <Settings className="w-4 h-4 text-[#86868B] dark:text-gray-400 group-hover:text-[#007AFF] dark:group-hover:text-[#7A27FF] transition-colors" />
+                            <span className="font-semibold text-sm text-[#1D1D1F] dark:text-white">Settings</span>
                         </div>
                         <ChevronDown className={cn(
-                            "w-4 h-4 text-muted-foreground transition-transform duration-200",
+                            "w-4 h-4 text-[#86868B] dark:text-gray-400 transition-transform duration-200",
                             isOpen && "rotate-180"
                         )} />
                     </button>
                 </CollapsibleTrigger>
 
                 <CollapsibleContent className="px-4 pb-4 space-y-4">
-                    {/* Theme Toggle */}
-                    <div className="flex items-center justify-between py-1">
-                        <div className="flex items-center gap-2">
-                            {isLightMode ? (
-                                <Sun className="w-4 h-4 text-yellow-500" />
-                            ) : (
-                                <Moon className="w-4 h-4 text-[#7A27FF]" />
-                            )}
-                            <span className="text-sm text-muted-foreground">Dark Mode</span>
-                        </div>
-                        <Switch
-                            checked={!isLightMode}
-                            onCheckedChange={toggleTheme}
-                            disabled={!isHydrated}
-                        />
+                    {/* Theme Selector */}
+                    <div className="space-y-2">
+                        <p className="text-[10px] uppercase tracking-widest text-[#86868B] font-bold px-1">Appearance</p>
+                        <ThemeToggle showLabels className="w-full bg-[#E8E8ED] dark:bg-white/5 border border-transparent dark:border-white/10" />
                     </div>
 
                     {/* Add New Model Button */}
                     <Button
                         variant="outline"
                         size="sm"
-                        className="w-full justify-start gap-2 bg-white/5 border-white/10 hover:bg-[#7A27FF]/20 hover:border-[#7A27FF]/30 transition-all"
+                        className={cn(
+                            "w-full justify-start gap-2 transition-all",
+                            "bg-[#E8E8ED] dark:bg-white/5",
+                            "border-0 dark:border dark:border-white/10",
+                            "hover:bg-[#007AFF]/10 hover:text-[#007AFF] dark:hover:bg-[#7A27FF]/10 dark:hover:text-[#7A27FF]",
+                            "text-[#1D1D1F] dark:text-white",
+                            "active:scale-[0.98]"
+                        )}
                         onClick={onAddModel}
                     >
                         <Plus className="w-4 h-4" />
@@ -85,7 +85,7 @@ export function SidebarSettings({ onAddModel }: SidebarSettingsProps) {
                     </Button>
 
                     <div className="pt-2">
-                        <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider text-center opacity-50">
+                        <p className="text-[10px] text-[#86868B] dark:text-gray-600 font-mono uppercase tracking-wider text-center">
                             TransHere Admin v1.1
                         </p>
                     </div>

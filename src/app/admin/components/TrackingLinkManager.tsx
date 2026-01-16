@@ -336,17 +336,17 @@ export function TrackingLinkManager({
             <div className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[700px] md:max-h-[80vh] z-[101] flex flex-col">
                 <div className={cn(
                     "flex flex-col h-full rounded-2xl overflow-hidden",
-                    "bg-card backdrop-blur-xl",
-                    "border border-border",
-                    "shadow-2xl shadow-black/50"
+                    "bg-[#F9F9FB] dark:bg-[#0A1221]/80 backdrop-blur-3xl",
+                    "border border-[#E5E5EA] dark:border-white/10",
+                    "shadow-2xl shadow-black/20 dark:shadow-black/50"
                 )}>
                     {/* Header */}
                     <div className="flex items-center justify-between px-6 py-4 border-b border-border">
                         <div>
-                            <h2 className="text-lg font-semibold text-foreground">
+                            <h2 className="text-lg font-semibold text-[#1D1D1F] dark:text-white">
                                 Tracking Links
                             </h2>
-                            <p className="text-sm text-muted-foreground">{modelName}</p>
+                            <p className="text-sm text-[#86868B] dark:text-gray-400">{modelName}</p>
                         </div>
                         <button
                             onClick={onClose}
@@ -381,10 +381,11 @@ export function TrackingLinkManager({
                                     }}
                                     className={cn(
                                         "w-full mb-6 py-3 px-4 rounded-xl",
-                                        "bg-[#00FF85]/10 border border-[#00FF85]/30",
-                                        "text-[#00FF85] font-medium",
-                                        "hover:bg-[#00FF85]/20 transition-colors",
-                                        "flex items-center justify-center gap-2"
+                                        "bg-[#007AFF]/10 dark:bg-[#00FF85]/10 border border-[#007AFF]/20 dark:border-[#00FF85]/30",
+                                        "text-[#007AFF] dark:text-[#00FF85] font-medium",
+                                        "hover:bg-[#007AFF]/15 dark:hover:bg-[#00FF85]/20 transition-all",
+                                        "flex items-center justify-center gap-2",
+                                        "shadow-sm active:scale-[0.98]"
                                     )}
                                 >
                                     <Plus className="w-5 h-5" />
@@ -401,12 +402,12 @@ export function TrackingLinkManager({
                                 ) : (
                                     <div className="space-y-2">
                                         {/* Table Header */}
-                                        <div className="grid grid-cols-12 gap-2 px-3 py-2 text-xs text-white/40 uppercase tracking-wider">
+                                        <div className="grid grid-cols-12 gap-2 px-3 py-2 text-[10px] text-[#86868B] dark:text-white/40 uppercase tracking-widest font-semibold">
                                             <div className="col-span-2">Slug</div>
                                             <div className="col-span-2">Source</div>
                                             <div className="col-span-2">Subtag</div>
                                             <div className="col-span-3">Preview</div>
-                                            <div className="col-span-1 text-center">Clicks</div>
+                                            <div className="col-span-1 text-center text-[#AF52DE] dark:text-[#AF52DE]">Clicks</div>
                                             <div className="col-span-2 text-right">Actions</div>
                                         </div>
 
@@ -422,18 +423,18 @@ export function TrackingLinkManager({
                                             >
                                                 {/* Slug */}
                                                 <div className="col-span-2">
-                                                    <code className="text-[#00FF85] font-mono text-sm">
+                                                    <code className="text-[#007AFF] dark:text-[#007AFF] font-mono text-sm font-semibold">
                                                         {link.slug}
                                                     </code>
                                                 </div>
 
                                                 {/* Source */}
-                                                <div className="col-span-2 text-foreground/80 text-sm truncate">
+                                                <div className="col-span-2 text-[#1D1D1F] dark:text-foreground/80 text-sm truncate font-medium">
                                                     {link.source_name || '—'}
                                                 </div>
 
                                                 {/* Subtag */}
-                                                <div className="col-span-2 text-muted-foreground text-sm truncate">
+                                                <div className="col-span-2 text-[#86868B] dark:text-muted-foreground text-sm truncate">
                                                     {link.subtag_name || '—'}
                                                 </div>
 
@@ -459,13 +460,13 @@ export function TrackingLinkManager({
                                                             </span>
                                                         </a>
                                                     ) : (
-                                                        <span className="text-muted-foreground/30 text-sm">—</span>
+                                                        <span className="text-[#86868B]/30 dark:text-muted-foreground/30 text-sm">—</span>
                                                     )}
                                                 </div>
 
                                                 {/* Clicks */}
                                                 <div className="col-span-1 text-center">
-                                                    <span className="text-foreground font-medium">
+                                                    <span className="text-[#AF52DE] dark:text-[#AF52DE] font-semibold tabular-nums">
                                                         {link.click_count.toLocaleString()}
                                                     </span>
                                                 </div>
@@ -476,10 +477,10 @@ export function TrackingLinkManager({
                                                     <button
                                                         onClick={() => copyToClipboard(link)}
                                                         className={cn(
-                                                            "p-2 rounded-lg transition-colors",
+                                                            "p-2 rounded-lg transition-all active:scale-90",
                                                             copiedId === link.id
-                                                                ? "bg-[#00FF85]/20 text-[#00FF85]"
-                                                                : "hover:bg-white/10 text-white/60"
+                                                                ? "bg-[#007AFF]/20 dark:bg-[#00FF85]/20 text-[#007AFF] dark:text-[#00FF85]"
+                                                                : "hover:bg-black/[0.06] dark:hover:bg-white/10 text-black/40 dark:text-white/60"
                                                         )}
                                                         title="Copy tracking URL"
                                                     >
@@ -493,7 +494,7 @@ export function TrackingLinkManager({
                                                     {/* Edit Button */}
                                                     <button
                                                         onClick={() => startEdit(link)}
-                                                        className="p-2 rounded-lg hover:bg-white/10 text-white/60 transition-colors"
+                                                        className="p-2 rounded-lg hover:bg-black/[0.06] dark:hover:bg-white/10 text-black/40 dark:text-white/60 transition-all active:scale-95"
                                                         title="Edit link"
                                                     >
                                                         <Pencil className="w-4 h-4" />
@@ -502,7 +503,7 @@ export function TrackingLinkManager({
                                                     {/* Archive Button */}
                                                     <button
                                                         onClick={() => handleArchive(link.id)}
-                                                        className="p-2 rounded-lg hover:bg-red-500/20 text-white/60 hover:text-red-400 transition-colors"
+                                                        className="p-2 rounded-lg hover:bg-red-500/10 dark:hover:bg-red-500/20 text-black/40 dark:text-white/60 hover:text-red-500 dark:hover:text-red-400 transition-all active:scale-95"
                                                         title="Archive link"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
@@ -523,19 +524,19 @@ export function TrackingLinkManager({
                                             setEditingLink(null);
                                             setFormState(initialFormState);
                                         }}
-                                        className="text-white/60 hover:text-white transition-colors"
+                                        className="text-[#86868B] dark:text-white/60 hover:text-[#1D1D1F] dark:hover:text-white transition-colors"
                                     >
                                         ← Back
                                     </button>
-                                    <h3 className="text-lg font-medium text-white">
+                                    <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-white">
                                         {viewMode === 'create' ? 'Create New Link' : 'Edit Link'}
                                     </h3>
                                 </div>
 
                                 {/* Source Selection */}
                                 <div>
-                                    <label className="block text-sm text-white/60 mb-2">
-                                        Traffic Source <span className="text-red-400">*</span>
+                                    <label className="block text-sm font-medium text-[#1D1D1F] dark:text-white/80 mb-2">
+                                        Traffic Source <span className="text-red-500">*</span>
                                     </label>
 
                                     {showCustomSourceInput ? (
@@ -550,9 +551,9 @@ export function TrackingLinkManager({
                                                 placeholder="Enter custom source name..."
                                                 className={cn(
                                                     "flex-1 px-4 py-3 rounded-xl",
-                                                    "bg-white/5 border border-white/10",
-                                                    "text-white placeholder:text-white/30",
-                                                    "focus:outline-none focus:border-[#00FF85]/50"
+                                                    "bg-[#EBECF0] dark:bg-white/5 border border-transparent dark:border-white/10",
+                                                    "text-[#1D1D1F] dark:text-white placeholder:text-[#86868B] dark:placeholder:text-white/30",
+                                                    "focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#007AFF]/20 transition-all"
                                                 )}
                                             />
                                             <button
@@ -560,8 +561,8 @@ export function TrackingLinkManager({
                                                 disabled={isSaving}
                                                 className={cn(
                                                     "px-4 py-3 rounded-xl",
-                                                    "bg-[#00FF85] text-black font-medium",
-                                                    "hover:bg-[#00FF85]/90 transition-colors",
+                                                    "bg-[#007AFF] dark:bg-[#00FF85] text-white dark:text-black font-semibold",
+                                                    "hover:opacity-90 transition-opacity",
                                                     "disabled:opacity-50"
                                                 )}
                                             >
@@ -588,15 +589,18 @@ export function TrackingLinkManager({
                                                         subtagId: '', // Reset subtag when source changes
                                                     }))}
                                                     className={cn(
-                                                        "px-4 py-3 rounded-xl text-sm transition-colors",
+                                                        "px-4 py-3 rounded-xl text-sm transition-all font-medium",
                                                         formState.sourceId === source.id
-                                                            ? "bg-[#7A27FF]/20 border-2 border-[#7A27FF] text-[#7A27FF]"
-                                                            : "bg-white/5 border border-white/10 text-white/80 hover:bg-white/10"
+                                                            ? "bg-[#007AFF] dark:bg-[#7A27FF] text-white shadow-lg shadow-[#007AFF]/30 dark:shadow-[#7A27FF]/20"
+                                                            : "bg-black/[0.04] dark:bg-white/5 border border-transparent dark:border-white/10 text-[#1D1D1F] dark:text-white/80 hover:bg-black/[0.08] dark:hover:bg-white/10"
                                                     )}
                                                 >
                                                     {source.name}
                                                     {source.is_custom && (
-                                                        <span className="ml-1 text-xs text-white/40">(custom)</span>
+                                                        <span className={cn(
+                                                            "ml-1 text-[10px] opacity-60",
+                                                            formState.sourceId === source.id ? "text-white" : "text-[#86868B]"
+                                                        )}>(custom)</span>
                                                     )}
                                                 </button>
                                             ))}
@@ -604,9 +608,9 @@ export function TrackingLinkManager({
                                                 onClick={() => setShowCustomSourceInput(true)}
                                                 className={cn(
                                                     "px-4 py-3 rounded-xl text-sm",
-                                                    "bg-white/5 border border-dashed border-white/20",
-                                                    "text-white/60 hover:text-white hover:border-white/40",
-                                                    "transition-colors flex items-center justify-center gap-1"
+                                                    "bg-black/[0.02] dark:bg-white/5 border border-dashed border-black/10 dark:border-white/20",
+                                                    "text-[#86868B] dark:text-white/60 hover:text-[#1D1D1F] dark:hover:text-white hover:border-black/20 dark:hover:border-white/40",
+                                                    "transition-all flex items-center justify-center gap-1"
                                                 )}
                                             >
                                                 <Plus className="w-4 h-4" />
@@ -619,14 +623,14 @@ export function TrackingLinkManager({
                                 {/* Subtag Selection (if source is selected) */}
                                 {formState.sourceId && (
                                     <div>
-                                        <label className="block text-sm text-muted-foreground mb-2">
+                                        <label className="block text-sm font-medium text-[#1D1D1F] dark:text-white/80 mb-2">
                                             Subtag (Optional)
                                         </label>
 
                                         {/* Explanation Text */}
-                                        <div className="mb-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs text-blue-400">
-                                            <p className="font-medium mb-1">About Subtags</p>
-                                            <p>Subtags are designed to track campaigns, multiple accounts in the same traffic source (e.g., separate IG accounts), specific posts, or different placements (like Bio vs. Story). Use them for granular attribution.</p>
+                                        <div className="mb-3 p-3 rounded-lg bg-[#007AFF]/10 dark:bg-blue-500/10 border border-[#007AFF]/20 dark:border-blue-500/20 text-xs text-[#007AFF] dark:text-blue-400">
+                                            <p className="font-semibold mb-1">About Subtags</p>
+                                            <p className="leading-relaxed">Subtags are designed to track campaigns, multiple accounts in the same traffic source (e.g., separate IG accounts), specific posts, or different placements (like Bio vs. Story). Use them for granular attribution.</p>
                                         </div>
 
                                         {showCustomSubtagInput ? (
@@ -641,9 +645,9 @@ export function TrackingLinkManager({
                                                     placeholder="Enter subtag name (e.g., 'Bio Link', 'Campaign A')..."
                                                     className={cn(
                                                         "flex-1 px-4 py-3 rounded-xl",
-                                                        "bg-card border border-border",
-                                                        "text-foreground placeholder:text-muted-foreground",
-                                                        "focus:outline-none focus:border-primary/50"
+                                                        "bg-[#EBECF0] dark:bg-white/5 border border-transparent dark:border-white/10",
+                                                        "text-[#1D1D1F] dark:text-white placeholder:text-[#86868B] dark:placeholder:text-white/30",
+                                                        "focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#007AFF]/20 transition-all"
                                                     )}
                                                 />
                                                 <button
@@ -651,8 +655,8 @@ export function TrackingLinkManager({
                                                     disabled={isSaving}
                                                     className={cn(
                                                         "px-4 py-3 rounded-xl",
-                                                        "bg-primary text-black font-medium",
-                                                        "hover:bg-primary/90 transition-colors",
+                                                        "bg-[#007AFF] dark:bg-[#00FF85] text-white dark:text-black font-semibold",
+                                                        "hover:opacity-90 transition-opacity",
                                                         "disabled:opacity-50"
                                                     )}
                                                 >
@@ -673,10 +677,10 @@ export function TrackingLinkManager({
                                                 <button
                                                     onClick={() => setFormState(prev => ({ ...prev, subtagId: '' }))}
                                                     className={cn(
-                                                        "px-3 py-2 rounded-lg text-sm transition-colors",
+                                                        "px-4 py-2 rounded-xl text-sm transition-all font-medium",
                                                         !formState.subtagId
-                                                            ? "bg-primary/20 text-primary border border-primary/20"
-                                                            : "bg-secondary text-muted-foreground hover:bg-secondary/80 border border-transparent"
+                                                            ? "bg-[#007AFF] dark:bg-primary/20 text-white dark:text-primary shadow-md shadow-[#007AFF]/20"
+                                                            : "bg-black/[0.04] dark:bg-secondary text-[#86868B] dark:text-muted-foreground hover:bg-black/[0.08] dark:hover:bg-secondary/80"
                                                     )}
                                                 >
                                                     None
@@ -686,10 +690,10 @@ export function TrackingLinkManager({
                                                         key={subtag.id}
                                                         onClick={() => setFormState(prev => ({ ...prev, subtagId: subtag.id }))}
                                                         className={cn(
-                                                            "px-3 py-2 rounded-lg text-sm transition-colors",
+                                                            "px-4 py-2 rounded-xl text-sm transition-all font-medium",
                                                             formState.subtagId === subtag.id
-                                                                ? "bg-primary/20 text-primary border border-primary/20"
-                                                                : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                                                                ? "bg-[#007AFF] dark:bg-primary/20 text-white dark:text-primary shadow-md shadow-[#007AFF]/20"
+                                                                : "bg-black/[0.04] dark:bg-secondary text-[#86868B] dark:text-muted-foreground hover:bg-black/[0.08] dark:hover:bg-secondary/80"
                                                         )}
                                                     >
                                                         {subtag.name}
@@ -721,7 +725,7 @@ export function TrackingLinkManager({
                                         Where is this tracking link placed? (e.g., Instagram post URL)
                                     </p>
                                     <div className="relative">
-                                        <ExternalLink className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                        <ExternalLink className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B] dark:text-muted-foreground" />
                                         <input
                                             type="url"
                                             value={formState.previewUrl}
@@ -732,9 +736,9 @@ export function TrackingLinkManager({
                                             placeholder="https://instagram.com/p/..."
                                             className={cn(
                                                 "w-full pl-11 pr-4 py-3 rounded-xl",
-                                                "bg-card border border-border",
-                                                "text-foreground placeholder:text-muted-foreground",
-                                                "focus:outline-none focus:border-primary/50"
+                                                "bg-[#EBECF0] dark:bg-card border border-transparent dark:border-border",
+                                                "text-[#1D1D1F] dark:text-foreground placeholder:text-[#86868B] dark:placeholder:text-muted-foreground",
+                                                "focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#007AFF]/20 transition-all"
                                             )}
                                         />
                                     </div>
@@ -755,10 +759,11 @@ export function TrackingLinkManager({
                                     onClick={viewMode === 'create' ? handleCreate : handleUpdate}
                                     disabled={isSaving || !formState.sourceId}
                                     className={cn(
-                                        "w-full py-4 rounded-xl font-medium",
-                                        "bg-primary text-black",
-                                        "hover:bg-primary/90 transition-colors",
-                                        "disabled:opacity-50 disabled:cursor-not-allowed",
+                                        "w-full py-4 rounded-xl font-bold text-base transition-all",
+                                        "bg-[#007AFF] dark:bg-primary text-white dark:text-black",
+                                        "hover:opacity-95 hover:shadow-lg hover:shadow-[#007AFF]/25 dark:hover:shadow-primary/20",
+                                        "active:scale-[0.98]",
+                                        "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none",
                                         "flex items-center justify-center gap-2"
                                     )}
                                 >

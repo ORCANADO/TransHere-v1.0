@@ -54,9 +54,9 @@ function CustomTooltip(props: any) {
     const isPositive = current >= previous;
 
     return (
-        <div className="liquid-glass-elevated rounded-xl p-4 min-w-[180px]">
+        <div className="bg-white/90 dark:bg-[#0A1221]/90 backdrop-blur-2xl rounded-2xl p-4 min-w-[180px] shadow-2xl border border-black/[0.05] dark:border-white/10">
             {/* Date Label */}
-            <p className="text-sm font-medium text-foreground mb-3 pb-2 border-b border-white/10">
+            <p className="text-sm font-semibold text-[#1D1D1F] dark:text-white mb-3 pb-2 border-b border-black/[0.05] dark:border-white/10">
                 {label}
             </p>
 
@@ -65,11 +65,11 @@ function CustomTooltip(props: any) {
                 <div className="flex items-center gap-2">
                     <div
                         className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: '#00FF85' }}
+                        style={{ backgroundColor: '#007AFF' }}
                     />
-                    <span className="text-sm text-muted-foreground">Current</span>
+                    <span className="text-sm text-[#86868B] dark:text-muted-foreground">Current</span>
                 </div>
-                <span className="text-sm font-semibold text-foreground">
+                <span className="text-sm font-bold text-[#1D1D1F] dark:text-white">
                     {current.toLocaleString()}
                 </span>
             </div>
@@ -78,24 +78,24 @@ function CustomTooltip(props: any) {
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                     <div
-                        className="w-3 h-3 rounded-full opacity-50"
-                        style={{ backgroundColor: '#94A3B8' }}
+                        className="w-3 h-3 rounded-full opacity-30"
+                        style={{ backgroundColor: '#86868B' }}
                     />
-                    <span className="text-sm text-muted-foreground">Previous</span>
+                    <span className="text-sm text-[#86868B]/70 dark:text-muted-foreground">Previous</span>
                 </div>
-                <span className="text-sm font-semibold text-muted-foreground">
+                <span className="text-sm font-semibold text-[#86868B]/70 dark:text-muted-foreground">
                     {previous.toLocaleString()}
                 </span>
             </div>
 
             {/* Delta Calculation */}
-            <div className="pt-2 border-t border-white/10">
+            <div className="pt-2 border-t border-black/[0.05] dark:border-white/10">
                 <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Change</span>
+                    <span className="text-sm text-[#86868B] dark:text-muted-foreground">Change</span>
                     <span
                         className={cn(
                             "text-sm font-bold",
-                            isPositive ? "text-[#00FF85]" : "text-red-400"
+                            isPositive ? "text-[#00C853] dark:text-[#00FF85]" : "text-red-500 dark:text-red-400"
                         )}
                     >
                         {delta}
@@ -146,9 +146,9 @@ export function ComparisonChart({
     }
 
     return (
-        <div className={cn("liquid-glass rounded-xl p-4 lg:p-6", className)}>
+        <div className={cn("rounded-2xl p-4 lg:p-6", className)}>
             {title && (
-                <h3 className="text-lg font-semibold text-foreground mb-4">
+                <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-white mb-4">
                     {title}
                 </h3>
             )}
@@ -169,20 +169,20 @@ export function ComparisonChart({
                         {/* X Axis - Minimalist */}
                         <XAxis
                             dataKey="label"
-                            stroke="#94A3B8"
-                            fontSize={12}
+                            stroke="#86868B"
+                            fontSize={11}
                             tickLine={false}
                             axisLine={false}
-                            tickMargin={10}
+                            tickMargin={12}
                         />
 
                         {/* Y Axis - Hidden axis line */}
                         <YAxis
-                            stroke="#94A3B8"
-                            fontSize={12}
+                            stroke="#86868B"
+                            fontSize={11}
                             tickLine={false}
                             axisLine={false}
-                            tickMargin={10}
+                            tickMargin={12}
                             tickFormatter={(value) => {
                                 if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
                                 if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
@@ -197,9 +197,11 @@ export function ComparisonChart({
                         {showLegend && (
                             <Legend
                                 verticalAlign="top"
+                                align="right"
+                                iconType="circle"
                                 height={36}
                                 formatter={(value: string) => (
-                                    <span className="text-sm text-muted-foreground">
+                                    <span className="text-xs font-medium text-[#86868B] dark:text-muted-foreground mr-4">
                                         {value === 'current' ? 'Current Period' : 'Previous Period'}
                                     </span>
                                 )}
@@ -211,23 +213,23 @@ export function ComparisonChart({
                             type="monotone"
                             dataKey="previous"
                             name="previous"
-                            stroke="#94A3B8"
+                            stroke="#86868B"
                             strokeWidth={2}
-                            strokeOpacity={0.5}
+                            strokeOpacity={0.3}
                             strokeDasharray="5 5"
                             dot={false}
-                            activeDot={{ r: 4, fill: '#94A3B8' }}
+                            activeDot={{ r: 4, fill: '#86868B', strokeWidth: 0 }}
                         />
 
-                        {/* Current Period Line - Solid, Electric Emerald */}
+                        {/* Current Period Line - Solid, Apple Blue */}
                         <Line
                             type="monotone"
                             dataKey="current"
                             name="current"
-                            stroke="#00FF85"
-                            strokeWidth={2}
+                            stroke="#007AFF"
+                            strokeWidth={3}
                             dot={false}
-                            activeDot={{ r: 6, fill: '#00FF85' }}
+                            activeDot={{ r: 6, fill: '#007AFF', stroke: '#fff', strokeWidth: 2 }}
                         />
                     </LineChart>
                 </ResponsiveContainer>

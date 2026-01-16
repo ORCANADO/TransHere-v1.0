@@ -79,9 +79,10 @@ function FilterDropdown({
             <button
                 onClick={onToggle}
                 className={cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-lg text-sm",
-                    "liquid-glass-button transition-all duration-200",
-                    isOpen && "ring-2 ring-[#7A27FF]/50",
+                    "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200",
+                    "bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10",
+                    "hover:bg-[#EBECF0] dark:hover:bg-white/10 shadow-sm active:scale-95",
+                    isOpen && "ring-2 ring-[#007AFF]/20 dark:ring-[#7A27FF]/50",
                     className
                 )}
             >
@@ -101,7 +102,7 @@ function FilterDropdown({
                     />
 
                     {/* Dropdown Content */}
-                    <div className="absolute top-full mt-2 z-[60] min-w-[200px] max-h-[400px] overflow-auto liquid-glass-elevated rounded-xl shadow-2xl">
+                    <div className="absolute top-full mt-2 z-[60] min-w-[220px] max-h-[450px] overflow-auto bg-[#F9F9FB]/95 dark:bg-[#0A1221]/95 backdrop-blur-3xl rounded-2xl border border-[#E5E5EA] dark:border-white/10 shadow-2xl">
                         {children}
                     </div>
                 </>
@@ -216,8 +217,8 @@ export function DashboardFiltersBar({
             <FilterDropdown
                 trigger={
                     <>
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-foreground">
+                        <Calendar className="w-4 h-4 text-[#86868B]" />
+                        <span className="text-[#1D1D1F] dark:text-white">
                             {TIME_PERIODS.find(p => p.value === filters.period)?.label || 'Select Period'}
                         </span>
                     </>
@@ -245,10 +246,10 @@ export function DashboardFiltersBar({
                                 }
                             }}
                             className={cn(
-                                "w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 transition-colors cursor-pointer",
+                                "w-full px-4 py-2.5 text-left text-sm hover:bg-black/[0.05] dark:hover:bg-white/5 transition-colors cursor-pointer",
                                 filters.period === period.value
-                                    ? "text-[#00FF85] font-medium"
-                                    : "text-foreground"
+                                    ? "text-[#007AFF] dark:text-[#007AFF] font-bold"
+                                    : "text-[#1D1D1F] dark:text-white"
                             )}
                         >
                             {period.label}
@@ -257,8 +258,8 @@ export function DashboardFiltersBar({
                 </div>
 
                 {/* Always show Custom Date Range if available in state or just below */}
-                <div className="p-3 border-t border-white/10 space-y-2">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold px-1 mb-1">Custom Range</p>
+                <div className="p-3 border-t border-[#E5E5EA] dark:border-white/10 space-y-2">
+                    <p className="text-[10px] uppercase tracking-widest text-[#86868B] font-bold px-1 mb-1">Custom Range</p>
                     <DatePicker
                         value={filters.startDate || ''}
                         onChange={(date) => {
@@ -284,8 +285,8 @@ export function DashboardFiltersBar({
             <FilterDropdown
                 trigger={
                     <>
-                        <Globe className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-foreground">
+                        <Globe className="w-4 h-4 text-[#86868B]" />
+                        <span className="text-[#1D1D1F] dark:text-white">
                             {filters.country || 'All Countries'}
                         </span>
                     </>
@@ -297,17 +298,17 @@ export function DashboardFiltersBar({
                 }}
                 className="min-w-[160px]"
             >
-                <div className="flex flex-col max-h-[400px]">
+                <div className="flex flex-col max-h-[450px]">
                     {/* Search Input */}
-                    <div className="p-2 border-b border-white/10 sticky top-0 bg-[#0A1221] z-10">
+                    <div className="p-3 border-b border-[#E5E5EA] dark:border-white/10 sticky top-0 bg-[#F9F9FB]/90 dark:bg-[#0A1221]/90 backdrop-blur-md z-10">
                         <div className="relative">
-                            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#86868B]" />
                             <input
                                 type="text"
                                 placeholder="Search countries..."
                                 value={countrySearch}
                                 onChange={(e) => setCountrySearch(e.target.value)}
-                                className="w-full pl-7 pr-2 py-1.5 text-xs bg-white/5 border border-white/10 rounded text-white placeholder:text-white/40 focus:outline-none focus:border-[#00FF85]/50"
+                                className="w-full pl-9 pr-2 py-2 text-xs bg-[#EBECF0] dark:bg-white/5 border border-transparent dark:border-white/10 rounded-lg text-[#1D1D1F] dark:text-white placeholder:text-[#86868B] dark:placeholder:text-white/40 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#007AFF]/20 transition-all"
                             />
                         </div>
                     </div>
@@ -320,10 +321,10 @@ export function DashboardFiltersBar({
                                 closeDropdowns();
                             }}
                             className={cn(
-                                "w-full px-4 py-2 text-left text-sm transition-colors block",
+                                "w-full px-4 py-3 text-left text-sm transition-colors block font-medium",
                                 !filters.country
-                                    ? "bg-[#00FF85]/20 text-[#00FF85]"
-                                    : "text-foreground hover:bg-white/10"
+                                    ? "bg-[#007AFF]/10 dark:bg-[#007AFF]/20 text-[#007AFF] dark:text-[#007AFF]"
+                                    : "text-[#1D1D1F] dark:text-white hover:bg-black/[0.05] dark:hover:bg-white/10"
                             )}
                         >
                             All Countries
@@ -341,10 +342,10 @@ export function DashboardFiltersBar({
                                         closeDropdowns();
                                     }}
                                     className={cn(
-                                        "w-full px-4 py-2 text-left text-sm transition-colors block",
+                                        "w-full px-4 py-2.5 text-left text-sm transition-colors block font-medium",
                                         filters.country === country
-                                            ? "bg-[#00FF85]/20 text-[#00FF85]"
-                                            : "text-foreground hover:bg-white/10"
+                                            ? "bg-[#007AFF]/10 dark:bg-[#007AFF]/20 text-[#007AFF] dark:text-[#007AFF]"
+                                            : "text-[#1D1D1F] dark:text-white hover:bg-black/[0.05] dark:hover:bg-white/10"
                                     )}
                                 >
                                     {country}
@@ -358,8 +359,8 @@ export function DashboardFiltersBar({
             <FilterDropdown
                 trigger={
                     <>
-                        <Link2 className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-foreground">
+                        <Link2 className="w-4 h-4 text-[#86868B]" />
+                        <span className="text-[#1D1D1F] dark:text-white">
                             {filters.sources.length === 0
                                 ? 'All Sources'
                                 : filters.sources.length === 1
@@ -382,8 +383,8 @@ export function DashboardFiltersBar({
                             updateFilter('sources', []);
                         }}
                         className={cn(
-                            "w-full px-3 py-2 text-left text-sm hover:bg-white/5 transition-colors rounded-md mb-2",
-                            filters.sources.length === 0 ? "text-[#00FF85] font-medium" : "text-foreground"
+                            "w-full px-3 py-2.5 text-left text-sm hover:bg-black/[0.05] dark:hover:bg-white/5 transition-colors rounded-xl mb-1 font-medium",
+                            filters.sources.length === 0 ? "text-[#007AFF] dark:text-[#007AFF] font-bold" : "text-[#1D1D1F] dark:text-white"
                         )}
                     >
                         All Sources
@@ -395,10 +396,10 @@ export function DashboardFiltersBar({
                             <div
                                 onClick={() => handleSourceToggle(source.name)}
                                 className={cn(
-                                    "flex items-center gap-2 px-3 py-2 cursor-pointer rounded-md transition-colors",
+                                    "flex items-center gap-2 px-3 py-2.5 cursor-pointer rounded-xl transition-all font-medium",
                                     isSourceSelected(source.name)
-                                        ? "bg-[#7A27FF]/20 text-[#7A27FF]"
-                                        : "hover:bg-white/10"
+                                        ? "bg-[#007AFF]/10 dark:bg-[#007AFF]/20 text-[#007AFF] dark:text-[#007AFF]"
+                                        : "text-[#1D1D1F] dark:text-white/80 hover:bg-black/[0.05] dark:hover:bg-white/10"
                                 )}
                             >
                                 <source.icon className="w-4 h-4" />
@@ -419,10 +420,10 @@ export function DashboardFiltersBar({
                                                 handleSubtagToggle(source.name, subtag);
                                             }}
                                             className={cn(
-                                                "px-2 py-1.5 text-xs cursor-pointer rounded transition-colors flex items-center justify-between",
+                                                "px-3 py-2 text-xs cursor-pointer rounded-lg transition-all flex items-center justify-between font-medium",
                                                 isSubtagSelected(source.name, subtag)
-                                                    ? "bg-[#7A27FF]/10 text-[#7A27FF]"
-                                                    : "text-white/60 hover:text-white"
+                                                    ? "bg-[#007AFF]/5 dark:bg-[#7A27FF]/10 text-[#007AFF] dark:text-[#7A27FF]"
+                                                    : "text-[#86868B] dark:text-white/60 hover:text-[#1D1D1F] dark:hover:text-white"
                                             )}
                                         >
                                             <span>{subtag}</span>
@@ -452,7 +453,7 @@ export function DashboardFiltersBar({
                             modelSlugs: [],
                         });
                     }}
-                    className="flex items-center gap-1 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="flex items-center gap-1 px-3 py-2 text-sm text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white transition-colors font-medium"
                 >
                     <X className="w-4 h-4" />
                     Clear

@@ -12,19 +12,23 @@ import { Skeleton } from '@/components/ui/skeleton';
 interface SidebarModelListProps {
     models: Model[];
     selectedIds: string[];
-    onSelectionChange: (ids: string[]) => void;
+    onModelToggle: (modelId: string) => void;
+    onClearSelection: () => void;
     onEditModel: (model: Model) => void;
     onManageTrackingLinks: (model: Model) => void;
     isLoading?: boolean;
+    metrics?: Record<string, { views: number; clicks: number }>;
 }
 
 export function SidebarModelList({
     models,
     selectedIds,
-    onSelectionChange,
+    onModelToggle,
+    onClearSelection,
     onEditModel,
     onManageTrackingLinks,
     isLoading = false,
+    metrics,
 }: SidebarModelListProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [pinnedIds, setPinnedIds] = useState<string[]>([]);
@@ -66,11 +70,7 @@ export function SidebarModelList({
 
     // Handle checkbox toggle
     const handleSelect = (modelId: string, checked: boolean | 'indeterminate') => {
-        if (checked === true) {
-            onSelectionChange([...selectedIds, modelId]);
-        } else {
-            onSelectionChange(selectedIds.filter((id) => id !== modelId));
-        }
+        onModelToggle(modelId);
     };
 
     // Loading State
@@ -115,9 +115,9 @@ export function SidebarModelList({
     return (
         <div className="flex flex-col h-full">
             {/* Search Bar - Sticky */}
-            <div className="sticky top-0 z-10 p-3 bg-white/60 dark:bg-[#0A1221]/60 backdrop-blur-xl border-b border-white/10">
+            <div className="sticky top-0 z-10 p-3 bg-[#F9F9FB]/80 backdrop-blur-xl border-b border-[#E5E5EA] dark:border-white/10">
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B] dark:text-gray-400" />
                     <input
                         id="model-search-input"
                         type="text"
@@ -125,11 +125,12 @@ export function SidebarModelList({
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className={cn(
-                            "w-full pl-9 pr-3 py-2 rounded-lg text-sm",
-                            "bg-white/60 dark:bg-white/5",
-                            "border border-white/20 dark:border-white/10",
-                            "focus-ring",
-                            "placeholder:text-muted-foreground",
+                            "w-full pl-9 pr-3 py-2.5 rounded-xl text-sm",
+                            "bg-[#EBECF0] dark:bg-white/5",
+                            "border-0 dark:border dark:border-white/10",
+                            "focus:ring-2 focus:ring-[#007AFF]/30 focus:bg-white dark:focus:bg-white/10",
+                            "placeholder:text-[#86868B] dark:placeholder:text-gray-500",
+                            "text-[#1D1D1F] dark:text-white",
                             "transition-all"
                         )}
                     />
@@ -146,7 +147,7 @@ export function SidebarModelList({
                         <p className="text-sm text-muted-foreground">No models match your search</p>
                         <button
                             onClick={() => setSearchQuery('')}
-                            className="text-xs text-[#7A27FF] mt-2 hover:underline"
+                            className="text-xs text-[#007AFF] mt-2 hover:underline"
                         >
                             Clear search
                         </button>
@@ -160,17 +161,26 @@ export function SidebarModelList({
                             return (
                                 <div
                                     key={model.id}
+                                    onClick={() => handleSelect(model.id, !isSelected)}
                                     className={cn(
-                                        "flex items-center gap-3 p-2 rounded-lg transition-all scale-up-subtle",
-                                        isPinned
-                                            ? "bg-[#00FF85]/10 dark:bg-[#00FF85]/5 border border-[#00FF85]/20"
-                                            : "hover:bg-white/10 border border-transparent"
+                                        "group relative flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all",
+                                        isSelected
+                                            ? "bg-[#007AFF]/10 dark:bg-[#AF52DE]/10 border border-[#007AFF]/30 dark:border-[#AF52DE]/30"
+                                            : "hover:bg-[#E8E8ED] dark:hover:bg-white/5 border border-transparent"
                                     )}
                                 >
                                     {/* Profile Photo (clickable for edit) */}
                                     <button
-                                        onClick={() => onEditModel(model)}
-                                        className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0 group"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onEditModel(model);
+                                        }}
+                                        className={cn(
+                                            "relative w-11 h-11 rounded-full overflow-hidden flex-shrink-0 z-10",
+                                            "ring-2 ring-[#E5E5EA] dark:ring-white/20",
+                                            "group-hover:ring-[#007AFF] dark:group-hover:ring-[#007AFF] transition-all",
+                                            "shadow-sm"
+                                        )}
                                         title={`Edit ${model.name}`}
                                     >
                                         {model.image_url ? (
@@ -178,46 +188,64 @@ export function SidebarModelList({
                                                 src={getImageUrl(model.image_url)}
                                                 alt={model.name}
                                                 fill
-                                                className="object-cover border border-white/20 rounded-full group-hover:border-[#7A27FF]/50 transition-colors"
+                                                className="object-cover"
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#7A27FF]/20 to-[#00FF85]/20 border border-white/20 rounded-full text-xs font-semibold text-[#7A27FF] group-hover:border-[#7A27FF]/50 transition-colors">
+                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#007AFF]/20 to-[#AF52DE]/20 text-xs font-semibold text-[#007AFF]">
                                                 {model.name.substring(0, 2).toUpperCase()}
                                             </div>
                                         )}
                                     </button>
 
                                     {/* Model Info */}
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-sm truncate flex items-center gap-1">
-                                            {model.name}
-                                            {model.is_verified && (
-                                                <span className="text-[#7A27FF]">✓</span>
-                                            )}
-                                        </p>
-                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            <span className="font-mono">/{model.slug}</span>
+                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                        <div className="flex items-center gap-2">
+                                            <div className={cn(
+                                                "font-semibold text-[12px] leading-tight transition-colors flex flex-col uppercase tracking-tight",
+                                                isSelected
+                                                    ? "text-[#007AFF] dark:text-[#AF52DE]"
+                                                    : "text-[#1D1D1F] dark:text-gray-200"
+                                            )}>
+                                                {model.slug.split('-').map((part, i) => (
+                                                    <span key={i} className={cn("block", i > 0 && "opacity-70 text-[10px]")}>
+                                                        {part}
+                                                    </span>
+                                                ))}
+                                            </div>
+
+                                            {/* Tracking Link Button - Moved next to name */}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onManageTrackingLinks(model);
+                                                }}
+                                                className={cn(
+                                                    "opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-all",
+                                                    "hover:bg-[#E8E8ED] dark:hover:bg-white/10",
+                                                    "text-[#86868B] dark:text-gray-400 hover:text-[#007AFF] dark:hover:text-[#007AFF]",
+                                                    "active:scale-95"
+                                                )}
+                                                title="Manage tracking links"
+                                            >
+                                                <Link2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+
+                                    </div>
+
+                                    {/* Metrics (Views/Clicks) */}
+                                    <div className="flex flex-col items-end gap-0.5 text-[10px] sm:text-xs">
+                                        <div className="flex items-center gap-1.5 font-medium text-[#007AFF] dark:text-[#007AFF]">
+                                            <span className="tabular-nums">{metrics?.[model.slug]?.views?.toLocaleString() || 0}</span>
+                                            <span className="text-[9px] opacity-60 uppercase tracking-wider font-medium">Views</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 font-medium text-[#AF52DE] dark:text-[#AF52DE]">
+                                            <span className="tabular-nums">{metrics?.[model.slug]?.clicks?.toLocaleString() || 0}</span>
+                                            <span className="text-[9px] opacity-60 uppercase tracking-wider font-medium">Clicks</span>
                                         </div>
                                     </div>
 
-                                    {/* Tracking Link Button */}
-                                    <button
-                                        onClick={() => onManageTrackingLinks(model)}
-                                        className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-muted-foreground hover:text-[#7A27FF]"
-                                        title="Manage tracking links"
-                                    >
-                                        <Link2 className="w-4 h-4" />
-                                    </button>
-
-                                    {/* Selection Checkbox */}
-                                    <Checkbox
-                                        checked={isSelected}
-                                        onCheckedChange={(checked) => handleSelect(model.id, checked)}
-                                        className={cn(
-                                            "border-white/30 data-[state=checked]:bg-[#7A27FF] data-[state=checked]:border-[#7A27FF]",
-                                            "transition-all"
-                                        )}
-                                    />
+                                    {/* Visual Selection Indicator (Green glow/border handled by parent div class) */}
                                 </div>
                             );
                         })}
@@ -233,8 +261,8 @@ export function SidebarModelList({
                             {selectedIds.length} model{selectedIds.length !== 1 ? 's' : ''} selected
                         </span>
                         <button
-                            onClick={() => onSelectionChange([])}
-                            className="text-[#7A27FF] hover:text-[#7A27FF]/80 transition-colors font-medium"
+                            onClick={onClearSelection}
+                            className="text-[#007AFF] hover:text-[#007AFF]/80 transition-colors font-medium"
                         >
                             Clear all
                         </button>
