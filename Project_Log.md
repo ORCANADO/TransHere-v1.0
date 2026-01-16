@@ -957,3 +957,11 @@ All planned features implemented, tested, and polished. The platform is producti
 #### Verification Status:
 - **E2E Verified:** All features (link creation, custom source management, archival, and deep linking) were successfully verified via automated browser subagents.
 - **Persistence:** Verified that link archival and custom source data persist correctly in Supabase.
+
+### 2026-01-16: Tracking Link Subtags & Universal Admin Theming
+- **Feature: Subtag Creation Flow**: Integrated real-time subtag creation within the `TrackingLinkManager` modal.
+- **UI: Granular Attribution Explanation**: Added tooltips/explaining text for subtags to help users understand campaign tracking.
+- **Theming: Admin Light Mode Synchronization**: Refactored `TrackingLinkManager` to use semantic theme tokens (`bg-card`, `text-foreground`), ensuring full Light Mode support.
+- **Fix: Model Card Visibility**: Updated the Admin "Tracking Links" tab cards to use `liquid-glass-elevated` for better visibility in light mode.
+- **API: New Subtag Endpoint**: Created `/api/admin/tracking-subtags` to handle POST requests for subtag persistence.
+- **Code Stability:** Standardized form states and resolved TypeScript lints in the tracking system components.

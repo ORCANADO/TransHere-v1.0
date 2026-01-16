@@ -170,7 +170,7 @@ function AdminContent() {
               {models.map((model) => (
                 <div
                   key={model.id}
-                  className="p-4 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between"
+                  className="p-4 rounded-xl bg-card border border-border flex flex-col justify-between liquid-glass-elevated"
                 >
                   <div>
                     <h3 className="font-medium text-white">{model.name}</h3>

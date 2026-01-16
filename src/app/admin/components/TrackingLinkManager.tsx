@@ -36,6 +36,7 @@ interface FormState {
     subtagId: string;
     previewUrl: string;
     customSourceName: string;
+    customSubtagName: string;
 }
 
 const initialFormState: FormState = {
@@ -43,6 +44,7 @@ const initialFormState: FormState = {
     subtagId: '',
     previewUrl: '',
     customSourceName: '',
+    customSubtagName: '',
 };
 
 export function TrackingLinkManager({
@@ -64,6 +66,7 @@ export function TrackingLinkManager({
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [editingLink, setEditingLink] = useState<TrackingLinkWithDetails | null>(null);
     const [showCustomSourceInput, setShowCustomSourceInput] = useState(false);
+    const [showCustomSubtagInput, setShowCustomSubtagInput] = useState(false);
     const [formState, setFormState] = useState<FormState>(initialFormState);
 
     // Base URL for tracking links
@@ -259,6 +262,52 @@ export function TrackingLinkManager({
         }
     };
 
+    // Create custom subtag
+    const handleCreateSubtag = async () => {
+        if (!formState.customSubtagName.trim()) {
+            setError('Please enter a subtag name');
+            return;
+        }
+
+        if (!formState.sourceId) {
+            setError('Source must be selected');
+            return;
+        }
+
+        setIsSaving(true);
+        setError(null);
+
+        try {
+            const response = await fetch(`/api/admin/tracking-subtags?key=${adminKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: formState.customSubtagName,
+                    sourceId: formState.sourceId
+                }),
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to create subtag');
+            }
+
+            // Add new subtag and select it
+            setSubtags(prev => [...prev, result.data]);
+            setFormState(prev => ({
+                ...prev,
+                subtagId: result.data.id,
+                customSubtagName: '',
+            }));
+            setShowCustomSubtagInput(false);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to create subtag');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     // Start editing a link
     const startEdit = (link: TrackingLinkWithDetails) => {
         setEditingLink(link);
@@ -267,6 +316,7 @@ export function TrackingLinkManager({
             subtagId: link.subtag_id || '',
             previewUrl: link.preview_url || '',
             customSourceName: '',
+            customSubtagName: '',
         });
         setViewMode('edit');
     };
@@ -286,23 +336,23 @@ export function TrackingLinkManager({
             <div className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[700px] md:max-h-[80vh] z-[101] flex flex-col">
                 <div className={cn(
                     "flex flex-col h-full rounded-2xl overflow-hidden",
-                    "bg-[#0A1221]/95 backdrop-blur-xl",
-                    "border border-white/10",
+                    "bg-card/95 backdrop-blur-xl",
+                    "border border-border",
                     "shadow-2xl shadow-black/50"
                 )}>
                     {/* Header */}
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+                    <div className="flex items-center justify-between px-6 py-4 border-b border-border">
                         <div>
-                            <h2 className="text-lg font-semibold text-white">
+                            <h2 className="text-lg font-semibold text-foreground">
                                 Tracking Links
                             </h2>
-                            <p className="text-sm text-white/60">{modelName}</p>
+                            <p className="text-sm text-muted-foreground">{modelName}</p>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                            className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
                         >
-                            <X className="w-5 h-5 text-white/60" />
+                            <X className="w-5 h-5 text-muted-foreground" />
                         </button>
                     </div>
 
@@ -557,52 +607,112 @@ export function TrackingLinkManager({
                                     )}
                                 </div>
 
-                                {/* Subtag Selection (if source has subtags) */}
-                                {formState.sourceId && getSubtagsForSource(formState.sourceId).length > 0 && (
+                                {/* Subtag Selection (if source is selected) */}
+                                {formState.sourceId && (
                                     <div>
-                                        <label className="block text-sm text-white/60 mb-2">
+                                        <label className="block text-sm text-muted-foreground mb-2">
                                             Subtag (Optional)
                                         </label>
-                                        <div className="flex flex-wrap gap-2">
-                                            <button
-                                                onClick={() => setFormState(prev => ({ ...prev, subtagId: '' }))}
-                                                className={cn(
-                                                    "px-3 py-2 rounded-lg text-sm transition-colors",
-                                                    !formState.subtagId
-                                                        ? "bg-[#00FF85]/20 text-[#00FF85]"
-                                                        : "bg-white/5 text-white/60 hover:bg-white/10"
-                                                )}
-                                            >
-                                                None
-                                            </button>
-                                            {getSubtagsForSource(formState.sourceId).map(subtag => (
-                                                <button
-                                                    key={subtag.id}
-                                                    onClick={() => setFormState(prev => ({ ...prev, subtagId: subtag.id }))}
+
+                                        {/* Explanation Text */}
+                                        <div className="mb-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs text-blue-400">
+                                            <p className="font-medium mb-1">About Subtags</p>
+                                            <p>Subtags are designed to track campaigns, multiple accounts in the same traffic source (e.g., separate IG accounts), specific posts, or different placements (like Bio vs. Story). Use them for granular attribution.</p>
+                                        </div>
+
+                                        {showCustomSubtagInput ? (
+                                            <div className="flex gap-2 mb-3">
+                                                <input
+                                                    type="text"
+                                                    value={formState.customSubtagName}
+                                                    onChange={(e) => setFormState(prev => ({
+                                                        ...prev,
+                                                        customSubtagName: e.target.value
+                                                    }))}
+                                                    placeholder="Enter subtag name (e.g., 'Bio Link', 'Campaign A')..."
                                                     className={cn(
-                                                        "px-3 py-2 rounded-lg text-sm transition-colors",
-                                                        formState.subtagId === subtag.id
-                                                            ? "bg-[#00FF85]/20 text-[#00FF85]"
-                                                            : "bg-white/5 text-white/60 hover:bg-white/10"
+                                                        "flex-1 px-4 py-3 rounded-xl",
+                                                        "bg-card border border-border",
+                                                        "text-foreground placeholder:text-muted-foreground",
+                                                        "focus:outline-none focus:border-primary/50"
+                                                    )}
+                                                />
+                                                <button
+                                                    onClick={handleCreateSubtag}
+                                                    disabled={isSaving}
+                                                    className={cn(
+                                                        "px-4 py-3 rounded-xl",
+                                                        "bg-primary text-black font-medium",
+                                                        "hover:bg-primary/90 transition-colors",
+                                                        "disabled:opacity-50"
                                                     )}
                                                 >
-                                                    {subtag.name}
+                                                    Add
                                                 </button>
-                                            ))}
-                                        </div>
+                                                <button
+                                                    onClick={() => {
+                                                        setShowCustomSubtagInput(false);
+                                                        setFormState(prev => ({ ...prev, customSubtagName: '' }));
+                                                    }}
+                                                    className="px-4 py-3 rounded-xl bg-muted text-foreground hover:bg-muted/80 transition-colors"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-wrap gap-2">
+                                                <button
+                                                    onClick={() => setFormState(prev => ({ ...prev, subtagId: '' }))}
+                                                    className={cn(
+                                                        "px-3 py-2 rounded-lg text-sm transition-colors",
+                                                        !formState.subtagId
+                                                            ? "bg-primary/20 text-primary border border-primary/20"
+                                                            : "bg-secondary text-muted-foreground hover:bg-secondary/80 border border-transparent"
+                                                    )}
+                                                >
+                                                    None
+                                                </button>
+                                                {getSubtagsForSource(formState.sourceId).map(subtag => (
+                                                    <button
+                                                        key={subtag.id}
+                                                        onClick={() => setFormState(prev => ({ ...prev, subtagId: subtag.id }))}
+                                                        className={cn(
+                                                            "px-3 py-2 rounded-lg text-sm transition-colors",
+                                                            formState.subtagId === subtag.id
+                                                                ? "bg-primary/20 text-primary border border-primary/20"
+                                                                : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                                                        )}
+                                                    >
+                                                        {subtag.name}
+                                                    </button>
+                                                ))}
+                                                <button
+                                                    onClick={() => setShowCustomSubtagInput(true)}
+                                                    className={cn(
+                                                        "px-3 py-2 rounded-lg text-sm",
+                                                        "bg-secondary border border-dashed border-muted-foreground/30",
+                                                        "text-muted-foreground hover:text-foreground hover:border-muted-foreground/60",
+                                                        "transition-colors flex items-center justify-center gap-1"
+                                                    )}
+                                                >
+                                                    <Plus className="w-3 h-3" />
+                                                    Add New
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
                                 {/* Preview URL */}
                                 <div>
-                                    <label className="block text-sm text-white/60 mb-2">
+                                    <label className="block text-sm text-muted-foreground mb-2">
                                         Preview URL (Optional)
                                     </label>
-                                    <p className="text-xs text-white/40 mb-2">
+                                    <p className="text-xs text-muted-foreground/60 mb-2">
                                         Where is this tracking link placed? (e.g., Instagram post URL)
                                     </p>
                                     <div className="relative">
-                                        <ExternalLink className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                                        <ExternalLink className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                         <input
                                             type="url"
                                             value={formState.previewUrl}
@@ -613,9 +723,9 @@ export function TrackingLinkManager({
                                             placeholder="https://instagram.com/p/..."
                                             className={cn(
                                                 "w-full pl-11 pr-4 py-3 rounded-xl",
-                                                "bg-white/5 border border-white/10",
-                                                "text-white placeholder:text-white/30",
-                                                "focus:outline-none focus:border-[#00FF85]/50"
+                                                "bg-card border border-border",
+                                                "text-foreground placeholder:text-muted-foreground",
+                                                "focus:outline-none focus:border-primary/50"
                                             )}
                                         />
                                     </div>
@@ -623,9 +733,9 @@ export function TrackingLinkManager({
 
                                 {/* Generated URL Preview */}
                                 {viewMode === 'edit' && editingLink && (
-                                    <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                                        <p className="text-xs text-white/40 mb-1">Tracking URL</p>
-                                        <code className="text-[#00FF85] text-sm break-all">
+                                    <div className="p-4 rounded-xl bg-card border border-border">
+                                        <p className="text-xs text-muted-foreground mb-1">Tracking URL</p>
+                                        <code className="text-primary text-sm break-all">
                                             {baseUrl}/model/{modelSlug}/{editingLink.slug}
                                         </code>
                                     </div>
@@ -637,8 +747,8 @@ export function TrackingLinkManager({
                                     disabled={isSaving || !formState.sourceId}
                                     className={cn(
                                         "w-full py-4 rounded-xl font-medium",
-                                        "bg-[#00FF85] text-black",
-                                        "hover:bg-[#00FF85]/90 transition-colors",
+                                        "bg-primary text-black",
+                                        "hover:bg-primary/90 transition-colors",
                                         "disabled:opacity-50 disabled:cursor-not-allowed",
                                         "flex items-center justify-center gap-2"
                                     )}

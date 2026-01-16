@@ -427,8 +427,17 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
     - **Hydration Sync:** Resolved a critical hydration mismatch in the admin panel by implementing a client-side mount check.
     - **API Recovery:** Fixed 500 errors on link and source creation by correcting table column naming (`click_count`) and slug requirements.
     - **Type Integrity:** Standardized `TrackingLink` types across the API and frontend to match the database schema.
+- [x] **Advanced Tracking Features:**
+    - **Subtag Creation:** Implemented real-time subtag creation flow within the manager, enabling granular attribution (Campaigns, Posts, Bio vs Story).
+    - **Attribution Logic:** Added descriptive explanation text for subtags to assist admin users in setup.
+- [x] **Admin Theme Synchronization:**
+    - **Universal Mode Support:** Refactored `TrackingLinkManager` with semantic CSS tokens to support both Light and Dark modes.
+    - **Visual Accessibility:** Updated model card components with `liquid-glass-elevated` styles to ensure visibility in standard light mode.
+- [x] **API & Backend Extension:**
+    - Created the `/api/admin/tracking-subtags` route to support dynamic subtag management.
+    - Standardized form state management and resolved TypeScript type lints for tracking components.
 - [x] **Verification:**
-    - Successfully performed end-to-end manual verification of the tracking link creation and archival flows.
+    - Successfully performed end-to-end manual verification of the tracking link creation, subtag management, and archival flows across both themes.
 
 **Next Steps:**
 - Final production deployment of v1.1.

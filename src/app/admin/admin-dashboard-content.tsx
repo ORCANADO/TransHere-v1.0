@@ -27,13 +27,13 @@ export default function AdminDashboardContent() {
   const [selectedModel, setSelectedModel] = useState("");
   const [storyType, setStoryType] = useState<"pinned" | "recent">("recent");
   const [mediaMode, setMediaMode] = useState<"image" | "video">("image");
-  
+
   // File state for hybrid video uploading
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [videoFileMp4, setVideoFileMp4] = useState<File | null>(null);
   const [videoFileWebm, setVideoFileWebm] = useState<File | null>(null);
   const [videoPoster, setVideoPoster] = useState<File | null>(null);
-  
+
   const [uploading, setUploading] = useState(false);
 
   // Gallery Manager State
@@ -124,7 +124,7 @@ export default function AdminDashboardContent() {
   ): Promise<string> => {
     // Use explicit contentType if provided, otherwise fall back to file.type
     const mimeType = contentType || file.type || 'application/octet-stream';
-    
+
     // Use proxy upload to avoid CORS issues
     const formData = new FormData();
     formData.append('file', file);
@@ -146,7 +146,7 @@ export default function AdminDashboardContent() {
     if (!uploadResponse.ok) {
       // Try to parse JSON error, fallback to status text
       let errorMessage = `Upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`;
-      
+
       if (isJson) {
         try {
           const err = await uploadResponse.json();
@@ -161,7 +161,7 @@ export default function AdminDashboardContent() {
         const text = await uploadResponse.text();
         errorMessage = `Server error (${uploadResponse.status}): ${text.substring(0, 200)}`;
       }
-      
+
       throw new Error(errorMessage);
     }
 
@@ -175,7 +175,7 @@ export default function AdminDashboardContent() {
     if (!result.success) {
       throw new Error(result.error || "Upload failed");
     }
-    
+
     return result.key;
   };
 
@@ -185,7 +185,7 @@ export default function AdminDashboardContent() {
     setVideoFileMp4(null);
     setVideoFileWebm(null);
     setVideoPoster(null);
-    
+
     // Reset DOM file inputs in stories section
     const storyInputs = document.querySelectorAll('[data-story-input] input[type="file"]') as NodeListOf<HTMLInputElement>;
     storyInputs.forEach((input) => (input.value = ""));
@@ -207,7 +207,7 @@ export default function AdminDashboardContent() {
     setGalleryVideoMp4(null);
     setGalleryVideoWebm(null);
     setGalleryPoster(null);
-    
+
     // Reset DOM file inputs in gallery section
     const galleryInputs = document.querySelectorAll('[data-gallery-input] input[type="file"]') as NodeListOf<HTMLInputElement>;
     galleryInputs.forEach((input) => (input.value = ""));
@@ -215,7 +215,7 @@ export default function AdminDashboardContent() {
 
   const handleStoryUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isUploadReady()) {
       alert("Please select a model and all required files");
       return;
@@ -224,10 +224,10 @@ export default function AdminDashboardContent() {
     setUploading(true);
     try {
       const adminKey = localStorage.getItem("admin_key") || ADMIN_SECRET;
-      
+
       // Generate a SINGLE timestamp for all files in this batch
       const timestamp = Date.now();
-      
+
       let mediaUrl: string;
       let coverUrl: string;
       let mediaType: "image" | "video";
@@ -241,7 +241,7 @@ export default function AdminDashboardContent() {
 
         // Clean the base name from the MP4 file
         const cleanName = videoFileMp4.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "-");
-        
+
         // Preserve original poster extension and get correct MIME type
         const posterExt = videoPoster.name.split('.').pop()?.toLowerCase() || 'webp';
         const posterMimeType = videoPoster.type || `image/${posterExt === 'jpg' ? 'jpeg' : posterExt}`;
@@ -267,11 +267,11 @@ export default function AdminDashboardContent() {
         }
 
         const cleanName = imageFile.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "-");
-        
+
         // Preserve original image extension and get correct MIME type
         const imageExt = imageFile.name.split('.').pop()?.toLowerCase() || 'webp';
         const imageMimeType = imageFile.type || `image/${imageExt === 'jpg' ? 'jpeg' : imageExt}`;
-        
+
         const imageKey = await uploadFileToR2(
           imageFile,
           `${timestamp}-${cleanName}.${imageExt}`,
@@ -320,7 +320,7 @@ export default function AdminDashboardContent() {
   // Handle Gallery Upload - inserts into gallery_items table
   const handleGalleryUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isGalleryUploadReady()) {
       alert("Please select a model and all required files");
       return;
@@ -330,7 +330,7 @@ export default function AdminDashboardContent() {
     try {
       const adminKey = localStorage.getItem("admin_key") || ADMIN_SECRET;
       const timestamp = Date.now();
-      
+
       let mediaUrl: string;
       let posterUrl: string | null = null;
       let mediaType: "image" | "video";
@@ -373,11 +373,11 @@ export default function AdminDashboardContent() {
         const cleanName = galleryImageFile.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "-");
         const imageExt = galleryImageFile.name.split('.').pop()?.toLowerCase() || 'webp';
         const imageMimeType = galleryImageFile.type || `image/${imageExt === 'jpg' ? 'jpeg' : imageExt}`;
-        
+
         // Use model-slug path and models bucket for gallery items
         const imageKey = await uploadFileToR2(
           galleryImageFile,
-          `${modelSlug}/${timestamp}-${cleanName}.${imageExt}`,
+          `${timestamp}-${cleanName}.${imageExt}`,
           adminKey,
           imageMimeType,
           'models' // Gallery items go to models bucket
@@ -538,7 +538,7 @@ export default function AdminDashboardContent() {
                     <p className="text-sm text-muted-foreground">
                       Upload all 3 files for optimal cross-browser video playback.
                     </p>
-                    
+
                     <div>
                       <label className="block text-sm font-medium mb-2">
                         MP4 Video <span className="text-destructive">*</span>
@@ -586,13 +586,13 @@ export default function AdminDashboardContent() {
                   </div>
                 )}
 
-                <Button 
-                  type="submit" 
-                  disabled={uploading || !isUploadReady()} 
+                <Button
+                  type="submit"
+                  disabled={uploading || !isUploadReady()}
                   className="w-full"
                 >
-                  {uploading 
-                    ? `Uploading ${mediaMode === "video" ? "Video Files" : "Image"}...` 
+                  {uploading
+                    ? `Uploading ${mediaMode === "video" ? "Video Files" : "Image"}...`
                     : `Upload ${mediaMode === "video" ? "Video Story" : "Image Story"}`}
                 </Button>
               </form>
@@ -663,7 +663,7 @@ export default function AdminDashboardContent() {
                     <p className="text-sm text-muted-foreground">
                       Upload all 3 files for optimal cross-browser video playback.
                     </p>
-                    
+
                     <div>
                       <label className="block text-sm font-medium mb-2">
                         MP4 Video <span className="text-destructive">*</span>
@@ -711,13 +711,13 @@ export default function AdminDashboardContent() {
                   </div>
                 )}
 
-                <Button 
-                  type="submit" 
-                  disabled={galleryUploading || !isGalleryUploadReady()} 
+                <Button
+                  type="submit"
+                  disabled={galleryUploading || !isGalleryUploadReady()}
                   className="w-full"
                 >
-                  {galleryUploading 
-                    ? `Uploading ${galleryMediaMode === "video" ? "Video Files" : "Image"}...` 
+                  {galleryUploading
+                    ? `Uploading ${galleryMediaMode === "video" ? "Video Files" : "Image"}...`
                     : `Add ${galleryMediaMode === "video" ? "Video" : "Image"} to Gallery`}
                 </Button>
               </form>
