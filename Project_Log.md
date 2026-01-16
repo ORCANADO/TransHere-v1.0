@@ -1012,3 +1012,14 @@ All planned features implemented, tested, and polished. The platform is producti
 - **Robust Error Handling:**
     - **API Safety:** Updated `ModelEditor` to safely handle non-JSON responses (e.g., 404 HTML pages) gracefully.
     - **Logging:** Implemented detailed console logging for API fetch errors to aid in debugging.
+
+## [2024-01-16] Cloudflare Deployment Fix - Edge Runtime Configuration
+
+### Fixed
+- **Cloudflare Pages Deployment Error:**
+    - Resolved build failure caused by unconfigured API routes on Cloudflare Pages.
+    - **Edge Runtime:** Added `export const runtime = 'edge';` to the following API routes to ensure compatibility with Cloudflare's Edge network:
+        - `src/app/api/admin/tracking-links/[linkId]/route.ts`
+        - `src/app/api/admin/tracking-links/route.ts`
+        - `src/app/api/admin/tracking-sources/[sourceId]/route.ts`
+        - `src/app/api/admin/tracking-sources/route.ts`
