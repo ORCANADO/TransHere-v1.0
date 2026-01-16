@@ -287,7 +287,7 @@ export async function GET(request: Request) {
 
     // Fetch Sources first for filtering and response
     const { data: sourcesData } = await supabaseAdmin
-      .from('traffic_sources')
+      .from('tracking_sources')
       .select('*, subtags:tracking_subtags(*)');
     const sources = sourcesData || [];
 

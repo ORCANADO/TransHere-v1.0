@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'edge';
 
-const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
+const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+const ADMIN_KEY = process.env.ADMIN_KEY;
 
 // Verify admin key helper
 const verifyAdmin = (req: NextRequest) => {
@@ -31,13 +36,18 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const supabase = createClient();
+        // Generate slug from name
+        const slug = name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
 
         // Create the subtag
         const { data, error } = await supabase
             .from('tracking_subtags')
             .insert({
                 name,
+                slug,
                 source_id: sourceId
             })
             .select()

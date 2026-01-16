@@ -947,21 +947,15 @@ All planned features implemented, tested, and polished. The platform is producti
   - Integrated `TrackingLinkManager` modal into the active admin dashboard (`src/app/admin/page.tsx`).
   - Added a dedicated "Tracking Links" tab with model-level management cards.
   - Enhanced the `TrackingLinkManager` with "Copy to Clipboard" feedback and immersive glassmorphism styling.
+- **Subtag Creation Flow**: Integrated real-time subtag creation within the `TrackingLinkManager` modal with granular attribution explanation.
+- **Admin Light Mode Synchronization**: Refactored `TrackingLinkManager` to use semantic theme tokens (`bg-card`, `text-foreground`), ensuring full Light Mode support.
 
-#### Technical Fixes & Stability:
-- **Hydration Resolution:** Successfully bypassed environment-specific hydration crashes by implementing a `mounted` state check and `suppressHydrationWarning` on the main admin container.
-- **Database Schema Consistency:** Corrected mismatched column names between TypeScript types and the PostgreSQL schema (e.g., `clicks` vs `click_count`).
-- **Authorization Bug:** Identified the correct `ADMIN_KEY` environment variable to resolve "Unauthorized" errors during testing.
-- **Chart Type Safety:** Resolved complex `recharts` type conflicts and implicit `any` errors in `ComparisonChart` and `ModelComparisonChart`.
-
-#### Verification Status:
-- **E2E Verified:** All features (link creation, custom source management, archival, and deep linking) were successfully verified via automated browser subagents.
-- **Persistence:** Verified that link archival and custom source data persist correctly in Supabase.
-
-### 2026-01-16: Tracking Link Subtags & Universal Admin Theming
-- **Feature: Subtag Creation Flow**: Integrated real-time subtag creation within the `TrackingLinkManager` modal.
-- **UI: Granular Attribution Explanation**: Added tooltips/explaining text for subtags to help users understand campaign tracking.
-- **Theming: Admin Light Mode Synchronization**: Refactored `TrackingLinkManager` to use semantic theme tokens (`bg-card`, `text-foreground`), ensuring full Light Mode support.
-- **Fix: Model Card Visibility**: Updated the Admin "Tracking Links" tab cards to use `liquid-glass-elevated` for better visibility in light mode.
-- **API: New Subtag Endpoint**: Created `/api/admin/tracking-subtags` to handle POST requests for subtag persistence.
-- **Code Stability:** Standardized form states and resolved TypeScript lints in the tracking system components.
+#### Technical Fixes & Stability (v1.1.10):
+- **Dashboard API**: Fixed "Unknown" traffic sources issue by correcting the table name from `traffic_sources` to `tracking_sources` in the dashboard route.
+- **Subtag API**: 
+    - Resolved 500 error by switching to the Service Role client to bypass RLS.
+    - Added automatic slug generation from subtag names to prevent database constraint violations.
+- **Tracking Link Manager**: 
+    - Implemented safe hostname extraction for `preview_url` to prevent "Invalid URL" runtime crashes.
+    - Updated list view colors for 100% legibility in both light and dark modes.
+- **Git Sync**: Completed final synchronization of v1.1 features.

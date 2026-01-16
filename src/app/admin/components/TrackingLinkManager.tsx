@@ -428,12 +428,12 @@ export function TrackingLinkManager({
                                                 </div>
 
                                                 {/* Source */}
-                                                <div className="col-span-2 text-white/80 text-sm truncate">
+                                                <div className="col-span-2 text-foreground/80 text-sm truncate">
                                                     {link.source_name || '—'}
                                                 </div>
 
                                                 {/* Subtag */}
-                                                <div className="col-span-2 text-white/60 text-sm truncate">
+                                                <div className="col-span-2 text-muted-foreground text-sm truncate">
                                                     {link.subtag_name || '—'}
                                                 </div>
 
@@ -441,22 +441,31 @@ export function TrackingLinkManager({
                                                 <div className="col-span-3">
                                                     {link.preview_url ? (
                                                         <a
-                                                            href={link.preview_url}
+                                                            href={link.preview_url.startsWith('http') ? link.preview_url : `https://${link.preview_url}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="text-[#7A27FF] text-sm hover:underline flex items-center gap-1 truncate"
+                                                            className="text-primary text-sm hover:underline flex items-center gap-1 truncate"
                                                         >
                                                             <ExternalLink className="w-3 h-3 flex-shrink-0" />
-                                                            <span className="truncate">{new URL(link.preview_url).hostname}</span>
+                                                            <span className="truncate">
+                                                                {(() => {
+                                                                    try {
+                                                                        const url = link.preview_url.startsWith('http') ? link.preview_url : `https://${link.preview_url}`;
+                                                                        return new URL(url).hostname;
+                                                                    } catch {
+                                                                        return link.preview_url;
+                                                                    }
+                                                                })()}
+                                                            </span>
                                                         </a>
                                                     ) : (
-                                                        <span className="text-white/30 text-sm">—</span>
+                                                        <span className="text-muted-foreground/30 text-sm">—</span>
                                                     )}
                                                 </div>
 
                                                 {/* Clicks */}
                                                 <div className="col-span-1 text-center">
-                                                    <span className="text-white font-medium">
+                                                    <span className="text-foreground font-medium">
                                                         {link.click_count.toLocaleString()}
                                                     </span>
                                                 </div>
