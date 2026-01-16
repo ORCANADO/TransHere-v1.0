@@ -36,7 +36,15 @@ export function ModelEditor({ adminKey, modelId, onBack, onSaved, onModelDeleted
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/models/${modelId}?key=${adminKey}`);
+      const url = `/api/admin/models/${modelId}?key=${adminKey}`;
+      console.log('[ModelEditor] Fetching model:', url);
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`API Error ${res.status}: ${text.substring(0, 100)}`);
+      }
+
       const json = await res.json();
 
       if (json.success) {

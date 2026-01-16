@@ -994,3 +994,21 @@ All planned features implemented, tested, and polished. The platform is producti
     - Implemented safe hostname extraction for `preview_url` to prevent "Invalid URL" runtime crashes.
     - Updated list view colors for 100% legibility in both light and dark modes.
 - **Git Sync**: Completed final synchronization of v1.1 features.
+
+### [2026-01-16] - Phase 6.6: Gallery Video Upload & Management Improvements
+**Status:** Complete
+
+- **Gallery Video Upload Modal:**
+    - Replaced the previous upload file picker with a refined **Video Upload Modal**.
+    - **Dual File Input:** Added separate, validated fields for **MP4/MOV** (Main) and **WebM** (Optimized) files.
+    - **Validation:** Enforced mandatory MP4/MOV + WebM pair requirement to ensure cross-platform compatibility and optimal performance.
+    - **UX Improvement:** Eliminated user confusion about selecting multiple files simultaneously.
+
+- **Custom Delete Confirmation:**
+    - Replaced the erratic native `window.confirm` dialog with a stable **React Delete Modal**.
+    - Fixed issues where the confirmation menu would auto-close on some devices.
+    - Provides a consistent, detailed warning ("This action cannot be undone") before deletion.
+
+- **Robust Error Handling:**
+    - **API Safety:** Updated `ModelEditor` to safely handle non-JSON responses (e.g., 404 HTML pages) gracefully.
+    - **Logging:** Implemented detailed console logging for API fetch errors to aid in debugging.

@@ -100,7 +100,7 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
   // Ensure component is mounted on client (hydration safety)
   useEffect(() => {
     setIsMounted(true);
-    
+
     // Force recalculation of scroll positions after mount
     const container = scrollContainerRef.current;
     if (container) {
@@ -129,7 +129,7 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
   // Track current slide based on scroll position
   useEffect(() => {
     if (!isMounted) return;
-    
+
     const container = scrollContainerRef.current;
     if (!container) return;
 
@@ -158,14 +158,26 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
     };
   }, [isMounted, validItems.length]);
 
-  // Helper: derive WebM URL from MP4 URL
-  const deriveWebmUrl = (mp4Url: string): string => {
-    // Replace .mp4 extension with .webm
-    if (mp4Url.endsWith('.mp4')) {
-      return mp4Url.replace(/\.mp4$/, '.webm');
+  // Helper: derive WebM URL from Video URL
+  const deriveWebmUrl = (url: string): string => {
+    // List of common video extensions to replace
+    const videoExts = ['.mp4', '.mov', '.avi', '.wmv', '.mkv', '.m4v'];
+
+    for (const ext of videoExts) {
+      if (url.toLowerCase().endsWith(ext)) {
+        return url.slice(0, -ext.length) + '.webm';
+      }
     }
-    // If not ending in .mp4, append .webm as fallback
-    return mp4Url + '.webm';
+
+    // Fallback: If no extension matched or it's unknown, replace whatever extension is there
+    // but only if it looks like there is one
+    const parts = url.split('.');
+    if (parts.length > 1) {
+      parts.pop();
+      return parts.join('.') + '.webm';
+    }
+
+    return url + '.webm';
   };
 
   if (validItems.length === 0) {
@@ -190,7 +202,7 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
   const scrollToSlide = (index: number) => {
     const container = scrollContainerRef.current;
     if (!container) return;
-    
+
     const containerWidth = container.clientWidth;
     container.scrollTo({
       left: index * containerWidth,
@@ -236,9 +248,9 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
       if (slide.type === 'video' && slide.url) {
         const mp4Url = slide.url;
         const webmUrl = deriveWebmUrl(mp4Url);
-        
+
         return (
-          <div 
+          <div
             className="relative w-full h-full overflow-hidden group cursor-pointer bg-card"
             onClick={handleLockedClick}
           >
@@ -254,7 +266,7 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
               <div className="absolute inset-0 bg-background/40 backdrop-blur-[10px]" />
               {/* Gradient vignette - softened for better content preview */}
               <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-              
+
               {/* Content */}
               <div className="relative z-10 flex flex-col items-center">
                 {/* Lock icon with Rich Gold Glassmorphism */}
@@ -275,7 +287,7 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
       // Default: Image (locked VIP teaser)
       if (slide.url) {
         return (
-          <div 
+          <div
             className="relative w-full h-full overflow-hidden group cursor-pointer bg-card"
             onClick={handleLockedClick}
           >
@@ -294,7 +306,7 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
               <div className="absolute inset-0 bg-background/40 backdrop-blur-[10px]" />
               {/* Gradient vignette - softened for better content preview */}
               <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-              
+
               {/* Content */}
               <div className="relative z-10 flex flex-col items-center">
                 {/* Lock icon with Rich Gold Glassmorphism */}
@@ -317,7 +329,7 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
     if (slide.type === 'video' && slide.url) {
       const mp4Url = slide.url;
       const webmUrl = deriveWebmUrl(mp4Url);
-      
+
       return (
         <VideoPlayer
           mp4Url={mp4Url}
@@ -350,7 +362,7 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
   return (
     <>
       {/* Mobile Carousel - Hidden on desktop (lg+) */}
-      <div 
+      <div
         ref={containerRef}
         className="relative w-full aspect-[3/4] group overflow-hidden lg:hidden"
       >
@@ -406,7 +418,7 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
         </div>
 
         {/* Bottom Gradient Shadow - Smooth blend with Obsidian Navy background */}
-        <div 
+        <div
           className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none z-40"
           style={{
             background: 'linear-gradient(to top, #050A14 0%, #050A14 15%, rgba(5, 10, 20, 0.85) 30%, rgba(5, 10, 20, 0.60) 50%, rgba(5, 10, 20, 0.30) 70%, rgba(5, 10, 20, 0.10) 85%, transparent 100%)'
@@ -434,8 +446,8 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
       {/* Desktop Vertical Stack - Hidden on mobile, visible on lg+ */}
       <div className="hidden lg:flex lg:flex-col w-full lg:pt-0 gap-6">
         {allSlides.map((slide, index) => (
-          <div 
-            key={slide.key} 
+          <div
+            key={slide.key}
             className={cn(
               "w-full rounded-xl overflow-hidden bg-card",
               // Use aspect ratio based on media type for consistent layout

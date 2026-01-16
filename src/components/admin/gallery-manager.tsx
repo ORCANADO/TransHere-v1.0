@@ -1,14 +1,17 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { 
-  GripVertical, 
-  Trash2, 
-  Plus, 
-  Image as ImageIcon, 
+import {
+  GripVertical,
+  Trash2,
+  Plus,
+  Image as ImageIcon,
   Film,
   Loader2,
-  Save
+  Save,
+  X,
+  Upload,
+  CheckCircle2
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn, getImageUrl } from '@/lib/utils';
@@ -22,12 +25,12 @@ interface GalleryManagerProps {
   onUpdate: () => void;
 }
 
-export function GalleryManager({ 
-  adminKey, 
-  modelId, 
-  modelSlug, 
-  initialItems, 
-  onUpdate 
+export function GalleryManager({
+  adminKey,
+  modelId,
+  modelSlug,
+  initialItems,
+  onUpdate
 }: GalleryManagerProps) {
   const [items, setItems] = useState<GalleryItemAdmin[]>(
     [...initialItems].sort((a, b) => a.sort_order - b.sort_order)
@@ -38,6 +41,15 @@ export function GalleryManager({
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>('');
 
+  // Video Modal State
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [mp4File, setMp4File] = useState<File | null>(null);
+
+  const [webmFile, setWebmFile] = useState<File | null>(null);
+
+  // Delete Modal State
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+
   const handleDragStart = (itemId: string) => {
     setDraggedItem(itemId);
   };
@@ -45,21 +57,21 @@ export function GalleryManager({
   const handleDragOver = (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
     if (!draggedItem || draggedItem === targetId) return;
-    
+
     const draggedIndex = items.findIndex(i => i.id === draggedItem);
     const targetIndex = items.findIndex(i => i.id === targetId);
-    
+
     if (draggedIndex === -1 || targetIndex === -1) return;
-    
+
     const newItems = [...items];
     const [removed] = newItems.splice(draggedIndex, 1);
     newItems.splice(targetIndex, 0, removed);
-    
+
     // Update sort_order
     newItems.forEach((item, index) => {
       item.sort_order = index;
     });
-    
+
     setItems(newItems);
     setHasChanges(true);
   };
@@ -81,7 +93,7 @@ export function GalleryManager({
           })),
         }),
       });
-      
+
       const json = await res.json();
       if (json.success) {
         setHasChanges(false);
@@ -97,18 +109,19 @@ export function GalleryManager({
     }
   };
 
-  const deleteItem = async (itemId: string) => {
-    if (!confirm('Delete this gallery item?')) return;
-    
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+
     try {
-      const res = await fetch(`/api/admin/gallery/${itemId}?key=${adminKey}`, {
+      const res = await fetch(`/api/admin/gallery/${itemToDelete}?key=${adminKey}`, {
         method: 'DELETE',
       });
-      
+
       const json = await res.json();
       if (json.success) {
-        setItems(items.filter(i => i.id !== itemId));
+        setItems(items.filter(i => i.id !== itemToDelete));
         onUpdate();
+        setItemToDelete(null); // Close modal
       } else {
         alert('Failed to delete: ' + json.error);
       }
@@ -118,24 +131,27 @@ export function GalleryManager({
     }
   };
 
-  const uploadFile = async (file: File, mediaType: 'image' | 'video'): Promise<string | null> => {
+  const deleteItem = (itemId: string) => {
+    setItemToDelete(itemId);
+  };
+
+  const uploadFile = async (file: File, mediaType: 'image' | 'video', customFilename?: string): Promise<string | null> => {
     try {
       // Get file extension
       const ext = file.name.split('.').pop()?.toLowerCase() || '';
-      const contentType = mediaType === 'video' 
+      const contentType = mediaType === 'video'
         ? (ext === 'webm' ? 'video/webm' : 'video/mp4')
-        : 'image/webp';
-      
+        : (file.type || 'image/webp');
+
       // Generate filename: model-slug/timestamp-filename.ext
-      // Note: The upload API currently prefixes with "stories/", so we'll need to
-      // strip that prefix from the returned key for gallery items
       const timestamp = Date.now();
       const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const filename = `${modelSlug}/${timestamp}-${sanitizedName}`;
+      const filename = customFilename || `${modelSlug}/${timestamp}-${sanitizedName}`;
 
       // Use proxy upload to avoid CORS issues
       setUploadProgress(`Uploading ${file.name}...`);
       const formData = new FormData();
+
       formData.append('file', file);
       formData.append('filename', filename);
       formData.append('contentType', contentType);
@@ -153,7 +169,7 @@ export function GalleryManager({
       if (!uploadRes.ok) {
         // Try to parse JSON error, fallback to status text
         let errorMessage = `Upload failed: ${uploadRes.status} ${uploadRes.statusText}`;
-        
+
         if (isJson) {
           try {
             const error = await uploadRes.json();
@@ -168,7 +184,7 @@ export function GalleryManager({
           const text = await uploadRes.text();
           errorMessage = `Server error (${uploadRes.status}): ${text.substring(0, 200)}`;
         }
-        
+
         throw new Error(errorMessage);
       }
 
@@ -182,7 +198,7 @@ export function GalleryManager({
       if (!result.success) {
         throw new Error(result.error || 'Upload failed');
       }
-      
+
       return result.key;
     } catch (err) {
       console.error('Upload error:', err);
@@ -192,34 +208,81 @@ export function GalleryManager({
 
   const handleUpload = async (files: FileList | null, mediaType: 'image' | 'video') => {
     if (!files || files.length === 0) return;
-    
+
     setUploading(true);
     setUploadProgress('Starting upload...');
-    
+
     try {
       const uploadedFiles: { media_url: string; poster_url?: string }[] = [];
-      
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        setUploadProgress(`Processing ${i + 1}/${files.length}: ${file.name}...`);
-        
-        // Upload main file
-        const mediaUrl = await uploadFile(file, mediaType);
-        if (!mediaUrl) continue;
-        
-        let posterUrl: string | undefined;
-        
-        // For videos, we need a poster image
-        // For now, we'll use the first frame or require manual upload
-        // You can enhance this later with video thumbnail extraction
-        if (mediaType === 'video') {
-          // Placeholder - in production, you'd extract a frame or upload a poster separately
-          // For now, we'll create the item without a poster and let admin add it later
+      const timestamp = Date.now();
+
+      if (mediaType === 'video') {
+        // Group files by base name (without extension) to handle mp4 + webm pairs
+        const groups: Record<string, File[]> = {};
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const baseName = file.name.replace(/\.[^/.]+$/, "");
+          if (!groups[baseName]) groups[baseName] = [];
+          groups[baseName].push(file);
         }
-        
-        uploadedFiles.push({ media_url: mediaUrl, poster_url: posterUrl });
+
+        // Validation: Ensure every group has both a main video (mp4/mov) and a webm
+        const missingPairs: string[] = [];
+        for (const baseName in groups) {
+          const groupFiles = groups[baseName];
+          const hasMain = groupFiles.some(f => !f.name.toLowerCase().endsWith('.webm'));
+          const hasWebm = groupFiles.some(f => f.name.toLowerCase().endsWith('.webm'));
+
+          if (!hasMain || !hasWebm) {
+            missingPairs.push(baseName);
+          }
+        }
+
+        if (missingPairs.length > 0) {
+          alert(`Missing file pairs for: ${missingPairs.join(', ')}\n\nBoth an MP4/MOV and a WebM file are required for each video.`);
+          setUploading(false);
+          setUploadProgress('');
+          return;
+        }
+
+        for (const baseName in groups) {
+          const groupFiles = groups[baseName];
+          // Find main video (non-webm) and webm (guaranteed to exist by validation above)
+          const mainVideo = groupFiles.find(f => !f.name.toLowerCase().endsWith('.webm'))!;
+          const webmVideo = groupFiles.find(f => f.name.toLowerCase().endsWith('.webm'))!;
+
+          const sanitizedBase = baseName.replace(/[^a-zA-Z0-9.-]/g, '_');
+          const mainExt = mainVideo.name.split('.').pop();
+          const mainFilename = `${modelSlug}/${timestamp}-${sanitizedBase}.${mainExt}`;
+
+          setUploadProgress(`Uploading ${mainVideo.name}...`);
+          const mainUrl = await uploadFile(mainVideo, 'video', mainFilename);
+
+          if (webmVideo) {
+            setUploadProgress(`Uploading ${webmVideo.name} (optimized)...`);
+            // Name it exactly as profile-gallery.tsx expects it (replacing extension with .webm)
+            const webmFilename = `${modelSlug}/${timestamp}-${sanitizedBase}.webm`;
+            await uploadFile(webmVideo, 'video', webmFilename);
+          }
+
+          if (mainUrl) {
+            uploadedFiles.push({ media_url: mainUrl });
+          }
+        }
+      } else {
+        // Handle images (one-by-one as before)
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          setUploadProgress(`Processing ${i + 1}/${files.length}: ${file.name}...`);
+
+          // Upload main file
+          const mediaUrl = await uploadFile(file, mediaType);
+          if (mediaUrl) {
+            uploadedFiles.push({ media_url: mediaUrl });
+          }
+        }
       }
-      
+
       // Create gallery items
       setUploadProgress('Creating gallery items...');
       for (const file of uploadedFiles) {
@@ -233,19 +296,76 @@ export function GalleryManager({
             poster_url: file.poster_url || null,
           }),
         });
-        
+
         if (!res.ok) {
           const json = await res.json();
           console.error('Failed to create gallery item:', json.error);
         }
       }
-      
+
       // Refresh items
       onUpdate();
       setUploadProgress('');
     } catch (err) {
       console.error('Upload error:', err);
       alert('Upload failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    } finally {
+      setUploading(false);
+      setUploadProgress('');
+    }
+  };
+
+  const handleDualUpload = async () => {
+    if (!mp4File || !webmFile) return;
+
+    setUploading(true);
+    setUploadProgress('Starting upload...');
+    setShowVideoModal(false); // Close modal
+
+    try {
+      const timestamp = Date.now();
+      const baseName = mp4File.name.replace(/\.[^/.]+$/, "");
+      const sanitizedBase = baseName.replace(/[^a-zA-Z0-9.-]/g, '_');
+
+      // MP4 Upload
+      const mp4Ext = mp4File.name.split('.').pop();
+      const mp4Filename = `${modelSlug}/${timestamp}-${sanitizedBase}.${mp4Ext}`;
+      setUploadProgress(`Uploading ${mp4File.name}...`);
+      const mp4Url = await uploadFile(mp4File, 'video', mp4Filename);
+
+      // WebM Upload
+      const webmFilename = `${modelSlug}/${timestamp}-${sanitizedBase}.webm`;
+      setUploadProgress(`Uploading ${webmFile.name}...`);
+      await uploadFile(webmFile, 'video', webmFilename);
+
+      if (mp4Url) {
+        // Create gallery item
+        setUploadProgress('Creating gallery item...');
+        const res = await fetch(`/api/admin/gallery?key=${adminKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model_id: modelId,
+            media_url: mp4Url,
+            media_type: 'video',
+            poster_url: null,
+          }),
+        });
+
+        if (!res.ok) {
+          const json = await res.json();
+          console.error('Failed to create gallery item:', json.error);
+        }
+
+        // Refresh items and cleanup
+        onUpdate();
+        setMp4File(null);
+        setWebmFile(null);
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Upload failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      setShowVideoModal(true); // Re-open modal on error
     } finally {
       setUploading(false);
       setUploadProgress('');
@@ -259,7 +379,7 @@ export function GalleryManager({
         <h3 className="text-lg font-semibold text-white">
           Gallery Items ({items.length})
         </h3>
-        
+
         <div className="flex gap-2 flex-wrap">
           {/* Upload Buttons */}
           <label className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white cursor-pointer hover:bg-white/10 transition-colors">
@@ -274,20 +394,15 @@ export function GalleryManager({
               disabled={uploading}
             />
           </label>
-          
-          <label className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white cursor-pointer hover:bg-white/10 transition-colors">
+
+          <button
+            onClick={() => setShowVideoModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors"
+          >
             <Film className="w-4 h-4" />
             <span className="text-sm">Add Video</span>
-            <input
-              type="file"
-              accept="video/*"
-              multiple
-              className="hidden"
-              onChange={(e) => handleUpload(e.target.files, 'video')}
-              disabled={uploading}
-            />
-          </label>
-          
+          </button>
+
           {/* Save Order Button */}
           {hasChanges && (
             <button
@@ -357,7 +472,7 @@ export function GalleryManager({
                   unoptimized
                 />
               )}
-              
+
               {/* Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity">
                 {/* Position badge */}
@@ -365,7 +480,7 @@ export function GalleryManager({
                   <GripVertical className="w-4 h-4 text-white" />
                   <span className="text-white text-sm font-medium">#{index + 1}</span>
                 </div>
-                
+
                 {/* Type badge */}
                 <div className="absolute top-2 right-2">
                   {item.media_type === 'video' ? (
@@ -374,7 +489,7 @@ export function GalleryManager({
                     <ImageIcon className="w-4 h-4 text-white" />
                   )}
                 </div>
-                
+
                 {/* Delete button */}
                 <button
                   onClick={(e) => {
@@ -386,7 +501,7 @@ export function GalleryManager({
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
-                
+
                 {/* Labels */}
                 {index === 0 && (
                   <span className="absolute bottom-2 left-2 px-2 py-1 bg-[#00FF85] text-black text-xs rounded font-medium">
@@ -413,6 +528,138 @@ export function GalleryManager({
             {uploadProgress && (
               <p className="text-sm text-muted-foreground">{uploadProgress}</p>
             )}
+          </div>
+        </div>
+      )}
+
+
+      {/* Video Upload Modal */}
+      {showVideoModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#050A14] border border-white/10 rounded-xl p-6 w-full max-w-md shadow-2xl space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-white">Upload Video Pair</h3>
+              <button
+                onClick={() => setShowVideoModal(false)}
+                className="text-muted-foreground hover:text-white transition-colors"
+                title="Close modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-200/90 text-sm">
+                Both formats are required for optimal playback across all devices.
+              </div>
+
+              {/* MP4 Input */}
+              <div className="space-y-2">
+                <label htmlFor="mp4-upload" className="text-sm font-medium text-white block">
+                  1. Main Video (MP4/MOV)
+                </label>
+                <div className={cn(
+                  "border-2 border-dashed rounded-lg p-4 transition-colors cursor-pointer hover:bg-white/5",
+                  mp4File ? "border-[#00FF85] bg-[#00FF85]/5" : "border-white/10"
+                )}>
+                  <label className="flex items-center justify-center gap-3 cursor-pointer w-full h-full">
+                    {mp4File ? (
+                      <>
+                        <CheckCircle2 className="w-5 h-5 text-[#00FF85]" />
+                        <span className="text-sm text-white truncate max-w-[200px]">{mp4File.name}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">Select MP4 or MOV</span>
+                      </>
+                    )}
+                    <input
+                      id="mp4-upload"
+                      type="file"
+                      accept="video/mp4,video/quicktime,.mp4,.mov"
+                      className="hidden"
+                      onChange={(e) => setMp4File(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* WebM Input */}
+              <div className="space-y-2">
+                <label htmlFor="webm-upload" className="text-sm font-medium text-white block">
+                  2. Optimized Video (WebM)
+                </label>
+                <div className={cn(
+                  "border-2 border-dashed rounded-lg p-4 transition-colors cursor-pointer hover:bg-white/5",
+                  webmFile ? "border-[#00FF85] bg-[#00FF85]/5" : "border-white/10"
+                )}>
+                  <label className="flex items-center justify-center gap-3 cursor-pointer w-full h-full">
+                    {webmFile ? (
+                      <>
+                        <CheckCircle2 className="w-5 h-5 text-[#00FF85]" />
+                        <span className="text-sm text-white truncate max-w-[200px]">{webmFile.name}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">Select WebM</span>
+                      </>
+                    )}
+                    <input
+                      id="webm-upload"
+                      type="file"
+                      accept="video/webm,.webm"
+                      className="hidden"
+                      onChange={(e) => setWebmFile(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={handleDualUpload}
+                  disabled={!mp4File || !webmFile}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#7A27FF] text-white rounded-lg font-medium hover:bg-[#7A27FF]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Upload className="w-4 h-4" />
+                  Upload Video Pair
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {itemToDelete && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#050A14] border border-white/10 rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-6">
+            <div className="space-y-2 text-center">
+              <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto">
+                <Trash2 className="w-6 h-6 text-red-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-white">Delete Item?</h3>
+              <p className="text-sm text-muted-foreground">
+                This action cannot be undone. This gallery item will be permanently removed.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setItemToDelete(null)}
+                className="flex-1 px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-medium"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
