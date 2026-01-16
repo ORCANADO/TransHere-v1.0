@@ -71,8 +71,7 @@ const DEFAULT_FILTERS: DashboardFilters = {
   startDate: null,
   endDate: null,
   country: null,
-  sourceId: null,
-  subtagId: null,
+  sources: [],
   modelSlugs: [],
 };
 
@@ -91,12 +90,14 @@ export function AnalyticsDashboard({ adminKey }: AnalyticsDashboardProps) {
     setError(null);
 
     try {
+      // Find IDs for selected sources/subtags to send to API
+      // Note: Current API implementation might need updates to handle multiple sources
+      // For now, we'll pass them as a JSON string or individual params if supported
       const params = new URLSearchParams({
         key: adminKey,
         period: filters.period,
         ...(filters.country && { country: filters.country }),
-        ...(filters.sourceId && { sourceId: filters.sourceId }),
-        ...(filters.subtagId && { subtagId: filters.subtagId }),
+        ...(filters.sources.length > 0 && { sources: JSON.stringify(filters.sources) }),
         ...(filters.modelSlugs.length > 0 && { models: filters.modelSlugs.join(',') }),
         ...(filters.period === 'custom' && filters.startDate && { startDate: filters.startDate }),
         ...(filters.period === 'custom' && filters.endDate && { endDate: filters.endDate }),
@@ -110,6 +111,7 @@ export function AnalyticsDashboard({ adminKey }: AnalyticsDashboardProps) {
       }
 
       setData(json);
+      console.log('📊 Dashboard Data Received - Countries:', json.availableCountries?.length);
       setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -277,14 +279,18 @@ export function AnalyticsDashboard({ adminKey }: AnalyticsDashboardProps) {
                 {data.sourceBreakdown.map((source) => (
                   <button
                     key={source.sourceId}
-                    onClick={() => setFilters(prev => ({
-                      ...prev,
-                      sourceId: prev.sourceId === source.sourceId ? null : source.sourceId,
-                      subtagId: null,
-                    }))}
-                    className={`p-3 rounded-lg text-left transition-all ${filters.sourceId === source.sourceId
-                        ? 'bg-[#7A27FF]/20 ring-2 ring-[#7A27FF]'
-                        : 'bg-white/5 hover:bg-white/10'
+                    onClick={() => setFilters(prev => {
+                      const isSelected = prev.sources.some(s => s.source === source.sourceName);
+                      return {
+                        ...prev,
+                        sources: isSelected
+                          ? prev.sources.filter(s => s.source !== source.sourceName)
+                          : [...prev.sources, { source: source.sourceName, subtags: [] }]
+                      };
+                    })}
+                    className={`p-3 rounded-lg text-left transition-all ${filters.sources.some(s => s.source === source.sourceName)
+                      ? 'bg-[#7A27FF]/20 ring-2 ring-[#7A27FF]'
+                      : 'bg-white/5 hover:bg-white/10'
                       }`}
                   >
                     <p className="font-medium text-foreground">{source.sourceName}</p>
@@ -314,8 +320,8 @@ export function AnalyticsDashboard({ adminKey }: AnalyticsDashboardProps) {
                       country: prev.country === country ? null : country,
                     }))}
                     className={`p-3 rounded-lg text-left transition-all ${filters.country === country
-                        ? 'bg-[#00FF85]/20 ring-2 ring-[#00FF85]'
-                        : 'bg-white/5 hover:bg-white/10'
+                      ? 'bg-[#00FF85]/20 ring-2 ring-[#00FF85]'
+                      : 'bg-white/5 hover:bg-white/10'
                       }`}
                   >
                     <p className="font-medium text-foreground">{country}</p>

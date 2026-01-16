@@ -913,3 +913,22 @@ All planned features implemented, tested, and polished. The platform is producti
 - **Verification:**
   - Created `check-all-tables.ts` utility to audit database state independently of the API.
   - Verified 10k event processing capacity locally.
+
+## [2026-01-15] - Filter Logic & DatePicker "Portal" Stabilization
+**Status:** Complete (Phase 6.3)
+
+- **DatePicker "Portal" Refactor:**
+  - **The Problem:** The calendar popup was getting hidden behind other dashboard elements and cut off by container boundaries.
+  - **The Fix:** Implemented `react-dom/createPortal` to render the calendar at the body level.
+  - **Smart Logic:** Added viewport detection to automatically flip the calendar above the button if space is limited (preventing off-screen rendering).
+  - **Timezone Fix:** Resolved a bug where the selected date appeared "one day early" by standardizing on local date parsing instead of UTC strings.
+
+- **Dashboard Filter Improvements:**
+  - **Atomic Updates:** Fixed a bug where clicking time period presets did nothing. The issue was multiple rapid state updates causing race conditions; consolidated into a single atomic update.
+  - **UX Streamlining:** Processed user request to make custom date inputs always visible. You no longer need to click "Custom Range" to see the date pickers; they are now a permanent part of the time period menu.
+  - **UI/UX Polish:** Added `stopPropagation` and `cursor-pointer` to filter buttons to ensure reliable interactions inside liquid-glass containers.
+
+- **Database & Data Integrity:**
+  - **Country Bug Fixed:** Discovered a logic error in the SQL mock data generator (`025_fix_country_randomization.sql`) where an array indexing error limited results to only AU/BR.
+  - **API Extraction:** Updated the dashboard API to return unique countries sorted by recency, ensuring the dashboard accurately reflects the latest traffic trends even with large historical datasets.
+  - **Verification:** Re-generated 7,000+ events and verified perfect distribution across all 10 countries (US, GB, CA, AU, DE, FR, ES, MX, CO, BR).

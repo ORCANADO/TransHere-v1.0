@@ -399,10 +399,26 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
     - Identified the transition path from raw event processing to materialized view querying for the v1.2 roadmap.
     - Implemented **recursive pagination (chunked fetching)** in the dashboard API that bypasses the 1,000-row limit, supporting up to 10,000 events per range.
 
+
+### Phase 6.3: Filter Intelligence & UX Stabilization (v1.1.7)
+**Goal:** Resolve critical bugs in the filter system and upgrade the DatePicker to professional standards.
+**Status:** [x] Complete
+
+- [x] **Filter Logic Fixes:**
+    - **Race Condition Resolution:** Refactored `DashboardFiltersBar` to perform atomic state updates. Resolved the "Nothing happens" bug when selecting time period presets by consolidating multiple state changes into a single `onFiltersChange` call.
+    - **Custom Date UX:** Upgraded the Time Period dropdown to always display Start/End date inputs. Interacting with these inputs now automatically switches the dashboard to "Custom Range" mode without requiring an extra click.
+    - **Country Data Integrity:** Fixed a significant bug in the mock data generator SQL that was incorrectly indexing the country array (causing only 2 countries to appear). Verified the fix across all 10 target countries.
+
+- [x] **DatePicker Pro Upgrade:**
+    - **Portal Architecture:** Refactored `DatePicker` to use `createPortal`, ensuring the calendar always renders above all other UI elements regardless of parent overflow or z-index constraints.
+    - **Viewport-Aware Positioning:** Implemented smart positioning logic that automatically flips the calendar above the button if there isn't enough space at the bottom of the screen.
+    - **Timezone Bug Fix:** Switched from UTC-based `new Date()` parsing to local date parsing for the display label, resolving the common "selected day is one day behind" issue.
+    - **Auto-Close:** Added global scroll and resize listeners to automatically close the picker when the page moves, preventing visual detachment.
+
 **Next Steps:**
-- Deploy to production environment
-- Monitor analytics and conversion rates
-- Gather user feedback for Version 1.2 planning
+- Final production deployment of v1.1 series.
+- Monitor dashboard performance with full 10k event datasets.
+- Begin architectural planning for v1.2 (Real-time Analytics).
 
 ---
 
@@ -411,6 +427,4 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
 * **Comments/Likes on Content:** Removed to save database costs.
 * **Random/Roulette Button:** Excluded by request.
 * **Content Uploading:** Models cannot upload their own content; managed centrally by the CEO *via Secret Dashboard*.
-* **History Injection (Deep Link Back Button):** Attempted feature to manipulate browser history so "Back" button navigates to home feed instead of closing the tab when landing on a deep link. Deferred due to conflicts with Next.js App Router's internal history management. Hook exists in codebase (`use-landing-history.ts`) for future implementation.
-
 

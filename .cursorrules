@@ -241,6 +241,12 @@ Do not use `useRouter().push` for external links.
     - Cards MUST use `liquid-glass-elevated` or equivalent overrides in light mode.
     - Text MUST prioritize accessibility with dark primary/secondary contrast ratios.
 - **Persistence:** Always use `useAdminTheme` hook in the main layout to ensure theme state is synchronized with `localStorage`.
+- **Date Handling:**
+    - ALWAYS use local date parsing (`new Date(year, month - 1, day)`) for UI display labels to prevent "one-day-off" UTC bugs.
+    - Standardize all database/API communications to YYYY-MM-DD (ISO strings) in UTC where possible, but convert to local on the client.
+- **Menu/Popover Positioning:**
+    - For high-priority UI elements like DatePickers or Dropdowns that must appear above all content, ALWAYS use `createPortal` to render at the `document.body` level.
+    - Implement "Smart Positioning" that checks viewport height and flips the menu above the trigger button if space is insufficient.
 
 ### 2.19 Story Visual Memory System
 - **Hook:** `useViewedStories` in `src/hooks/use-viewed-stories.ts`

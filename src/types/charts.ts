@@ -57,6 +57,14 @@ export interface ModelComparisonChartProps {
 }
 
 /**
+ * Source filter structure for multi-select
+ */
+export interface SourceFilter {
+    source: string;
+    subtags: string[];
+}
+
+/**
  * Dashboard filter state
  */
 export interface DashboardFilters {
@@ -64,8 +72,7 @@ export interface DashboardFilters {
     startDate: string | null;
     endDate: string | null;
     country: string | null;
-    sourceId: string | null;
-    subtagId: string | null;
+    sources: SourceFilter[];
     modelSlugs: string[];
 }
 

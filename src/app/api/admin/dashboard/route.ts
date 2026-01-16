@@ -11,7 +11,8 @@ import type {
   ComparisonDataPoint,
   ModelComparisonDataPoint,
   TrafficSourceOption,
-  ModelFilterOption
+  ModelFilterOption,
+  SourceFilter
 } from '@/types/charts';
 
 export const runtime = 'edge';
@@ -239,10 +240,19 @@ export async function GET(request: Request) {
     const sourceId = url.searchParams.get('sourceId') || null;
     const subtagId = url.searchParams.get('subtagId') || null;
     const modelsParam = url.searchParams.get('models') || '';
+    const sourcesParam = url.searchParams.get('sources') || '';
     const startDate = url.searchParams.get('startDate') || undefined;
     const endDate = url.searchParams.get('endDate') || undefined;
 
     const modelSlugs = modelsParam ? modelsParam.split(',') : [];
+    let selectedSources: SourceFilter[] = [];
+    if (sourcesParam) {
+      try {
+        selectedSources = JSON.parse(sourcesParam);
+      } catch (e) {
+        console.error('Failed to parse sources param:', e);
+      }
+    }
 
     // Verify admin access
     if (!adminKey || adminKey !== ADMIN_KEY) {
@@ -275,15 +285,47 @@ export async function GET(request: Request) {
       .lte('created_at', end.toISOString())
       .order('created_at', { ascending: false });
 
+    // Fetch Sources first for filtering and response
+    const { data: sourcesData } = await supabaseAdmin
+      .from('traffic_sources')
+      .select('*, subtags:tracking_subtags(*)');
+    const sources = sourcesData || [];
+
     // Apply filters to queryBuilder
     if (country && country !== 'all') {
       queryBuilder = queryBuilder.eq('country', country);
     }
-    if (sourceId) {
-      queryBuilder = queryBuilder.eq('source_id', sourceId);
-    }
-    if (subtagId) {
-      queryBuilder = queryBuilder.eq('subtag_id', subtagId);
+
+    // Handle multiple sources and subtags
+    if (selectedSources.length > 0) {
+      const orConditions: string[] = [];
+      selectedSources.forEach(f => {
+        const source = sources.find(s => s.name === f.source);
+        if (!source) return;
+
+        if (f.subtags.length === 0) {
+          orConditions.push(`source_id.eq.${source.id}`);
+        } else {
+          const subtagIds = source.subtags
+            ?.filter((st: any) => f.subtags.includes(st.name))
+            .map((st: any) => st.id) || [];
+          if (subtagIds.length > 0) {
+            orConditions.push(`and(source_id.eq.${source.id},subtag_id.in.(${subtagIds.join(',')}))`);
+          }
+        }
+      });
+
+      if (orConditions.length > 0) {
+        queryBuilder = queryBuilder.or(orConditions.join(','));
+      }
+    } else {
+      // Backward compatibility / individual params
+      if (sourceId) {
+        queryBuilder = queryBuilder.eq('source_id', sourceId);
+      }
+      if (subtagId) {
+        queryBuilder = queryBuilder.eq('subtag_id', subtagId);
+      }
     }
 
     // Execute paginated fetch to bypass Supabase 1000-row limit
@@ -344,10 +386,7 @@ export async function GET(request: Request) {
       return true;
     });
 
-    // Fetch Sources
-    const { data: sources } = await supabaseAdmin
-      .from('traffic_sources')
-      .select('*, subtags:tracking_subtags(*)');
+    // 4. Source Breakdown (already have sources from line 281)
 
     // Process events into dashboard data - REUSING/UPDATING processEvents logic inline or separate?
     // The requirement says "Add this function... and update the response". 
@@ -493,11 +532,14 @@ export async function GET(request: Request) {
     })).sort((a, b) => b.visits - a.visits);
 
     // 7. Available Lists
-    const { data: allCountriesData } = await supabaseAdmin
+    const { data: allCountriesData, error: allCountriesError } = await supabaseAdmin
       .from('analytics_events')
       .select('country')
       .not('country', 'is', null)
+      .order('created_at', { ascending: false })
       .limit(10000);
+
+    if (allCountriesError) console.error('❌ Country fetch error:', allCountriesError);
 
     const availableCountries = [...new Set(allCountriesData?.map((e: any) => e.country).filter(Boolean))].sort() as string[];
 
