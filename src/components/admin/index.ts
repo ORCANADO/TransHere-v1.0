@@ -11,18 +11,20 @@ export { AnalyticsChart } from './analytics-chart';
 export { AnalyticsDashboard } from './analytics-dashboard';
 export { DashboardFiltersBar } from './dashboard-filters';
 export { StatCard } from './stat-card';
-export { ModelAnalyticsCard } from './model-analytics-card';
 
 // Theme
 export { ThemeToggle, ThemeToggleIcon } from './theme-toggle';
 
 // Models Management
-export { ModelList } from './model-list';
 export { ModelEditor } from './model-editor';
 export { ModelBasicInfo } from './model-basic-info';
 export { GalleryManager } from './gallery-manager';
 export { StoryManager } from './story-manager';
 export { PinnedBlocksManager } from './pinned-blocks-manager';
+
+// Sidebar Components
+export { AdminSidebar } from './AdminSidebar';
+export { SidebarModelList } from './SidebarModelList';
 
 // Tracking Links
 // export { TrackingLinksManager } from './tracking-links-manager'; // Component not yet created

@@ -791,13 +791,34 @@
   - Gallery Manager: Updated to use `models` bucket for gallery uploads
   - Admin Dashboard: Updated `uploadFileToR2` to support bucket parameter
   - Gallery uploads now use model-slug paths (e.g., `valentina-aguirre/timestamp-file.webp`)
-### [Current Date] - Admin UI Light Mode & 3D Aesthetics (Solar Spectrum)
+### [2026-01-16] - Phase 6.5: Admin Dashboard Overhaul & UX Polishing (v1.1.9)
 **Status:** Complete
-- **Theme Foundation:**
-  - Created `src/app/admin/admin-theme.css` with comprehensive OKLCH token system for "Solar Spectrum" light mode.
-  - Implemented semantic variable mapping to support Shadcn/UI components in both themes.
-- **Aesthetic Refinement (3D Glass):**
-  - Developed "Liquid Glass" effect for content cards with reflective borders and multi-layered depth shadows.
+
+- **Loading & Empty States:**
+    - Implemented a reusable `Skeleton` UI component for layout-adaptive loading states.
+    - Added comprehensive empty states for metrics, model lists, and search results ("No models found").
+    - Integrated visual loading spinners for data refreshes in the `AnalyticsDashboard`.
+- **Responsive Redesign (Mobile-First):**
+    - Refactored `AdminSidebar` to use an overlay mode on mobile with a frosted glass backdrop.
+    - Added a hamburger menu toggle in the main dashboard header for small viewports.
+    - Guaranteed main content stability on desktop when toggling the sidebar.
+- **Accessibility & Keyboard Navigation:**
+    - Implemented `Cmd/Ctrl + K` to focus the model search.
+    - Implemented `Cmd/Ctrl + \` to toggle the sidebar.
+    - Standardized `Escape` key behavior to close editors, modals, and managers.
+    - Added high-visibility focus rings to all interactive sidebar elements.
+- **Model Management & Safety:**
+    - Relocated model deletion to a dedicated "Danger Zone" in the Model Editor.
+    - Implemented an `AlertDialog` confirmation with an explicit warning about permanent data loss.
+    - Simplified the sidebar by removing low-value legacy actions (Quick Upload, direct Delete).
+- **Visual Polish:**
+    - Integrated "Liquid Glass" effects into `StatCard` components.
+    - Applied subtle `scale-up` animations on hover for sidebar model items.
+    - Ensured consistent theme persistence (Solar Spectrum) across all sub-components.
+
+### [2026-01-16] - Documentation Finalization & Codebase Sync
+- Updated `README.md` to reflect the current state of Admin v1.1.
+- Synchronized all local changes with the remote Git repository.
   - Enhanced card interactions with 3D lift transforms on hover.
 - **Component Modernization:**
   - Refactored `DatePicker` to be fully theme-aware with premium glassmorphism styling.

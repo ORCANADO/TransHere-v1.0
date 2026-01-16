@@ -440,8 +440,9 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
     - Successfully performed end-to-end manual verification of the tracking link creation, subtag management, and archival flows across both themes.
 
 **Next Steps:**
-- Final production deployment of v1.1.
-- Monitor tracking link performance and attribution accuracy.
+- [x] Final production deployment of v1.1.
+- [x] Admin Dashboard Overhaul (Loading, Empty States, Responsive, Deletion Safety).
+- [x] Monitor tracking link performance and attribution accuracy.
 
 ---
 

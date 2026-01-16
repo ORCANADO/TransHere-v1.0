@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  ArrowLeft, 
-  User, 
-  Image as ImageIcon, 
-  Film, 
+import {
+  ArrowLeft,
+  User,
+  Image as ImageIcon,
+  Film,
   Pin,
   Loader2
 } from 'lucide-react';
@@ -22,9 +22,10 @@ interface ModelEditorProps {
   modelId: string | null; // null for new model
   onBack: () => void;
   onSaved: () => void;
+  onModelDeleted?: (modelId: string) => void;
 }
 
-export function ModelEditor({ adminKey, modelId, onBack, onSaved }: ModelEditorProps) {
+export function ModelEditor({ adminKey, modelId, onBack, onSaved, onModelDeleted }: ModelEditorProps) {
   const [activeTab, setActiveTab] = useState<Tab>('basic');
   const [model, setModel] = useState<any>(null);
   const [loading, setLoading] = useState(!!modelId);
@@ -32,12 +33,12 @@ export function ModelEditor({ adminKey, modelId, onBack, onSaved }: ModelEditorP
 
   const fetchModel = useCallback(async () => {
     if (!modelId) return;
-    
+
     setLoading(true);
     try {
       const res = await fetch(`/api/admin/models/${modelId}?key=${adminKey}`);
       const json = await res.json();
-      
+
       if (json.success) {
         setModel(json.data);
       } else {
@@ -126,39 +127,52 @@ export function ModelEditor({ adminKey, modelId, onBack, onSaved }: ModelEditorP
                 onSaved();
               }
             }}
+            onDeleted={(deletedId) => {
+              if (onModelDeleted) {
+                onModelDeleted(deletedId);
+              }
+              onBack(); // Go back to list immediately
+            }}
           />
         )}
-        
-        {activeTab === 'gallery' && model && (
-          <GalleryManager
-            adminKey={adminKey}
-            modelId={model.id}
-            modelSlug={model.slug}
-            initialItems={model.gallery_items || []}
-            onUpdate={fetchModel}
-          />
-        )}
-        
-        {activeTab === 'stories' && model && (
-          <StoryManager
-            adminKey={adminKey}
-            modelId={model.id}
-            modelSlug={model.slug}
-            storyGroups={model.story_groups || []}
-            onUpdate={fetchModel}
-          />
-        )}
-        
-        {activeTab === 'pinned' && model && (
-          <PinnedBlocksManager
-            adminKey={adminKey}
-            modelId={model.id}
-            modelSlug={model.slug}
-            storyGroups={(model.story_groups || []).filter((g: any) => g.is_pinned)}
-            onUpdate={fetchModel}
-          />
-        )}
-      </div>
-    </div>
+
+
+        {
+          activeTab === 'gallery' && model && (
+            <GalleryManager
+              adminKey={adminKey}
+              modelId={model.id}
+              modelSlug={model.slug}
+              initialItems={model.gallery_items || []}
+              onUpdate={fetchModel}
+            />
+          )
+        }
+
+        {
+          activeTab === 'stories' && model && (
+            <StoryManager
+              adminKey={adminKey}
+              modelId={model.id}
+              modelSlug={model.slug}
+              storyGroups={model.story_groups || []}
+              onUpdate={fetchModel}
+            />
+          )
+        }
+
+        {
+          activeTab === 'pinned' && model && (
+            <PinnedBlocksManager
+              adminKey={adminKey}
+              modelId={model.id}
+              modelSlug={model.slug}
+              storyGroups={(model.story_groups || []).filter((g: any) => g.is_pinned)}
+              onUpdate={fetchModel}
+            />
+          )
+        }
+      </div >
+    </div >
   );
 }

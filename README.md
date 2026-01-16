@@ -6,10 +6,9 @@ A high-performance, mobile-first landing page for X (Twitter) to OnlyFans/Fansly
 
 - **Instagram-Style Stories**: 7-day decay, pinned groups, inter-model navigation
 - **Visual Memory System**: Tracks viewed profiles and stories using localStorage
-- **Category Filtering**: Top 15 most-used tags with frequency-based sorting
-- **Real-Time Sync**: Cross-tab/window synchronization for favorites and viewed content
-- **Dark Mode Luxury Branding**: Midnight Spectrum color palette
-- **Tracking Link Management**: Granular attribution per model/source with custom traffic source support
+- **Admin Dashboard v1.1**: Solar Spectrum (Light Mode) + Liquid Glass aesthetics
+- **Advanced Tracking**: Granular attribution per model/source with custom traffic source support
+- **Performance & UX**: Skeleton loaders, accessibility shortcuts, and responsive overlay sidebar
 - **Zero-Cost Infrastructure**: Cloudflare Pages + R2 + Supabase (Free Tier)
 
 ## Tech Stack

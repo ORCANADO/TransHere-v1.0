@@ -12,7 +12,7 @@ interface StatCardProps {
   className?: string;
 }
 
-export function StatCard({ title, value, subtitle, change, icon, className }: StatCardProps) {
+export function StatCard({ title, value, icon, change, subtitle }: StatCardProps) {
   const formatValue = (val: string | number) => {
     if (typeof val === 'number') {
       return val.toLocaleString();
@@ -21,11 +21,8 @@ export function StatCard({ title, value, subtitle, change, icon, className }: St
   };
 
   return (
-    <div className={cn(
-      "bg-card border border-white/10 rounded-xl p-4 lg:p-6",
-      className
-    )}>
-      <div className="flex items-start justify-between">
+    <div className="liquid-glass rounded-xl p-6 glass-depth-1 hover:glass-depth-2 transition-all duration-300">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <p className="text-muted-foreground text-sm font-medium">{title}</p>
           <p className="text-2xl lg:text-3xl font-bold text-white mt-1">
@@ -41,7 +38,7 @@ export function StatCard({ title, value, subtitle, change, icon, className }: St
           </div>
         )}
       </div>
-      
+
       {change !== undefined && (
         <div className={cn(
           "flex items-center gap-1 mt-3 text-sm",

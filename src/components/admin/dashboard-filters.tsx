@@ -42,7 +42,6 @@ interface DashboardFiltersBarProps {
     onFiltersChange: (filters: DashboardFilters) => void;
     availableCountries: string[];
     availableSources: TrafficSourceOption[];
-    availableModels: ModelFilterOption[];
     isLoading?: boolean;
 }
 
@@ -111,129 +110,6 @@ function FilterDropdown({
     );
 }
 
-/**
- * Model Multi-Select Component
- */
-function ModelMultiSelect({
-    selectedSlugs,
-    availableModels,
-    onChange,
-    isOpen,
-    onToggle,
-}: {
-    selectedSlugs: string[];
-    availableModels: ModelFilterOption[];
-    onChange: (slugs: string[]) => void;
-    isOpen: boolean;
-    onToggle: () => void;
-}) {
-    const [searchQuery, setSearchQuery] = useState('');
-
-    const filteredModels = availableModels.filter(model =>
-        model.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        model.slug.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    const handleModelToggle = useCallback((slug: string) => {
-        if (selectedSlugs.includes(slug)) {
-            onChange(selectedSlugs.filter(s => s !== slug));
-        } else {
-            onChange([...selectedSlugs, slug]);
-        }
-    }, [selectedSlugs, onChange]);
-
-    return (
-        <FilterDropdown
-            trigger={
-                <>
-                    <Users className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-foreground">
-                        Models {selectedSlugs.length > 0 && `(${selectedSlugs.length})`}
-                    </span>
-                </>
-            }
-            isOpen={isOpen}
-            onToggle={onToggle}
-            className="min-w-[200px]"
-        >
-            {/* Search Input */}
-            <div className="p-2 border-b border-white/10">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search models..."
-                        className="w-full pl-9 pr-3 py-2 text-sm bg-white/5 border border-white/10 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#7A27FF]/50"
-                    />
-                </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="flex gap-2 px-3 py-2 border-b border-white/10 mb-2">
-                <button
-                    onClick={() => onChange(availableModels.map(m => m.slug))}
-                    className="text-xs text-[#00FF85] hover:underline"
-                >
-                    Select All
-                </button>
-                <span className="text-white/30">|</span>
-                <button
-                    onClick={() => {
-                        onChange([]);
-                        setSearchQuery('');
-                    }}
-                    className="text-xs text-white/60 hover:text-white"
-                >
-                    Clear
-                </button>
-            </div>
-
-            {/* Model List */}
-            <div className="max-h-[300px] overflow-y-auto px-1">
-                {filteredModels.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-muted-foreground">
-                        No models found
-                    </div>
-                ) : (
-                    filteredModels.map((model) => (
-                        <div
-                            key={model.slug}
-                            onClick={() => handleModelToggle(model.slug)}
-                            className={cn(
-                                "flex items-center gap-2 px-3 py-2 cursor-pointer rounded-md transition-colors mb-1",
-                                selectedSlugs.includes(model.slug)
-                                    ? "bg-[#00FF85]/20 text-[#00FF85]"
-                                    : "hover:bg-white/10"
-                            )}
-                        >
-                            <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-white/10">
-                                {model.imageUrl ? (
-                                    <Image
-                                        src={getImageUrl(model.imageUrl)}
-                                        alt={model.name}
-                                        width={24}
-                                        height={24}
-                                        className="object-cover w-full h-full"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">
-                                        {model.name.charAt(0)}
-                                    </div>
-                                )}
-                            </div>
-                            <span className="text-sm truncate select-none">{model.name}</span>
-                            {selectedSlugs.includes(model.slug) && (
-                                <Check className="w-4 h-4 ml-auto text-[#00FF85]" />
-                            )}
-                        </div>
-                    ))
-                )}
-            </div>
-        </FilterDropdown>
-    );
-}
 
 /**
  * Traffic Source Options with Icons
@@ -256,7 +132,6 @@ export function DashboardFiltersBar({
     onFiltersChange,
     availableCountries,
     availableSources,
-    availableModels,
     isLoading = false,
 }: DashboardFiltersBarProps) {
     // Dropdown open states
@@ -563,14 +438,6 @@ export function DashboardFiltersBar({
                 </div>
             </FilterDropdown>
 
-            {/* Model Filter (Multi-Select) */}
-            <ModelMultiSelect
-                selectedSlugs={filters.modelSlugs}
-                availableModels={availableModels}
-                onChange={(slugs) => updateFilter('modelSlugs', slugs)}
-                isOpen={openDropdown === 'models'}
-                onToggle={() => toggleDropdown('models')}
-            />
 
             {/* Clear All Filters */}
             {(filters.country || filters.sources.length > 0 || filters.modelSlugs.length > 0 || filters.period !== '7days') && (

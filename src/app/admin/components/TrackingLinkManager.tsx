@@ -336,7 +336,7 @@ export function TrackingLinkManager({
             <div className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[700px] md:max-h-[80vh] z-[101] flex flex-col">
                 <div className={cn(
                     "flex flex-col h-full rounded-2xl overflow-hidden",
-                    "bg-card/95 backdrop-blur-xl",
+                    "bg-card backdrop-blur-xl",
                     "border border-border",
                     "shadow-2xl shadow-black/50"
                 )}>

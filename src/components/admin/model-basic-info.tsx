@@ -1,23 +1,37 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  Save, 
-  Loader2, 
-  Plus, 
+import {
+  Save,
+  Loader2,
+  Plus,
   X,
-  ExternalLink
+  ExternalLink,
+  Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 
 interface ModelBasicInfoProps {
   adminKey: string;
   model: any | null;
   isNew: boolean;
   onSaved: (model: any) => void;
+  onDeleted: (modelId: string) => void;
 }
 
-export function ModelBasicInfo({ adminKey, model, isNew, onSaved }: ModelBasicInfoProps) {
+export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted }: ModelBasicInfoProps) {
   const [formData, setFormData] = useState({
     name: model?.name || '',
     slug: model?.slug || '',
@@ -30,9 +44,10 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved }: ModelBasicIn
     is_new: model?.is_new !== undefined ? model.is_new : true,
     is_pinned: model?.is_pinned || false,
   });
-  
+
   const [newTag, setNewTag] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Update form data when model changes
@@ -56,13 +71,13 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved }: ModelBasicIn
   const handleChange = (field: string, value: any) => {
     setFormData(prev => {
       const updated = { ...prev, [field]: value };
-      
+
       // Auto-generate slug from name if new model and slug is empty
       if (field === 'name' && isNew && !prev.slug) {
         const slug = value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
         updated.slug = slug;
       }
-      
+
       return updated;
     });
   };
@@ -87,20 +102,20 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved }: ModelBasicIn
   const handleSubmit = async () => {
     setSaving(true);
     setError(null);
-    
+
     try {
-      const url = isNew 
+      const url = isNew
         ? `/api/admin/models?key=${adminKey}`
         : `/api/admin/models/${model.id}?key=${adminKey}`;
-      
+
       const res = await fetch(url, {
         method: isNew ? 'POST' : 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-      
+
       const json = await res.json();
-      
+
       if (json.success) {
         onSaved(json.data);
         setError(null);
@@ -111,6 +126,31 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved }: ModelBasicIn
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!model?.id) return;
+
+    setDeleting(true);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/admin/models/${model.id}?key=${adminKey}`, {
+        method: 'DELETE',
+      });
+
+      const json = await res.json();
+
+      if (json.success) {
+        onDeleted(model.id);
+      } else {
+        setError(json.error || 'Failed to delete model');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -138,7 +178,7 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved }: ModelBasicIn
             className="w-full px-4 py-2 bg-background border border-white/10 rounded-lg text-white placeholder:text-muted-foreground focus:outline-none focus:border-[#00FF85]/50"
           />
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-1">
             Slug * <span className="text-xs">(URL-friendly name)</span>
@@ -182,28 +222,28 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved }: ModelBasicIn
 
       {/* Social Link */}
       <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-1">
-            Social Link (OnlyFans/Fansly) *
-          </label>
-          <div className="relative">
-            <input
-              type="url"
-              value={formData.social_link}
-              onChange={(e) => handleChange('social_link', e.target.value)}
-              placeholder="https://onlyfans.com/username"
-              className="w-full px-4 py-2 pr-10 bg-background border border-white/10 rounded-lg text-white placeholder:text-muted-foreground focus:outline-none focus:border-[#00FF85]/50"
-            />
-            {formData.social_link && (
-              <a
-                href={formData.social_link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
-              >
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            )}
-          </div>
+        <label className="block text-sm font-medium text-muted-foreground mb-1">
+          Social Link (OnlyFans/Fansly) *
+        </label>
+        <div className="relative">
+          <input
+            type="url"
+            value={formData.social_link}
+            onChange={(e) => handleChange('social_link', e.target.value)}
+            placeholder="https://onlyfans.com/username"
+            className="w-full px-4 py-2 pr-10 bg-background border border-white/10 rounded-lg text-white placeholder:text-muted-foreground focus:outline-none focus:border-[#00FF85]/50"
+          />
+          {formData.social_link && (
+            <a
+              href={formData.social_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Profile Image URL */}
@@ -235,11 +275,11 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved }: ModelBasicIn
               className="flex items-center gap-1 px-3 py-1 bg-[#7A27FF]/20 text-[#7A27FF] rounded-full text-sm"
             >
               {tag}
-              <button 
-              onClick={() => removeTag(tag)} 
-              className="hover:text-white transition-colors"
-              aria-label={`Remove tag ${tag}`}
-            >
+              <button
+                onClick={() => removeTag(tag)}
+                className="hover:text-white transition-colors"
+                aria-label={`Remove tag ${tag}`}
+              >
                 <X className="w-3 h-3" />
               </button>
             </span>
@@ -289,7 +329,7 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved }: ModelBasicIn
           </div>
           <span className="text-sm font-medium text-white select-none">Verified</span>
         </label>
-        
+
         <label className="group relative flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 backdrop-blur-[2px] bg-white/[0.02] border border-white/10 hover:bg-white/[0.04] hover:border-white/15 active:scale-[0.98]">
           <div className="relative">
             <input
@@ -313,7 +353,7 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved }: ModelBasicIn
           </div>
           <span className="text-sm font-medium text-white select-none">New</span>
         </label>
-        
+
         <label className="group relative flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 backdrop-blur-[2px] bg-white/[0.02] border border-white/10 hover:bg-white/[0.04] hover:border-white/15 active:scale-[0.98]">
           <div className="relative">
             <input
@@ -359,6 +399,49 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved }: ModelBasicIn
           {isNew ? 'Create Model' : 'Save Changes'}
         </button>
       </div>
+
+      {/* Danger Zone */}
+      {!isNew && model && (
+        <div className="border border-red-500/30 rounded-lg p-4 mt-8 bg-red-500/5">
+          <h4 className="text-red-500 font-medium mb-2">Danger Zone</h4>
+          <p className="text-sm text-muted-foreground mb-4">
+            Permanently delete this model and all associated content (stories, gallery items, tracking links).
+          </p>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm" disabled={deleting}>
+                {deleting ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4 mr-2" />
+                )}
+                Delete Model
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete {model.name} and all their content:
+                  <ul className="list-disc list-inside mt-2 space-y-1">
+                    <li>Stories and story groups</li>
+                    <li>Gallery items</li>
+                    <li>Tracking links</li>
+                    <li>Analytics data</li>
+                  </ul>
+                  <p className="mt-4 font-semibold text-red-500">This action cannot be undone.</p>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600 text-white">
+                  Delete Forever
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
     </div>
   );
 }
