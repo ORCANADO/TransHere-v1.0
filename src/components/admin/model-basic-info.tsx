@@ -167,7 +167,7 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted }: M
       {/* Basic Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-1">
+          <label className="block text-sm font-bold text-muted-foreground mb-1 px-1">
             Name *
           </label>
           <input
@@ -175,27 +175,27 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted }: M
             value={formData.name}
             onChange={(e) => handleChange('name', e.target.value)}
             placeholder="Valentina Aguirre"
-            className="w-full px-4 py-2 bg-background border border-white/10 rounded-lg text-white placeholder:text-muted-foreground focus:outline-none focus:border-[#00FF85]/50"
+            className="w-full px-4 py-2.5 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-1">
-            Slug * <span className="text-xs">(URL-friendly name)</span>
+          <label className="block text-sm font-bold text-muted-foreground mb-1 px-1">
+            Slug * <span className="text-xs font-medium opacity-70">(URL-friendly name)</span>
           </label>
           <input
             type="text"
             value={formData.slug}
             onChange={(e) => handleChange('slug', e.target.value)}
             placeholder="valentina-aguirre"
-            className="w-full px-4 py-2 bg-background border border-white/10 rounded-lg text-white placeholder:text-muted-foreground focus:outline-none focus:border-[#00FF85]/50"
+            className="w-full px-4 py-2.5 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all"
           />
         </div>
       </div>
 
       {/* Bio */}
       <div>
-        <label className="block text-sm font-medium text-muted-foreground mb-1">
+        <label className="block text-sm font-bold text-muted-foreground mb-1 px-1">
           Bio (English)
         </label>
         <textarea
@@ -203,26 +203,26 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted }: M
           onChange={(e) => handleChange('bio', e.target.value)}
           placeholder="Model description in English..."
           rows={3}
-          className="w-full px-4 py-2 bg-background border border-white/10 rounded-lg text-white resize-none placeholder:text-muted-foreground focus:outline-none focus:border-[#00FF85]/50"
+          className="w-full px-4 py-2.5 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground resize-none placeholder:text-muted-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-muted-foreground mb-1">
-          Bio (Spanish) <span className="text-xs text-muted-foreground">(Optional)</span>
+        <label className="block text-sm font-bold text-muted-foreground mb-1 px-1">
+          Bio (Spanish) <span className="text-xs font-medium opacity-70">(Optional)</span>
         </label>
         <textarea
           value={formData.bio_es}
           onChange={(e) => handleChange('bio_es', e.target.value)}
           placeholder="Descripción del modelo en español..."
           rows={3}
-          className="w-full px-4 py-2 bg-background border border-white/10 rounded-lg text-white resize-none placeholder:text-muted-foreground focus:outline-none focus:border-[#00FF85]/50"
+          className="w-full px-4 py-2.5 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground resize-none placeholder:text-muted-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all"
         />
       </div>
 
       {/* Social Link */}
       <div>
-        <label className="block text-sm font-medium text-muted-foreground mb-1">
+        <label className="block text-sm font-bold text-muted-foreground mb-1 px-1">
           Social Link (OnlyFans/Fansly) *
         </label>
         <div className="relative">
@@ -231,14 +231,14 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted }: M
             value={formData.social_link}
             onChange={(e) => handleChange('social_link', e.target.value)}
             placeholder="https://onlyfans.com/username"
-            className="w-full px-4 py-2 pr-10 bg-background border border-white/10 rounded-lg text-white placeholder:text-muted-foreground focus:outline-none focus:border-[#00FF85]/50"
+            className="w-full px-4 py-2.5 pr-10 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all"
           />
           {formData.social_link && (
             <a
               href={formData.social_link}
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ExternalLink className="w-4 h-4" />
             </a>
@@ -248,7 +248,7 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted }: M
 
       {/* Profile Image URL */}
       <div>
-        <label className="block text-sm font-medium text-muted-foreground mb-1">
+        <label className="block text-sm font-bold text-muted-foreground mb-1 px-1">
           Profile Image URL *
         </label>
         <input
@@ -256,7 +256,7 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted }: M
           value={formData.image_url}
           onChange={(e) => handleChange('image_url', e.target.value)}
           placeholder="valentina-aguirre/profile.webp"
-          className="w-full px-4 py-2 bg-background border border-white/10 rounded-lg text-white placeholder:text-muted-foreground focus:outline-none focus:border-[#00FF85]/50"
+          className="w-full px-4 py-2.5 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all"
         />
         <p className="text-xs text-muted-foreground mt-1">
           Path in R2 bucket (e.g., model-slug/profile.webp)
@@ -292,11 +292,11 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted }: M
             onChange={(e) => setNewTag(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
             placeholder="Add tag..."
-            className="flex-1 px-4 py-2 bg-background border border-white/10 rounded-lg text-white placeholder:text-muted-foreground focus:outline-none focus:border-[#00FF85]/50"
+            className="flex-1 px-4 py-2.5 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all"
           />
           <button
             onClick={addTag}
-            className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-white/10 transition-colors"
+            className="px-4 py-2 bg-black/[0.03] dark:bg-white/5 border border border-border dark:border-white/10 rounded-xl text-foreground hover:bg-black/[0.06] dark:hover:bg-white/10 transition-all active:scale-95"
             aria-label="Add tag"
           >
             <Plus className="w-5 h-5" />
@@ -354,7 +354,7 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted }: M
           <span className="text-sm font-medium text-white select-none">New</span>
         </label>
 
-        <label className="group relative flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 backdrop-blur-[2px] bg-white/[0.02] border border-white/10 hover:bg-white/[0.04] hover:border-white/15 active:scale-[0.98]">
+        <label className="group relative flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 backdrop-blur-[2px] bg-black/[0.02] dark:bg-white/[0.02] border border-border dark:border-white/10 hover:bg-black/[0.04] dark:hover:bg-white/[0.04] hover:border-black/20 dark:hover:border-white/15 active:scale-[0.98]">
           <div className="relative">
             <input
               type="checkbox"
@@ -366,7 +366,7 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted }: M
               "w-5 h-5 rounded-md border-2 transition-all duration-200 flex items-center justify-center",
               formData.is_pinned
                 ? "bg-[#D4AF37] border-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.3)]"
-                : "bg-white/[0.05] border-white/20 group-hover:border-white/30"
+                : "bg-black/[0.05] dark:bg-white/[0.05] border-border dark:border-white/20 group-hover:border-black/30 dark:group-hover:border-white/30"
             )}>
               {formData.is_pinned && (
                 <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -375,7 +375,7 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted }: M
               )}
             </div>
           </div>
-          <span className="text-sm font-medium text-white select-none">Pinned to Top</span>
+          <span className="text-sm font-bold text-foreground select-none">Pinned to Top</span>
         </label>
       </div>
 

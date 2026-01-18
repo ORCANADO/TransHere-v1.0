@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    let { model_id, group_id, is_pinned, title, cover_url, media_url, media_type, duration } = body;
+    let { model_id, group_id, is_pinned, title, cover_url, media_url, poster_url, media_type, duration } = body;
 
     if (!model_id || !media_url) {
       return NextResponse.json(
@@ -25,21 +25,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // Ensure media_url and cover_url are relative paths only (strip full URLs)
-    // If a full URL is provided, extract just the path portion
+    // Ensure media_url, cover_url, and poster_url are relative paths only
     const normalizePath = (url: string): string => {
       if (!url) return url;
-      // If it's already a relative path (no http/https), return as-is
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         return url;
       }
-      // If it's a full URL, extract the path after the domain
       try {
         const urlObj = new URL(url);
-        // Remove leading slash from pathname
         return urlObj.pathname.startsWith('/') ? urlObj.pathname.slice(1) : urlObj.pathname;
       } catch {
-        // If URL parsing fails, try to extract path manually
         const match = url.match(/https?:\/\/[^\/]+\/(.+)$/);
         return match ? match[1] : url;
       }
@@ -47,14 +42,14 @@ export async function POST(request: Request) {
 
     media_url = normalizePath(media_url);
     cover_url = cover_url ? normalizePath(cover_url) : media_url;
+    poster_url = poster_url ? normalizePath(poster_url) : null;
 
     // Log for debugging
     console.log("Story upload data:", {
       model_id,
       media_url,
       cover_url,
-      original_media_url: body.media_url,
-      original_cover_url: body.cover_url,
+      poster_url,
     });
 
     // Create admin client with service_role key (bypasses RLS)
@@ -96,7 +91,7 @@ export async function POST(request: Request) {
           .from("story_groups")
           .update({ cover_url })
           .eq("id", groupId);
-        
+
         if (updateError) {
           console.warn("Warning: Failed to update cover_url on existing group:", updateError);
         }
@@ -112,14 +107,14 @@ export async function POST(request: Request) {
 
       if (existingGroup) {
         groupId = existingGroup.id;
-        
+
         // Update the group's cover_url if a new one was provided
         if (cover_url) {
           const { error: updateError } = await supabaseAdmin
             .from("story_groups")
             .update({ cover_url })
             .eq("id", groupId);
-          
+
           if (updateError) {
             console.warn("Warning: Failed to update cover_url on existing group:", updateError);
           }
@@ -156,6 +151,7 @@ export async function POST(request: Request) {
         media_url,
         media_type: media_type || "image",
         duration: duration || 5,
+        poster_url: poster_url,
         posted_date: new Date().toISOString(),
       })
       .select("id")

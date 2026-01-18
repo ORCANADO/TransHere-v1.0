@@ -5,7 +5,8 @@ import { Suspense, useState, useCallback, useEffect } from 'react';
 import {
   Shield,
   AlertTriangle,
-  ChevronRight
+  ChevronRight,
+  PanelLeft
 } from 'lucide-react';
 import './admin-theme.css';
 import { ThemeToggle } from '@/components/admin/theme-toggle';
@@ -205,6 +206,25 @@ function AdminContent() {
 
         {/* Main Content Area */}
         <main className="h-screen overflow-y-auto relative">
+          {/* Sidebar Toggle Button (Visible when collapsed) */}
+          {isSidebarCollapsed && (
+            <button
+              onClick={handleToggleCollapse}
+              className={cn(
+                "fixed left-4 top-4 lg:left-6 lg:top-6 z-[60] flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300",
+                "bg-white/80 dark:bg-[#0A1221]/80 backdrop-blur-xl",
+                "border border-[#E5E5EA] dark:border-white/10",
+                "shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)]",
+                "hover:scale-110 active:scale-95 group hover:border-[#007AFF]/30 dark:hover:border-[#7A27FF]/30",
+                "flex"
+              )}
+              title="Expand Sidebar (Cmd + \)"
+            >
+              <PanelLeft className="w-5 h-5 text-black/60 dark:text-white/60 group-hover:text-[#007AFF] dark:group-hover:text-[#7A27FF] transition-colors" />
+              <div className="absolute inset-0 rounded-xl bg-[#007AFF]/5 dark:bg-[#7A27FF]/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          )}
+
           {/* Analytics Dashboard - Always Visible */}
           <div className="p-4 lg:p-6">
             <AnalyticsDashboard
@@ -212,6 +232,7 @@ function AdminContent() {
               selectedModelIds={selectedIds}
               onModelSelectionChange={selectMultiple}
               onDataLoaded={handleDataLoaded}
+              isSidebarCollapsed={isSidebarCollapsed}
             />
           </div>
         </main>

@@ -1023,3 +1023,21 @@ All planned features implemented, tested, and polished. The platform is producti
         - `src/app/api/admin/tracking-links/route.ts`
         - `src/app/api/admin/tracking-sources/[sourceId]/route.ts`
         - `src/app/api/admin/tracking-sources/route.ts`
+
+### [2026-01-18] - Phase 7.1: Multi-file Video Story Upload & UI Refinement
+**Status:** Complete
+
+- **Mandatory 3-File Video Story Workflow:**
+    - Refactored `StoryManager` and `PinnedBlocksManager` to require exactly three files for video stories: **MP4**, **WebM**, and **WebP** (preview).
+    - Implemented a dedicated "Liquid Glass" upload modal to handle the 3-file selection with clear visual validation (check icons).
+    - Ensures 100% format cross-compatibility and instant playback feedback via the WebP poster.
+- **API & Database Enhancements:**
+    - Updated `POST /api/admin/stories` to accept and normalize `poster_url`.
+    - Integrated `poster_url` into the video player logic for better initial load experience.
+- **Upload Reliability:**
+    - Standardized all story and block uploads to use the `/api/upload/proxy` endpoint.
+    - Added model-slug based pathing and timestamped filenames for better R2 organization and cache busting.
+- **Admin UI Polish:**
+    - Optimized the "Add to Recent" trigger in `StoryManager` to intelligently switch between file input (images) and modal trigger (videos).
+    - Refactored `PinnedBlocksManager` state management to resolve dragging and ordering conflicts introduced during the shift.
+    - Applied consistent "Liquid Glass" styling across all new upload components.

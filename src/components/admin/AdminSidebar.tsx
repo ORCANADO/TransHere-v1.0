@@ -53,34 +53,33 @@ export function AdminSidebar({
             <aside className={cn(
                 "h-screen transition-all duration-300 flex flex-col overflow-hidden z-50",
                 "fixed lg:relative",
-                // iOS 26 Liquid Glass - Creamy white for light mode, translucent for dark
-                "bg-[#F9F9FB] dark:bg-[#0A1221]/80",
+                // iOS 26 Liquid Glass - Titanium white for light mode, dark translucent for dark
+                "bg-background dark:bg-[#0A1221]/80",
                 "backdrop-blur-3xl dark:backdrop-blur-2xl",
-                "border-r border-[#E5E5EA] dark:border-white/10",
+                "border-r border-border dark:border-white/10",
                 "shadow-[1px_0_0_rgba(0,0,0,0.02)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)]",
                 isCollapsed ? "-translate-x-full lg:translate-x-0 lg:w-0" : "translate-x-0 w-[280px]"
             )}>
-                {/* Header */}
-                <header className="flex items-center justify-between p-4 border-b border-[#E5E5EA] dark:border-white/10">
+                <header className="flex items-center justify-between p-4 border-b border-border dark:border-white/10">
                     <div className="flex items-center gap-2">
                         <div className={cn(
                             "w-8 h-8 rounded-xl",
                             "bg-gradient-to-br from-[#7A27FF] via-[#9D4EFF] to-[#00FF85]",
-                            "shadow-lg shadow-[#7A27FF]/30",
+                            "shadow-lg shadow-[#7A27FF]/20",
                             "flex items-center justify-center",
                             "ring-1 ring-white/20"
                         )}>
                             <span className="text-white font-bold text-sm drop-shadow-sm">TH</span>
                         </div>
-                        <span className="font-semibold text-sm text-black dark:text-white">TransHere</span>
+                        <span className="font-bold text-sm text-foreground tracking-tight">TransHere</span>
                     </div>
                     <button
                         onClick={onToggleCollapse}
                         className={cn(
-                            "p-1.5 rounded-lg transition-all",
-                            "hover:bg-black/[0.06] dark:hover:bg-white/10",
+                            "p-2 rounded-xl transition-all",
+                            "hover:bg-black/[0.04] dark:hover:bg-white/10",
                             "active:scale-95",
-                            "text-black/60 dark:text-gray-300"
+                            "text-muted-foreground hover:text-foreground"
                         )}
                         aria-label="Toggle sidebar"
                     >

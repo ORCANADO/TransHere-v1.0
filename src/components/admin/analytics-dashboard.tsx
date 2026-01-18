@@ -29,6 +29,7 @@ interface AnalyticsDashboardProps {
   selectedModelIds: string[];
   onModelSelectionChange: (ids: string[]) => void;
   onDataLoaded?: (data: DashboardData) => void;
+  isSidebarCollapsed?: boolean;
 }
 
 interface DashboardData {
@@ -85,6 +86,7 @@ export function AnalyticsDashboard({
   selectedModelIds,
   onModelSelectionChange,
   onDataLoaded,
+  isSidebarCollapsed = false,
 }: AnalyticsDashboardProps) {
   // State
   const [data, setData] = useState<DashboardData | null>(null);
@@ -204,7 +206,10 @@ export function AnalyticsDashboard({
   return (
     <div className="space-y-6">
       {/* Sticky Filters Bar & Header Info */}
-      <div className="sticky top-0 z-30 -mx-4 lg:-mx-6 px-4 lg:px-6 py-4 bg-background/80 backdrop-blur-xl border-b border-[#E5E5EA] dark:border-white/10 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className={cn(
+        "sticky top-0 z-30 -mx-4 lg:-mx-6 px-4 lg:px-6 py-4 bg-background/80 backdrop-blur-xl border-b border-[#E5E5EA] dark:border-white/10 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-300",
+        isSidebarCollapsed && "pl-16 lg:pl-20"
+      )}>
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <DashboardFiltersBar
             filters={{ ...filters, modelSlugs: currentModelSlugs }}

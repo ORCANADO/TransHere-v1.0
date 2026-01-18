@@ -100,11 +100,11 @@ export function SidebarModelList({
         return (
             <div className="flex flex-col h-full">
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+                    <div className="w-16 h-16 rounded-full bg-black/[0.03] dark:bg-white/5 flex items-center justify-center mb-4">
                         <Link2 className="w-8 h-8 text-muted-foreground/30" />
                     </div>
-                    <h3 className="text-lg font-semibold text-white">No models yet</h3>
-                    <p className="text-sm text-muted-foreground mt-2 max-w-[200px]">
+                    <h3 className="text-lg font-bold text-foreground">No models yet</h3>
+                    <p className="text-sm text-muted-foreground mt-2 max-w-[200px] font-medium leading-relaxed">
                         Get started by adding your first model in the settings below.
                     </p>
                 </div>
@@ -115,9 +115,9 @@ export function SidebarModelList({
     return (
         <div className="flex flex-col h-full">
             {/* Search Bar - Sticky */}
-            <div className="sticky top-0 z-10 p-3 bg-[#F9F9FB]/80 backdrop-blur-xl border-b border-[#E5E5EA] dark:border-white/10">
+            <div className="sticky top-0 z-10 p-3 bg-white/80 dark:bg-[#0A1221]/80 backdrop-blur-xl border-b border-border dark:border-white/10">
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868B] dark:text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <input
                         id="model-search-input"
                         type="text"
@@ -125,13 +125,13 @@ export function SidebarModelList({
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className={cn(
-                            "w-full pl-9 pr-3 py-2.5 rounded-xl text-sm",
-                            "bg-[#EBECF0] dark:bg-white/5",
-                            "border-0 dark:border dark:border-white/10",
-                            "focus:ring-2 focus:ring-[#007AFF]/30 focus:bg-white dark:focus:bg-white/10",
-                            "placeholder:text-[#86868B] dark:placeholder:text-gray-500",
-                            "text-[#1D1D1F] dark:text-white",
-                            "transition-all"
+                            "w-full pl-9 pr-3 py-2.5 rounded-xl text-sm font-medium",
+                            "bg-black/[0.03] dark:bg-white/5",
+                            "border border-border dark:border-white/10",
+                            "focus:ring-2 focus:ring-[#007AFF]/20 focus:bg-white dark:focus:bg-white/10",
+                            "placeholder:text-muted-foreground",
+                            "text-foreground",
+                            "transition-all outline-none"
                         )}
                     />
                 </div>
@@ -165,8 +165,8 @@ export function SidebarModelList({
                                     className={cn(
                                         "group relative flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all",
                                         isSelected
-                                            ? "bg-[#007AFF]/10 dark:bg-[#AF52DE]/10 border border-[#007AFF]/30 dark:border-[#AF52DE]/30"
-                                            : "hover:bg-[#E8E8ED] dark:hover:bg-white/5 border border-transparent"
+                                            ? "bg-[#007AFF]/10 dark:bg-[#AF52DE]/10 border border-[#007AFF]/30 dark:border-[#AF52DE]/30 shadow-sm"
+                                            : "hover:bg-black/[0.03] dark:hover:bg-white/5 border border-transparent"
                                     )}
                                 >
                                     {/* Profile Photo (clickable for edit) */}
@@ -255,9 +255,9 @@ export function SidebarModelList({
 
             {/* Selection Summary */}
             {selectedIds.length > 0 && (
-                <div className="sticky bottom-0 p-3 bg-white/60 dark:bg-[#0A1221]/60 backdrop-blur-xl border-t border-white/10">
-                    <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">
+                <div className="sticky bottom-0 p-3 bg-white/80 dark:bg-[#0A1221]/80 backdrop-blur-xl border-t border-border dark:border-white/10">
+                    <div className="flex items-center justify-between text-xs px-1">
+                        <span className="text-muted-foreground font-bold uppercase tracking-wider">
                             {selectedIds.length} model{selectedIds.length !== 1 ? 's' : ''} selected
                         </span>
                         <button

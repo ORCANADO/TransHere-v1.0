@@ -40,17 +40,17 @@ export function SidebarSettings({ onAddModel }: SidebarSettingsProps) {
     if (!mounted) return null;
 
     return (
-        <div className="border-t border-[#E5E5EA] dark:border-white/10 bg-[#F9F9FB] dark:bg-transparent">
+        <div className="border-t border-border dark:border-white/10 bg-black/[0.01] dark:bg-transparent transition-colors">
             <Collapsible open={isOpen} onOpenChange={handleToggle}>
                 <CollapsibleTrigger asChild>
                     <button className={cn(
                         "flex items-center justify-between w-full p-4 transition-all group",
-                        "hover:bg-[#E8E8ED] dark:hover:bg-white/5",
+                        "hover:bg-black/[0.04] dark:hover:bg-white/5",
                         "active:scale-[0.99]"
                     )}>
                         <div className="flex items-center gap-2">
-                            <Settings className="w-4 h-4 text-[#86868B] dark:text-gray-400 group-hover:text-[#007AFF] dark:group-hover:text-[#7A27FF] transition-colors" />
-                            <span className="font-semibold text-sm text-[#1D1D1F] dark:text-white">Settings</span>
+                            <Settings className="w-4 h-4 text-muted-foreground group-hover:text-[#007AFF] dark:group-hover:text-[#7A27FF] transition-colors" />
+                            <span className="font-bold text-sm text-foreground">Settings</span>
                         </div>
                         <ChevronDown className={cn(
                             "w-4 h-4 text-[#86868B] dark:text-gray-400 transition-transform duration-200",
@@ -62,8 +62,8 @@ export function SidebarSettings({ onAddModel }: SidebarSettingsProps) {
                 <CollapsibleContent className="px-4 pb-4 space-y-4">
                     {/* Theme Selector */}
                     <div className="space-y-2">
-                        <p className="text-[10px] uppercase tracking-widest text-[#86868B] font-bold px-1">Appearance</p>
-                        <ThemeToggle showLabels className="w-full bg-[#E8E8ED] dark:bg-white/5 border border-transparent dark:border-white/10" />
+                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold px-1 opacity-70">Appearance</p>
+                        <ThemeToggle showLabels className="w-full bg-black/[0.04] dark:bg-white/5 border-0 dark:border dark:border-white/10" />
                     </div>
 
                     {/* Add New Model Button */}
@@ -71,11 +71,10 @@ export function SidebarSettings({ onAddModel }: SidebarSettingsProps) {
                         variant="outline"
                         size="sm"
                         className={cn(
-                            "w-full justify-start gap-2 transition-all",
-                            "bg-[#E8E8ED] dark:bg-white/5",
-                            "border-0 dark:border dark:border-white/10",
+                            "w-full justify-start gap-2 transition-all rounded-xl border-border dark:border-white/10",
+                            "bg-black/[0.04] dark:bg-white/5 font-bold text-xs",
                             "hover:bg-[#007AFF]/10 hover:text-[#007AFF] dark:hover:bg-[#7A27FF]/10 dark:hover:text-[#7A27FF]",
-                            "text-[#1D1D1F] dark:text-white",
+                            "text-foreground",
                             "active:scale-[0.98]"
                         )}
                         onClick={onAddModel}

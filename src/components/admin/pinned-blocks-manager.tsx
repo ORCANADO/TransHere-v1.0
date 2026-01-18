@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { 
-  Pin, 
-  Plus, 
-  Trash2, 
-  Edit, 
-  ChevronUp, 
+import {
+  Pin,
+  Plus,
+  Trash2,
+  Edit,
+  ChevronUp,
   ChevronDown,
   GripVertical,
   Image as ImageIcon,
@@ -15,7 +15,8 @@ import {
   Loader2,
   X,
   Upload,
-  Camera
+  Camera,
+  CheckCircle2
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn, getImageUrl } from '@/lib/utils';
@@ -29,12 +30,12 @@ interface PinnedBlocksManagerProps {
   onUpdate: () => void;
 }
 
-export function PinnedBlocksManager({ 
-  adminKey, 
-  modelId, 
-  modelSlug, 
+export function PinnedBlocksManager({
+  adminKey,
+  modelId,
+  modelSlug,
   storyGroups: initialGroups,
-  onUpdate 
+  onUpdate
 }: PinnedBlocksManagerProps) {
   const [groups, setGroups] = useState<StoryGroupAdmin[]>(
     [...initialGroups].sort((a, b) => a.sort_order - b.sort_order).map(g => ({
@@ -61,21 +62,33 @@ export function PinnedBlocksManager({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newBlockTitle, setNewBlockTitle] = useState('');
   const [saving, setSaving] = useState(false);
+
   const [uploading, setUploading] = useState<string | null>(null); // groupId that's uploading
   const [uploadingCover, setUploadingCover] = useState<string | null>(null); // groupId that's uploading cover
   const [uploadProgress, setUploadProgress] = useState<string>('');
+
   const [draggedStory, setDraggedStory] = useState<{ groupId: string; storyId: string } | null>(null);
   const [draggedBlock, setDraggedBlock] = useState<string | null>(null);
+
   const [hasOrderChanges, setHasOrderChanges] = useState<{ [groupId: string]: boolean }>({});
   const [hasBlockOrderChanges, setHasBlockOrderChanges] = useState(false);
+
   const [savingOrder, setSavingOrder] = useState<string | null>(null); // groupId that's saving order
   const [savingBlockOrder, setSavingBlockOrder] = useState(false);
+
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
   const coverInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
+  // Video Modal State
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [targetGroupId, setTargetGroupId] = useState<string | null>(null);
+  const [mp4File, setMp4File] = useState<File | null>(null);
+  const [webmFile, setWebmFile] = useState<File | null>(null);
+  const [webpFile, setWebpFile] = useState<File | null>(null);
+
   const createBlock = async () => {
     if (!newBlockTitle.trim()) return;
-    
+
     setSaving(true);
     try {
       const res = await fetch(`/api/admin/story-groups?key=${adminKey}`, {
@@ -87,7 +100,7 @@ export function PinnedBlocksManager({
           is_pinned: true,
         }),
       });
-      
+
       const json = await res.json();
       if (json.success) {
         setGroups([...groups, { ...json.data, stories: [] }]);
@@ -112,7 +125,7 @@ export function PinnedBlocksManager({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
       });
-      
+
       const json = await res.json();
       if (json.success) {
         setGroups(groups.map(g => g.id === groupId ? { ...g, ...updates } : g));
@@ -129,12 +142,12 @@ export function PinnedBlocksManager({
 
   const deleteBlock = async (groupId: string) => {
     if (!confirm('Delete this pinned block and all its stories?')) return;
-    
+
     try {
       const res = await fetch(`/api/admin/story-groups/${groupId}?key=${adminKey}`, {
         method: 'DELETE',
       });
-      
+
       const json = await res.json();
       if (json.success) {
         setGroups(groups.filter(g => g.id !== groupId));
@@ -154,20 +167,20 @@ export function PinnedBlocksManager({
       (direction === 'up' && index === 0) ||
       (direction === 'down' && index === groups.length - 1)
     ) return;
-    
+
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     const newGroups = [...groups];
     [newGroups[index], newGroups[newIndex]] = [newGroups[newIndex], newGroups[index]];
-    
+
     // Update sort_order
     const updates = newGroups.map((g, i) => ({
       id: g.id,
       sort_order: i,
     }));
-    
+
     setGroups(newGroups.map((g, i) => ({ ...g, sort_order: i })));
     setHasBlockOrderChanges(true);
-    
+
     // Save to server
     try {
       const res = await fetch(`/api/admin/story-groups/reorder?key=${adminKey}`, {
@@ -175,7 +188,7 @@ export function PinnedBlocksManager({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: updates }),
       });
-      
+
       const json = await res.json();
       if (json.success) {
         setHasBlockOrderChanges(false);
@@ -193,21 +206,21 @@ export function PinnedBlocksManager({
   const handleBlockDragOver = (e: React.DragEvent, targetGroupId: string) => {
     e.preventDefault();
     if (!draggedBlock || draggedBlock === targetGroupId) return;
-    
+
     const draggedIndex = groups.findIndex(g => g.id === draggedBlock);
     const targetIndex = groups.findIndex(g => g.id === targetGroupId);
-    
+
     if (draggedIndex === -1 || targetIndex === -1) return;
-    
+
     const newGroups = [...groups];
     const [removed] = newGroups.splice(draggedIndex, 1);
     newGroups.splice(targetIndex, 0, removed);
-    
+
     // Update sort_order
     newGroups.forEach((group, index) => {
       group.sort_order = index;
     });
-    
+
     setGroups(newGroups);
     setHasBlockOrderChanges(true);
   };
@@ -218,7 +231,7 @@ export function PinnedBlocksManager({
 
   const saveBlockOrder = async () => {
     if (!hasBlockOrderChanges) return;
-    
+
     setSavingBlockOrder(true);
     try {
       const res = await fetch(`/api/admin/story-groups/reorder?key=${adminKey}`, {
@@ -231,7 +244,7 @@ export function PinnedBlocksManager({
           })),
         }),
       });
-      
+
       const json = await res.json();
       if (json.success) {
         setHasBlockOrderChanges(false);
@@ -249,16 +262,16 @@ export function PinnedBlocksManager({
 
   const deleteStory = async (storyId: string, groupId: string) => {
     if (!confirm('Delete this story?')) return;
-    
+
     try {
       const res = await fetch(`/api/admin/stories/${storyId}?key=${adminKey}`, {
         method: 'DELETE',
       });
-      
+
       const json = await res.json();
       if (json.success) {
-        setGroups(groups.map(g => 
-          g.id === groupId 
+        setGroups(groups.map(g =>
+          g.id === groupId
             ? { ...g, stories: g.stories.filter(s => s.id !== storyId) }
             : g
         ));
@@ -269,75 +282,67 @@ export function PinnedBlocksManager({
     }
   };
 
-  const uploadFile = async (file: File, filename: string): Promise<string> => {
-    const ext = file.name.split('.').pop()?.toLowerCase() || '';
-    const contentType = ext === 'webm' || ext === 'mp4' 
-      ? (ext === 'webm' ? 'video/webm' : 'video/mp4')
-      : (file.type || 'image/webp');
+  const uploadFile = async (file: File, mediaType: 'image' | 'video', customFilename?: string): Promise<string> => {
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+      const contentType = mediaType === 'video'
+        ? (ext === 'webm' ? 'video/webm' : 'video/mp4')
+        : (file.type || 'image/webp');
 
-    setUploadProgress(`Getting upload URL for ${file.name}...`);
-    const presignRes = await fetch(`/api/upload?key=${adminKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        filename,
-        contentType,
-      }),
-    });
+      const timestamp = Date.now();
+      const sanitizedBase = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9.-]/g, '_');
+      const filename = customFilename || `${modelSlug}/${timestamp}-${sanitizedBase}.${ext}`;
 
-    if (!presignRes.ok) {
-      throw new Error('Failed to get upload URL');
+      setUploadProgress(`Uploading ${file.name}...`);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('filename', filename);
+      formData.append('contentType', contentType);
+      formData.append('bucket', 'stories');
+
+      const uploadRes = await fetch(`/api/upload/proxy?key=${adminKey}`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const errorText = await uploadRes.text();
+        throw new Error(`Upload failed: ${uploadRes.status} - ${errorText.substring(0, 100)}`);
+      }
+
+      const result = await uploadRes.json();
+      if (!result.success) {
+        throw new Error(result.error || 'Upload failed');
+      }
+
+      return result.key;
+    } catch (err) {
+      console.error('Upload error:', err);
+      throw err;
     }
-
-    const { uploadUrl, key } = await presignRes.json();
-
-    setUploadProgress(`Uploading ${file.name}...`);
-    const uploadRes = await fetch(uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: {
-        'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=31536000, immutable',
-      },
-    });
-
-    if (!uploadRes.ok) {
-      throw new Error('Failed to upload file');
-    }
-
-    return key;
   };
 
   const handleUpload = async (groupId: string, files: FileList | null) => {
     if (!files || files.length === 0) return;
-    
+
+    const file = files[0];
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+
+    // If video, open modal
+    if (ext === 'webm' || ext === 'mp4') {
+      setTargetGroupId(groupId);
+      setMp4File(null);
+      setWebmFile(null);
+      setWebpFile(null);
+      setShowVideoModal(true);
+      return;
+    }
+
     setUploading(groupId);
     setUploadProgress('Starting upload...');
-    
-    try {
-      const timestamp = Date.now();
-      const file = files[0];
-      const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "-");
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'webp';
-      
-      let mediaUrl: string;
-      let coverUrl: string;
-      let mediaType: 'image' | 'video';
-      let duration: number;
 
-      if (ext === 'webm' || ext === 'mp4') {
-        const filename = `stories/${timestamp}-${cleanName}.${ext}`;
-        mediaUrl = await uploadFile(file, filename);
-        coverUrl = mediaUrl; // Placeholder - would need separate poster upload
-        mediaType = 'video';
-        duration = 15;
-      } else {
-        const filename = `stories/${timestamp}-${cleanName}.${ext}`;
-        mediaUrl = await uploadFile(file, filename);
-        coverUrl = mediaUrl;
-        mediaType = 'image';
-        duration = 5;
-      }
+    try {
+      const mediaUrl = await uploadFile(file, 'image');
 
       setUploadProgress('Creating story...');
       const res = await fetch(`/api/admin/stories?key=${adminKey}`, {
@@ -348,9 +353,9 @@ export function PinnedBlocksManager({
           group_id: groupId,
           is_pinned: true,
           media_url: mediaUrl,
-          cover_url: coverUrl,
-          media_type: mediaType,
-          duration: duration,
+          cover_url: mediaUrl,
+          media_type: 'image',
+          duration: 5,
         }),
       });
 
@@ -370,20 +375,83 @@ export function PinnedBlocksManager({
     }
   };
 
+  const handleVideoStoryUpload = async () => {
+    if (!mp4File || !webmFile || !webpFile || !targetGroupId) return;
+
+    setUploading(targetGroupId);
+    setUploadProgress('Starting upload...');
+    setShowVideoModal(false);
+
+    try {
+      const timestamp = Date.now();
+      const baseName = mp4File.name.replace(/\.[^/.]+$/, "");
+      const sanitizedBase = baseName.replace(/[^a-zA-Z0-9.-]/g, '_');
+
+      // MP4 Upload
+      const mp4Ext = mp4File.name.split('.').pop() || 'mp4';
+      const mp4Filename = `${modelSlug}/${timestamp}-${sanitizedBase}.${mp4Ext}`;
+      const mp4Url = await uploadFile(mp4File, 'video', mp4Filename);
+
+      // WebM Upload
+      const webmFilename = `${modelSlug}/${timestamp}-${sanitizedBase}.webm`;
+      await uploadFile(webmFile, 'video', webmFilename);
+
+      // WebP Preview Upload
+      const webpFilename = `${modelSlug}/${timestamp}-${sanitizedBase}.webp`;
+      const posterUrl = await uploadFile(webpFile, 'image', webpFilename);
+
+      setUploadProgress('Creating video story...');
+      const res = await fetch(`/api/admin/stories?key=${adminKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model_id: modelId,
+          group_id: targetGroupId,
+          is_pinned: true,
+          media_url: mp4Url,
+          cover_url: posterUrl,
+          poster_url: posterUrl,
+          media_type: 'video',
+          duration: 15,
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        onUpdate();
+        // Cleanup
+        setMp4File(null);
+        setWebmFile(null);
+        setWebpFile(null);
+        setTargetGroupId(null);
+      } else {
+        alert('Failed to create story: ' + json.error);
+        setShowVideoModal(true);
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Upload failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      setShowVideoModal(true);
+    } finally {
+      setUploading(null);
+      setUploadProgress('');
+    }
+  };
+
   const handleCoverUpload = async (groupId: string, files: FileList | null) => {
     if (!files || files.length === 0) return;
-    
+
     setUploadingCover(groupId);
     setUploadProgress('Uploading cover photo...');
-    
+
     try {
       const timestamp = Date.now();
       const file = files[0];
       const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "-");
       const ext = file.name.split('.').pop()?.toLowerCase() || 'webp';
       const filename = `stories/${timestamp}-${cleanName}-cover.${ext}`;
-      
-      const coverUrl = await uploadFile(file, filename);
+
+      const coverUrl = await uploadFile(file, 'image', filename);
 
       setUploadProgress('Updating cover...');
       const res = await fetch(`/api/admin/story-groups/${groupId}?key=${adminKey}`, {
@@ -396,8 +464,8 @@ export function PinnedBlocksManager({
 
       const json = await res.json();
       if (json.success) {
-        setGroups(groups.map(g => 
-          g.id === groupId 
+        setGroups(groups.map(g =>
+          g.id === groupId
             ? { ...g, cover_url: coverUrl }
             : g
         ));
@@ -422,26 +490,26 @@ export function PinnedBlocksManager({
   const handleStoryDragOver = (e: React.DragEvent, groupId: string, targetStoryId: string) => {
     e.preventDefault();
     if (!draggedStory || draggedStory.groupId !== groupId || draggedStory.storyId === targetStoryId) return;
-    
+
     const group = groups.find(g => g.id === groupId);
     if (!group || !group.stories) return;
-    
+
     const draggedIndex = group.stories.findIndex(s => s.id === draggedStory.storyId);
     const targetIndex = group.stories.findIndex(s => s.id === targetStoryId);
-    
+
     if (draggedIndex === -1 || targetIndex === -1) return;
-    
+
     const newStories = [...group.stories];
     const [removed] = newStories.splice(draggedIndex, 1);
     newStories.splice(targetIndex, 0, removed);
-    
+
     // Update sort_order
     newStories.forEach((story, index) => {
       story.sort_order = index;
     });
-    
-    setGroups(groups.map(g => 
-      g.id === groupId 
+
+    setGroups(groups.map(g =>
+      g.id === groupId
         ? { ...g, stories: newStories }
         : g
     ));
@@ -455,7 +523,7 @@ export function PinnedBlocksManager({
   const saveStoryOrder = async (groupId: string) => {
     const group = groups.find(g => g.id === groupId);
     if (!group || !group.stories || !hasOrderChanges[groupId]) return;
-    
+
     setSavingOrder(groupId);
     try {
       const res = await fetch(`/api/admin/stories/reorder?key=${adminKey}`, {
@@ -468,7 +536,7 @@ export function PinnedBlocksManager({
           })),
         }),
       });
-      
+
       const json = await res.json();
       if (json.success) {
         setHasOrderChanges({ ...hasOrderChanges, [groupId]: false });
@@ -489,18 +557,18 @@ export function PinnedBlocksManager({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+          <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
             <Pin className="w-5 h-5 text-[#D4AF37]" />
             Pinned Blocks ({groups.length})
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground font-medium">
             Pinned blocks appear at the top of the model's story section
           </p>
         </div>
-        
+
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-[#D4AF37] text-black rounded-lg font-medium hover:bg-[#D4AF37]/90"
+          className="flex items-center gap-2 px-5 py-2.5 bg-[#D4AF37] hover:bg-[#B8962E] text-black rounded-xl font-bold transition-all shadow-lg shadow-[#D4AF37]/20 active:scale-95"
         >
           <Plus className="w-4 h-4" />
           Create Block
@@ -509,9 +577,9 @@ export function PinnedBlocksManager({
 
       {/* Blocks List */}
       {groups.length === 0 ? (
-        <div className="text-center py-12 border-2 border-dashed border-white/10 rounded-xl">
-          <Pin className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">No pinned blocks yet</p>
+        <div className="text-center py-12 border-2 border-dashed border-border dark:border-white/10 rounded-2xl bg-black/[0.02] dark:bg-white/5">
+          <Pin className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-20" />
+          <p className="text-muted-foreground font-bold">No pinned blocks yet</p>
           <p className="text-sm text-muted-foreground mt-1">
             Create blocks like "Trips", "Behind the Scenes", etc.
           </p>
@@ -553,16 +621,16 @@ export function PinnedBlocksManager({
               onDragOver={(e) => handleBlockDragOver(e, group.id)}
               onDragEnd={handleBlockDragEnd}
               className={cn(
-                "bg-background border border-white/10 rounded-xl overflow-hidden transition-opacity",
-                draggedBlock === group.id && "opacity-50"
+                "bg-black/[0.02] dark:bg-white/5 border border-border dark:border-white/10 rounded-2xl overflow-hidden shadow-sm transition-all",
+                draggedBlock === group.id && "opacity-50 scale-[0.98]"
               )}
             >
               {/* Block Header */}
-              <div className="flex items-center gap-4 p-4 border-b border-white/10 cursor-move">
-                <GripVertical className="w-5 h-5 text-muted-foreground" />
-                
+              <div className="flex items-center gap-4 p-4 border-b border-border dark:border-white/10 cursor-move hover:bg-black/[0.04] dark:hover:bg-white/[0.08] transition-colors">
+                <GripVertical className="w-5 h-5 text-muted-foreground opacity-50" />
+
                 {/* Cover */}
-                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-white/5 flex-shrink-0 group/cover">
+                <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-black/10 dark:bg-white/10 flex-shrink-0 group/cover border border-border dark:border-white/10 shadow-inner">
                   {group.cover_url ? (
                     <Image
                       src={getImageUrl(group.cover_url)}
@@ -604,7 +672,7 @@ export function PinnedBlocksManager({
                     disabled={uploadingCover === group.id}
                   />
                 </div>
-                
+
                 {/* Title */}
                 <div className="flex-1">
                   {editingGroup === group.id ? (
@@ -613,30 +681,30 @@ export function PinnedBlocksManager({
                         type="text"
                         value={editTitle}
                         onChange={(e) => setEditTitle(e.target.value)}
-                        className="px-3 py-1 bg-card border border-white/10 rounded-lg text-white"
+                        className="px-3 py-1.5 bg-white dark:bg-black/20 border border-border dark:border-white/10 rounded-lg text-foreground font-medium focus:ring-2 focus:ring-[#7A27FF]/20 outline-none"
                         autoFocus
                       />
                       <button
                         onClick={() => updateBlock(group.id, { title: editTitle })}
-                        className="p-1 text-[#00FF85] hover:bg-[#00FF85]/10 rounded"
+                        className="p-1.5 text-emerald-600 dark:text-[#00FF85] hover:bg-emerald-50 dark:hover:bg-[#00FF85]/10 rounded-lg transition-colors"
                       >
                         <Save className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setEditingGroup(null)}
-                        className="p-1 text-muted-foreground hover:text-white"
+                        className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
-                    <h4 className="font-semibold text-white">{group.title || 'Untitled'}</h4>
+                    <h4 className="font-bold text-foreground text-base">{group.title || 'Untitled'}</h4>
                   )}
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mt-0.5">
                     {group.stories?.length || 0} stories
                   </p>
                 </div>
-                
+
                 {/* Actions */}
                 <div className="flex items-center gap-1">
                   <button
@@ -670,7 +738,7 @@ export function PinnedBlocksManager({
                   </button>
                 </div>
               </div>
-              
+
               {/* Stories Preview */}
               <div className="p-4">
                 {group.stories && group.stories.length > 0 ? (
@@ -706,12 +774,12 @@ export function PinnedBlocksManager({
                               unoptimized
                             />
                           )}
-                          
+
                           {/* Drag handle */}
                           <div className="absolute top-1 left-1 bg-black/50 rounded p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                             <GripVertical className="w-3 h-3 text-white" />
                           </div>
-                          
+
                           {/* Delete overlay */}
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <button
@@ -721,14 +789,14 @@ export function PinnedBlocksManager({
                               <Trash2 className="w-3 h-3" />
                             </button>
                           </div>
-                          
+
                           {/* Type indicator */}
                           {story.media_type === 'video' && (
                             <Film className="absolute top-1 right-1 w-3 h-3 text-white" />
                           )}
                         </div>
                       ))}
-                    
+
                       {/* Add story button */}
                       <button
                         onClick={() => fileInputRefs.current[group.id]?.click()}
@@ -837,46 +905,138 @@ export function PinnedBlocksManager({
         </div>
       )}
 
-      {/* Create Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-card border border-white/10 rounded-xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-white mb-4">
-              Create Pinned Block
-            </h3>
-            
-            <input
-              type="text"
-              value={newBlockTitle}
-              onChange={(e) => setNewBlockTitle(e.target.value)}
-              placeholder="Block title (e.g., Trips, BTS)"
-              className="w-full px-4 py-2 bg-background border border-white/10 rounded-lg text-white mb-4"
-              autoFocus
-            />
-            
-            <div className="flex gap-3 justify-end">
+      {/* Upload indicator */}
+      {uploading && (
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-[110]">
+          <div className="bg-card border border-border dark:border-white/10 p-6 rounded-2xl text-center min-w-[300px] shadow-2xl liquid-glass-elevated">
+            <Loader2 className="w-8 h-8 animate-spin text-[#7A27FF] mx-auto mb-4" />
+            <p className="text-foreground font-bold mb-1">Uploading...</p>
+            {uploadProgress && (
+              <p className="text-sm text-muted-foreground font-medium px-4">{uploadProgress}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Video Story Modal */}
+      {showVideoModal && (
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
+          <div className="bg-white/95 dark:bg-[#051124] border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl space-y-6 liquid-glass-elevated">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-foreground">Upload Video Story</h3>
               <button
                 onClick={() => {
-                  setShowCreateModal(false);
-                  setNewBlockTitle('');
+                  setShowVideoModal(false);
+                  setTargetGroupId(null);
                 }}
-                className="px-4 py-2 text-muted-foreground hover:text-white"
+                className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground transition-all"
               >
-                Cancel
+                <X className="w-5 h-5" />
               </button>
-              <button
-                onClick={createBlock}
-                disabled={saving || !newBlockTitle.trim()}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-lg font-medium",
-                  saving || !newBlockTitle.trim()
-                    ? "bg-white/10 text-muted-foreground"
-                    : "bg-[#D4AF37] text-black"
-                )}
-              >
-                {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                Create
-              </button>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-xs text-muted-foreground font-medium px-1">
+                All 3 files are required for video stories.
+              </p>
+
+              {/* MP4 Input */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-muted-foreground uppercase px-1">1. Main Video (MP4)</label>
+                <div className={cn(
+                  "border-2 border-dashed rounded-xl p-4 transition-all duration-300 cursor-pointer",
+                  mp4File ? "border-emerald-500 bg-emerald-500/5" : "border-border dark:border-white/10 hover:border-black/20 dark:hover:border-white/20"
+                )}>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    {mp4File ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
+                    <span className="text-sm text-foreground font-medium truncate">{mp4File ? mp4File.name : "Select MP4"}</span>
+                    <input type="file" accept="video/mp4" className="hidden" onChange={(e) => setMp4File(e.target.files?.[0] || null)} />
+                  </label>
+                </div>
+              </div>
+
+              {/* WebM Input */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-muted-foreground uppercase px-1">2. Optimized Video (WebM)</label>
+                <div className={cn(
+                  "border-2 border-dashed rounded-xl p-4 transition-all duration-300 cursor-pointer",
+                  webmFile ? "border-emerald-500 bg-emerald-500/5" : "border-border dark:border-white/10 hover:border-black/20 dark:hover:border-white/20"
+                )}>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    {webmFile ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
+                    <span className="text-sm text-foreground font-medium truncate">{webmFile ? webmFile.name : "Select WebM"}</span>
+                    <input type="file" accept="video/webm" className="hidden" onChange={(e) => setWebmFile(e.target.files?.[0] || null)} />
+                  </label>
+                </div>
+              </div>
+
+              {/* WebP Input */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-muted-foreground uppercase px-1">3. Preview Image (WebP)</label>
+                <div className={cn(
+                  "border-2 border-dashed rounded-xl p-4 transition-all duration-300 cursor-pointer",
+                  webpFile ? "border-emerald-500 bg-emerald-500/5" : "border-border dark:border-white/10 hover:border-black/20 dark:hover:border-white/20"
+                )}>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    {webpFile ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
+                    <span className="text-sm text-foreground font-medium truncate">{webpFile ? webpFile.name : "Select WebP"}</span>
+                    <input type="file" accept="image/webp" className="hidden" onChange={(e) => setWebpFile(e.target.files?.[0] || null)} />
+                  </label>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={handleVideoStoryUpload}
+                  disabled={!mp4File || !webmFile || !webpFile}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#7A27FF] hover:bg-[#6620D6] text-white rounded-xl font-bold transition-all shadow-lg shadow-[#7A27FF]/20 disabled:opacity-50 active:scale-95"
+                >
+                  <Upload className="w-4 h-4" />
+                  Upload 3-File Story
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Block Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
+          <div className="bg-white/95 dark:bg-[#051124] border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-7 w-full max-w-sm shadow-2xl space-y-6 liquid-glass-elevated">
+            <div className="space-y-2">
+              <h3 className="text-2xl font-bold text-foreground">New Pinned Block</h3>
+              <p className="text-sm text-muted-foreground font-medium">Create a new collection for stories.</p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-foreground px-1">Block Title</label>
+                <input
+                  type="text"
+                  value={newBlockTitle}
+                  onChange={(e) => setNewBlockTitle(e.target.value)}
+                  placeholder='e.g. "Beach Trips"'
+                  className="w-full px-4 py-3 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 px-4 py-3 bg-black/[0.03] dark:bg-white/5 hover:bg-black/[0.06] dark:hover:bg-white/10 text-foreground rounded-xl transition-all font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={createBlock}
+                  disabled={saving || !newBlockTitle.trim()}
+                  className="flex-1 px-4 py-3 bg-[#D4AF37] hover:bg-[#B8962E] text-black rounded-xl transition-all font-bold shadow-lg shadow-[#D4AF37]/20 disabled:opacity-50 active:scale-95"
+                >
+                  {saving ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Create Block'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
