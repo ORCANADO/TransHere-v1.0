@@ -1,122 +1,142 @@
-// ============================================
-// TRANSHERE v1.1 - ANALYTICS VIEW REFRESH API
-// Manual trigger for materialized view refresh
-// ============================================
-
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
+import type { RefreshStatus, RefreshViewsResponse } from '@/types/analytics-aggregated';
 
-export const runtime = 'edge';
+// Use service role for refresh operations
+const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-const ADMIN_KEY = process.env.ADMIN_KEY || process.env.ADMIN_SECRET || 'admin123';
+const ADMIN_KEY = process.env.ADMIN_KEY;
 
-/**
- * Verify admin authorization
- */
-function isAuthorized(request: NextRequest): boolean {
+// Verify admin authentication
+function verifyAdmin(request: NextRequest): boolean {
     const url = new URL(request.url);
-    return url.searchParams.get('key') === ADMIN_KEY;
+    const key = url.searchParams.get('key');
+    return key === ADMIN_KEY;
 }
 
-/**
- * POST /api/admin/refresh-views
- * 
- * Manually triggers refresh of analytics materialized views.
- * This calls the refresh_analytics_views() PostgreSQL function
- * created in the migration.
- * 
- * Requires: ?key=ADMIN_SECRET
- */
-export async function POST(request: NextRequest): Promise<NextResponse> {
-    if (!isAuthorized(request)) {
+// GET: Check refresh status and last refresh time
+export async function GET(
+    request: NextRequest
+): Promise<NextResponse<RefreshViewsResponse>> {
+    if (!verifyAdmin(request)) {
         return NextResponse.json(
-            { error: 'Unauthorized' },
+            { success: false, error: 'Unauthorized' },
             { status: 401 }
         );
     }
 
     try {
-        const supabase = await createClient();
-
-        // Call the PostgreSQL function to refresh views
-        const { error } = await supabase.rpc('refresh_analytics_views');
+        // Get last refresh info from system_config
+        const { data, error } = await supabase
+            .from('system_config')
+            .select('value')
+            .eq('key', 'analytics_last_refresh')
+            .single();
 
         if (error) {
-            console.error('[refresh-views] RPC error:', error);
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: error.message,
-                    details: 'Failed to refresh materialized views'
-                },
-                { status: 500 }
-            );
+            // If table doesn't exist yet, return default status
+            if (error.code === 'PGRST116' || error.code === '42P01') {
+                return NextResponse.json({
+                    success: true,
+                    data: {
+                        timestamp: null,
+                        duration_ms: null,
+                        status: 'never',
+                    },
+                });
+            }
+            throw error;
         }
 
         return NextResponse.json({
             success: true,
-            message: 'Analytics views refreshed successfully',
-            timestamp: new Date().toISOString(),
+            data: data.value as RefreshStatus,
         });
-    } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        console.error('[refresh-views] Unexpected error:', errorMessage);
-
+    } catch (error) {
+        console.error('Error getting refresh status:', error);
         return NextResponse.json(
             {
                 success: false,
-                error: errorMessage,
-                details: 'An unexpected error occurred'
+                error: error instanceof Error ? error.message : 'Failed to get refresh status',
             },
             { status: 500 }
         );
     }
 }
 
-/**
- * GET /api/admin/refresh-views
- * 
- * Returns the last refresh status and cron job info.
- * Useful for debugging the automatic refresh schedule.
- */
-export async function GET(request: NextRequest): Promise<NextResponse> {
-    if (!isAuthorized(request)) {
+// POST: Trigger materialized view refresh
+export async function POST(
+    request: NextRequest
+): Promise<NextResponse<RefreshViewsResponse>> {
+    if (!verifyAdmin(request)) {
         return NextResponse.json(
-            { error: 'Unauthorized' },
+            { success: false, error: 'Unauthorized' },
             { status: 401 }
         );
     }
 
     try {
-        const supabase = await createClient();
-
-        // Check cron job status (if pg_cron is enabled)
-        const { data: cronJobs, error: cronError } = await supabase
-            .from('cron.job')
-            .select('jobid, jobname, schedule, command')
-            .eq('jobname', 'refresh-analytics-views-10min')
+        // Check if a refresh is already in progress
+        const { data: currentStatus } = await supabase
+            .from('system_config')
+            .select('value')
+            .eq('key', 'analytics_last_refresh')
             .single();
 
-        // Get last run details
-        const { data: lastRun, error: runError } = await supabase
-            .from('cron.job_run_details')
-            .select('job_pid, status, return_message, start_time, end_time')
-            .order('start_time', { ascending: false })
-            .limit(5);
+        if (currentStatus?.value?.status === 'in_progress') {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'A refresh is already in progress',
+                },
+                { status: 409 }
+            );
+        }
+
+        // Mark refresh as in progress
+        await supabase
+            .from('system_config')
+            .upsert({
+                key: 'analytics_last_refresh',
+                value: { status: 'in_progress', timestamp: new Date().toISOString() },
+                updated_at: new Date().toISOString(),
+            });
+
+        // Call the refresh function
+        const { data, error } = await supabase.rpc('refresh_analytics_views');
+
+        if (error) {
+            // Update status to error
+            await supabase
+                .from('system_config')
+                .update({
+                    value: {
+                        status: 'error',
+                        timestamp: new Date().toISOString(),
+                        error_message: error.message,
+                    },
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('key', 'analytics_last_refresh');
+
+            throw error;
+        }
 
         return NextResponse.json({
             success: true,
-            cronJob: cronError ? null : cronJobs,
-            recentRuns: runError ? [] : lastRun,
-            note: cronError ? 'pg_cron may not be enabled or accessible' : undefined,
+            data: data as RefreshStatus,
         });
-    } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-
-        return NextResponse.json({
-            success: false,
-            error: errorMessage,
-            note: 'Could not retrieve cron status. Views may still be refreshing automatically.',
-        });
+    } catch (error) {
+        console.error('Error refreshing views:', error);
+        return NextResponse.json(
+            {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to refresh views',
+            },
+            { status: 500 }
+        );
     }
 }

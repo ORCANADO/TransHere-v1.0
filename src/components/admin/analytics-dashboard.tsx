@@ -5,13 +5,14 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Eye, MousePointer, Percent, RefreshCw, TrendingUp } from 'lucide-react';
 import { StatCard } from './stat-card';
 import { ComparisonChart } from './comparison-chart';
 import { ModelComparisonChart } from './model-comparison-chart';
 import { DashboardFiltersBar } from './dashboard-filters';
 import { ThemeToggle } from './theme-toggle';
+import { RefreshButton } from '@/app/admin/components/RefreshButton';
 import { cn } from '@/lib/utils';
 import type {
   DashboardFilters,
@@ -103,6 +104,16 @@ export function AnalyticsDashboard({
   });
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [comparisonMetric, setComparisonMetric] = useState<'views' | 'clicks'>('views');
+  const [queryTime, setQueryTime] = useState<number | null>(null);
+  const [lastRefresh, setLastRefresh] = useState<string | null>(null);
+
+  // Keep a ref of available models mapping to avoid infinite loops in fetchData
+  const availableModelsRef = useRef<ModelFilterOption[]>([]);
+  useEffect(() => {
+    if (data?.availableModels) {
+      availableModelsRef.current = data.availableModels;
+    }
+  }, [data?.availableModels]);
 
   // Fetch dashboard data
   const fetchData = useCallback(async () => {
@@ -110,9 +121,9 @@ export function AnalyticsDashboard({
     setError(null);
 
     try {
-      // Derive model slugs from IDs using available data if we have it
+      // Derive model slugs from IDs using ref to avoid reactive dependency loop
       const modelSlugs = selectedModelIds.map(id => {
-        const model = data?.availableModels.find(m => m.slug === id || (m as any).id === id);
+        const model = availableModelsRef.current.find(m => m.slug === id || m.id === id);
         return model?.slug || id;
       });
 
@@ -127,15 +138,66 @@ export function AnalyticsDashboard({
       });
 
       const res = await fetch(`/api/admin/dashboard?${params}`);
-      const json = await res.json();
+      const result = await res.json();
 
-      if (!res.ok) {
-        throw new Error(json.error || 'Failed to fetch analytics');
+      if (!res.ok || !result.success) {
+        throw new Error(result.error || 'Failed to fetch analytics');
       }
 
-      setData(json);
-      if (onDataLoaded) onDataLoaded(json as DashboardData);
-      console.log('📊 Dashboard Data Received - Countries:', json.availableCountries?.length);
+      // Legacy support: map new stats structure to old overview structure if needed
+      const dashboardData = result.data;
+
+      // Adapt the response to the component's internal DashboardData interface
+      const adaptedData: DashboardData = {
+        overview: {
+          totalVisits: dashboardData.stats.totalViews,
+          totalClicks: dashboardData.stats.totalClicks,
+          conversionRate: dashboardData.stats.ctr,
+          uniqueCountries: dashboardData.stats.uniqueCountries,
+          mainLayoutVisits: dashboardData.stats.mainLayoutVisits || 0,
+          trackingLinkVisits: dashboardData.stats.trackingLinkVisits || 0,
+        },
+        chartData: dashboardData.chartData.map((d: any) => ({
+          date: d.date,
+          label: new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          current: d.views,
+          previous: d.visitsPrev || 0,
+        })),
+        modelComparisonData: dashboardData.modelComparison || null,
+        sourceBreakdown: dashboardData.stats.topSources.map((s: any) => ({
+          sourceId: s.source_name,
+          sourceName: s.source_name,
+          totalViews: s.total_views,
+          totalClicks: s.total_clicks,
+          conversionRate: (s.total_clicks / Math.max(s.total_views, 1)) * 100,
+        })),
+        countryBreakdown: dashboardData.stats.topCountries.map((c: any) => ({
+          country: c.country,
+          visits: c.total_views,
+          clicks: c.total_clicks,
+        })),
+        modelAnalytics: dashboardData.stats.topModels.map((m: any) => ({
+          modelSlug: m.model_slug,
+          modelName: m.model_slug,
+          imageUrl: null,
+          visits: m.total_views,
+          clicks: m.total_clicks,
+          conversionRate: m.ctr_percentage,
+          topCountries: [],
+          dailyData: [],
+        })),
+        availableCountries: dashboardData.availableCountries || [],
+        availableSources: dashboardData.availableSources || [],
+        availableModels: dashboardData.availableModels || [],
+      };
+
+      setData(adaptedData);
+      setQueryTime(result.data.queryTime);
+      setLastRefresh(result.data.lastRefresh?.timestamp || null);
+
+      if (onDataLoaded) onDataLoaded(adaptedData);
+      if (result.warning) console.warn('Dashboard warning:', result.warning);
+
       setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -230,14 +292,19 @@ export function AnalyticsDashboard({
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={fetchData}
-            disabled={loading}
-            className="p-2.5 rounded-xl bg-black/[0.03] dark:bg-white/5 border border-transparent dark:border-white/10 hover:bg-black/[0.06] dark:hover:bg-white/10 transition-all disabled:opacity-50 active:scale-95"
-            aria-label="Refresh data"
-          >
-            <RefreshCw className={cn("w-5 h-5", loading ? 'animate-spin' : '')} />
-          </button>
+          {/* Query Performance Badge */}
+          {queryTime !== null && (
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-black/[0.03] dark:bg-white/5 border border-transparent dark:border-white/10 text-[10px] text-black/40 dark:text-white/40 font-mono uppercase tracking-wider">
+              <span>Query: {queryTime}ms</span>
+            </div>
+          )}
+
+          <RefreshButton
+            adminKey={adminKey}
+            onRefreshComplete={() => {
+              fetchData();
+            }}
+          />
 
           <div className="h-8 w-[1px] bg-[#E5E5EA] dark:bg-white/10 hidden md:block mx-1" />
 
@@ -261,6 +328,16 @@ export function AnalyticsDashboard({
       {/* Dashboard content */}
       {data && (
         <div className="relative">
+          {/* Data Freshness Indicator */}
+          {lastRefresh && (
+            <div className="mb-4 flex items-center gap-2 text-sm text-black/40 dark:text-white/40">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00FF85] animate-pulse" />
+              <span>Data as of:</span>
+              <span className="font-medium text-black/60 dark:text-white/60">
+                {new Date(lastRefresh).toLocaleString()}
+              </span>
+            </div>
+          )}
           {/* Refresh Overlay Spinner */}
           {loading && (
             <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/20 dark:bg-black/20 backdrop-blur-[2px] transition-all duration-300 rounded-2xl overflow-hidden">

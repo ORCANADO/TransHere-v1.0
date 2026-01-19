@@ -1,549 +1,649 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import type {
-  DashboardData,
-  OverviewStats,
-  ModelAnalytics,
+  DailyStats,
+  SourceSummary,
+  ModelSummary,
+  CountrySummary,
+  RefreshStatus,
+  DashboardResponse,
   ChartDataPoint,
-  TimePeriod
-} from '@/types/analytics';
-import type {
-  ComparisonDataPoint,
+  DashboardStats,
   ModelComparisonDataPoint,
   TrafficSourceOption,
   ModelFilterOption,
-  SourceFilter
-} from '@/types/charts';
+} from '@/types/analytics-aggregated';
 
-export const runtime = 'edge';
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
+const ADMIN_KEY = process.env.ADMIN_KEY;
 
-// Helper to get date range based on period (UTC focused)
-function getDateRange(period: TimePeriod, startDate?: string, endDate?: string): { start: Date; end: Date } {
+function verifyAdmin(request: NextRequest): boolean {
+  const url = new URL(request.url);
+  const key = url.searchParams.get('key');
+  return key === ADMIN_KEY;
+}
+
+// Parse query parameters and calculate date ranges
+function parseQueryParams(request: NextRequest) {
+  const url = new URL(request.url);
+  const period = (url.searchParams.get('period') || '30days') as string;
+
   const now = new Date();
-  const end = new Date(now);
-  const start = new Date(now);
+  let startDate: string;
+  let endDate: string = now.toISOString().split('T')[0];
+  let prevStartDate: string;
+  let prevEndDate: string;
+
+  // Helper to get ISO date string (YYYY-MM-DD)
+  const toDateStr = (date: Date) => date.toISOString().split('T')[0];
 
   switch (period) {
     case 'hour':
-      start.setHours(start.getHours() - 1);
+      // Last 1 hour with full ISO granularity
+      startDate = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
+      endDate = now.toISOString();
+      prevStartDate = new Date(now.getTime() - 120 * 60 * 1000).toISOString();
+      prevEndDate = startDate;
       break;
     case 'today':
-      start.setHours(0, 0, 0, 0);
+      startDate = toDateStr(now);
+      prevStartDate = toDateStr(new Date(now.getTime() - 24 * 60 * 60 * 1000));
+      prevEndDate = prevStartDate;
       break;
     case '7days':
-      start.setDate(start.getDate() - 7);
+      startDate = toDateStr(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000));
+      prevStartDate = toDateStr(new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000));
+      prevEndDate = toDateStr(new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000));
       break;
     case '30days':
-      start.setDate(start.getDate() - 30);
+      startDate = toDateStr(new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000));
+      prevStartDate = toDateStr(new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000));
+      prevEndDate = toDateStr(new Date(now.getTime() - 31 * 24 * 60 * 60 * 1000));
       break;
     case '90days':
-      start.setDate(start.getDate() - 90);
+      startDate = toDateStr(new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000));
+      prevStartDate = toDateStr(new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000));
+      prevEndDate = toDateStr(new Date(now.getTime() - 91 * 24 * 60 * 60 * 1000));
       break;
     case 'all':
-      start.setFullYear(2020);
+      startDate = '2024-01-01'; // Default start of data
+      prevStartDate = startDate; // No previous for "all"
+      prevEndDate = startDate;
       break;
     case 'custom':
-      if (startDate && endDate) {
-        return {
-          start: new Date(startDate),
-          end: new Date(endDate)
-        };
-      }
-      start.setDate(start.getDate() - 7);
+      startDate = url.searchParams.get('startDate') || toDateStr(new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000));
+      endDate = url.searchParams.get('endDate') || toDateStr(now);
+
+      const diff = new Date(endDate).getTime() - new Date(startDate).getTime();
+      prevEndDate = toDateStr(new Date(new Date(startDate).getTime() - 24 * 60 * 60 * 1000));
+      prevStartDate = toDateStr(new Date(new Date(prevEndDate).getTime() - diff));
       break;
+    default:
+      startDate = toDateStr(new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000));
+      prevStartDate = toDateStr(new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000));
+      prevEndDate = toDateStr(new Date(now.getTime() - 31 * 24 * 60 * 60 * 1000));
   }
 
-  return { start, end };
+  const models = url.searchParams.get('models')?.split(',').filter(Boolean) || [];
+
+  // Handle both JSON string and comma-separated sources
+  let sources: string[] = [];
+  const rawSources = url.searchParams.get('sources');
+  if (rawSources) {
+    if (rawSources.startsWith('[') && rawSources.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(rawSources);
+        sources = parsed.map((s: any) => typeof s === 'string' ? s : s.source);
+      } catch (e) {
+        sources = rawSources.split(',').filter(Boolean);
+      }
+    } else {
+      sources = rawSources.split(',').filter(Boolean);
+    }
+  }
+
+  const countries = [
+    ...(url.searchParams.get('countries')?.split(',') || []),
+    ...(url.searchParams.get('country')?.split(',') || [])
+  ].filter(Boolean);
+
+  return {
+    startDate,
+    endDate,
+    prevStartDate,
+    prevEndDate,
+    models,
+    sources,
+    countries
+  };
 }
 
-// Helper to format date for grouping
-function formatDateForGrouping(date: string, period: TimePeriod): string {
-  const d = new Date(date);
-  if (period === 'hour') {
-    return d.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
-  }
-  return d.toISOString().slice(0, 10); // YYYY-MM-DD
-}
+// Fetch all daily stats from materialized view using pagination
+async function fetchDailyStats(
+  startDate: string,
+  endDate: string,
+  models: string[],
+  sources: string[],
+  countries: string[]
+): Promise<DailyStats[]> {
+  const allData: DailyStats[] = [];
+  const pageSize = 1000;
+  let offset = 0;
+  let hasMore = true;
 
-// Helper to format date label for display
-function formatDateLabel(date: string, period: TimePeriod): string {
-  const d = new Date(date);
-  if (period === 'hour') {
-    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  }
-  if (period === 'today') {
-    return d.toLocaleTimeString('en-US', { hour: '2-digit' });
-  }
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
+  while (hasMore) {
+    let query = supabase
+      .from('analytics_daily_stats')
+      .select('*')
+      .gte('date', startDate)
+      .lte('date', endDate)
+      .order('date', { ascending: true })
+      .range(offset, offset + pageSize - 1);
 
-/**
- * Generate model comparison data for chart
- * Returns data points with each model's metrics as separate keys
- */
-function generateModelComparisonData(
-  events: any[],
-  modelSlugs: string[],
-  startDate: Date,
-  endDate: Date
-): ModelComparisonDataPoint[] {
-  // Group events by date and model
-  const dateModelMap = new Map<string, Map<string, { views: number; clicks: number }>>();
-
-  events.forEach(event => {
-    if (!event.model_slug || !modelSlugs.includes(event.model_slug)) return;
-
-    const dateKey = new Date(event.created_at).toISOString().split('T')[0];
-
-    if (!dateModelMap.has(dateKey)) {
-      dateModelMap.set(dateKey, new Map());
+    // Apply filters
+    if (models.length > 0) {
+      query = query.in('model_slug', models);
     }
 
-    const modelMap = dateModelMap.get(dateKey)!;
-    if (!modelMap.has(event.model_slug)) {
-      modelMap.set(event.model_slug, { views: 0, clicks: 0 });
+    if (sources.length > 0) {
+      query = query.in('traffic_source', sources);
     }
 
-    const stats = modelMap.get(event.model_slug)!;
-    if (event.event_type === 'page_view') stats.views++;
-    if (event.event_type === 'link_click') stats.clicks++;
-  });
+    if (countries.length > 0) {
+      query = query.in('country', countries);
+    }
 
-  // Generate data points for all dates in range
-  const result: ModelComparisonDataPoint[] = [];
-  const currentDate = new Date(startDate);
-  // Ensure we don't go past end date, strip time for comparison
-  const endDateTime = new Date(endDate);
-  endDateTime.setHours(0, 0, 0, 0);
+    const { data, error } = await query;
+    if (error) throw error;
 
-  // Create a working date starting from start date (time stripped)
-  const workingDate = new Date(startDate);
-  workingDate.setHours(0, 0, 0, 0);
+    if (data && data.length > 0) {
+      allData.push(...data);
+      if (data.length < pageSize) {
+        hasMore = false;
+      } else {
+        offset += pageSize;
+      }
+    } else {
+      hasMore = false;
+    }
+  }
 
-  // Limit loop to prevent infinite loops if dates are wrong
-  let safety = 0;
-  while (workingDate <= endDateTime && safety < 366) {
-    const dateKey = workingDate.toISOString().split('T')[0];
-    const modelStats = dateModelMap.get(dateKey);
+  return allData;
+}
 
-    const dataPoint: ModelComparisonDataPoint = {
-      date: dateKey,
-      label: workingDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+// Fetch all hourly stats from materialized view
+async function fetchHourlyStats(
+  startHour: string,
+  endHour: string,
+  models: string[],
+  sources: string[],
+  countries: string[]
+): Promise<DailyStats[]> {
+  const allData: DailyStats[] = [];
+  const pageSize = 1000;
+  let offset = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    let query = supabase
+      .from('analytics_hourly_stats')
+      .select('hour, model_slug, tracking_link_id, country, views, clicks')
+      .gte('hour', startHour)
+      .lte('hour', endHour)
+      .order('hour', { ascending: true })
+      .range(offset, offset + pageSize - 1);
+
+    // Apply filters
+    if (models.length > 0) {
+      query = query.in('model_slug', models);
+    }
+
+    if (sources.length > 0) {
+      // For hourly view, traffic_source is stored as tracking_link_id
+      query = query.in('tracking_link_id', sources);
+    }
+
+    if (countries.length > 0) {
+      query = query.in('country', countries);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      // Map hourly structure to DailyStats structure for aggregation compatibility
+      const mapped = data.map((d: any) => ({
+        date: d.hour, // Use full timestamp string as 'date' for hourly chart labels
+        model_slug: d.model_slug,
+        country: d.country,
+        traffic_source: d.tracking_link_id || 'organic',
+        views: d.views,
+        clicks: d.clicks,
+        total_events: d.views + d.clicks
+      }));
+
+      allData.push(...mapped);
+      if (data.length < pageSize) {
+        hasMore = false;
+      } else {
+        offset += pageSize;
+      }
+    } else {
+      hasMore = false;
+    }
+  }
+
+  return allData;
+}
+
+// Fetch source summary from materialized view
+async function fetchSourceSummary(): Promise<SourceSummary[]> {
+  const { data, error } = await supabase
+    .from('analytics_source_summary')
+    .select('*')
+    .order('total_events', { ascending: false })
+    .limit(20);
+
+  if (error) {
+    console.error('Error fetching source summary:', error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+// Fetch model summary from materialized view
+async function fetchModelSummary(models?: string[]): Promise<ModelSummary[]> {
+  let query = supabase
+    .from('analytics_model_summary')
+    .select('*')
+    .order('total_views', { ascending: false });
+
+  if (models && models.length > 0) {
+    query = query.in('model_slug', models);
+  } else {
+    query = query.limit(20);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching model summary:', error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+// Fetch country summary from materialized view
+async function fetchCountrySummary(countries?: string[]): Promise<CountrySummary[]> {
+  let query = supabase
+    .from('analytics_country_summary')
+    .select('*')
+    .order('total_events', { ascending: false });
+
+  if (countries && countries.length > 0) {
+    query = query.in('country', countries);
+  } else {
+    query = query.limit(20);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching country summary:', error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+// Fetch last refresh status
+async function fetchRefreshStatus(): Promise<RefreshStatus> {
+  const { data, error } = await supabase
+    .from('system_config')
+    .select('value')
+    .eq('key', 'analytics_last_refresh')
+    .single();
+
+  if (error) {
+    // Return default if not found
+    return {
+      timestamp: null,
+      duration_ms: null,
+      status: 'never',
     };
-
-    // Add each model's data
-    modelSlugs.forEach(slug => {
-      const stats = modelStats?.get(slug) || { views: 0, clicks: 0 };
-      // Use slug as key, store views by default (frontend switches between views/clicks)
-      dataPoint[slug] = stats.views;
-      dataPoint[`${slug}_clicks`] = stats.clicks;
-    });
-
-    result.push(dataPoint);
-    workingDate.setDate(workingDate.getDate() + 1);
-    safety++;
   }
 
-  return result;
+  return data.value as RefreshStatus;
 }
 
-/**
- * Generate current vs previous period comparison data
- */
-function generateComparisonData(
-  events: any[],
-  startDate: Date,
-  endDate: Date
-): ComparisonDataPoint[] {
-  const periodDays = Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
-  const previousStart = new Date(startDate.getTime() - periodDays * 24 * 60 * 60 * 1000);
-  const previousEnd = new Date(startDate.getTime() - 1); // Up to just before start
+// ============================================
+// AGGREGATION FUNCTIONS
+// ============================================
 
-  // Group current period by date
+// Aggregate daily stats into chart data (current and previous)
+function aggregateChartData(
+  currentStats: DailyStats[],
+  prevStats: DailyStats[]
+): ChartDataPoint[] {
   const currentMap = new Map<string, { views: number; clicks: number }>();
-  const previousMap = new Map<string, { views: number; clicks: number }>();
+  const prevMap = new Map<string, { views: number; clicks: number }>();
 
-  events.forEach(event => {
-    const eventDate = new Date(event.created_at);
-    // Strip time for key
-    const dateKey = eventDate.toISOString().split('T')[0];
-
-    // Determine if current or previous period
-    if (eventDate >= startDate && eventDate <= endDate) {
-      if (!currentMap.has(dateKey)) {
-        currentMap.set(dateKey, { views: 0, clicks: 0 });
-      }
-      const stats = currentMap.get(dateKey)!;
-      if (event.event_type === 'page_view') stats.views++;
-      if (event.event_type === 'link_click') stats.clicks++;
-    } else if (eventDate >= previousStart && eventDate <= previousEnd) {
-      // For previous period, we need to map it to the corresponding day index
-      // But here we just count totals per date key
-      const prevDateKey = dateKey;
-      if (!previousMap.has(prevDateKey)) {
-        previousMap.set(prevDateKey, { views: 0, clicks: 0 });
-      }
-      const stats = previousMap.get(prevDateKey)!;
-      if (event.event_type === 'page_view') stats.views++;
-      if (event.event_type === 'link_click') stats.clicks++;
-    }
+  // Aggregate current
+  currentStats.forEach(s => {
+    const existing = currentMap.get(s.date) || { views: 0, clicks: 0 };
+    currentMap.set(s.date, { views: existing.views + s.views, clicks: existing.clicks + s.clicks });
   });
 
-  // Generate comparison points
-  const result: ComparisonDataPoint[] = [];
-  const currentDate = new Date(startDate);
-  currentDate.setHours(0, 0, 0, 0);
+  // Aggregate previous
+  prevStats.forEach(s => {
+    const existing = prevMap.get(s.date) || { views: 0, clicks: 0 };
+    prevMap.set(s.date, { views: existing.views + s.views, clicks: existing.clicks + s.clicks });
+  });
 
-  const endDateTime = new Date(endDate);
-  endDateTime.setHours(0, 0, 0, 0);
+  const sortedCurrentDates = Array.from(currentMap.keys()).sort();
+  const sortedPrevDates = Array.from(prevMap.keys()).sort();
 
-  let dayIndex = 0;
-  let safety = 0;
+  return sortedCurrentDates.map((date, index) => {
+    const current = currentMap.get(date)!;
+    const prevDate = sortedPrevDates[index];
+    const prev = prevDate ? prevMap.get(prevDate) : null;
 
-  while (currentDate <= endDateTime && safety < 366) {
-    const currentKey = currentDate.toISOString().split('T')[0];
-    const previousDate = new Date(previousStart.getTime());
-    previousDate.setHours(0, 0, 0, 0);
-    previousDate.setDate(previousDate.getDate() + dayIndex);
+    return {
+      date,
+      views: current.views,
+      clicks: current.clicks,
+      visitsPrev: prev ? prev.views : 0,
+      clicksPrev: prev ? prev.clicks : 0
+    };
+  });
+}
 
-    const previousKey = previousDate.toISOString().split('T')[0];
+// Calculate overall stats and per-model stats from daily data including comparison
+function calculateOverallStats(
+  currentStats: DailyStats[],
+  prevStats: DailyStats[],
+  sourceMap: Map<string, string> // UUID -> Source Name
+): DashboardStats {
+  // Current period totals
+  let totalViews = 0;
+  let totalClicks = 0;
+  const countryMap = new Map<string, { views: number; clicks: number }>();
+  const modelMap = new Map<string, { views: number; clicks: number }>();
+  const sourceNameMap = new Map<string, { views: number; clicks: number }>();
 
-    const currentStats = currentMap.get(currentKey) || { views: 0, clicks: 0 };
-    // We need to find the stats for the constructed previousKey from our previous period scan
-    // But our previous period scan just filled the map with actual dates.
-    // So looking up previousKey works.
-    const previousStats = previousMap.get(previousKey) || { views: 0, clicks: 0 };
+  currentStats.forEach(stat => {
+    totalViews += stat.views;
+    totalClicks += stat.clicks;
 
-    result.push({
-      date: currentKey,
-      label: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      current: currentStats.views,
-      previous: previousStats.views,
-    });
+    // Country Aggregation
+    const c = countryMap.get(stat.country) || { views: 0, clicks: 0 };
+    countryMap.set(stat.country, { views: c.views + stat.views, clicks: c.clicks + stat.clicks });
 
-    currentDate.setDate(currentDate.getDate() + 1);
-    dayIndex++;
-    safety++;
-  }
+    // Model Aggregation
+    const m = modelMap.get(stat.model_slug) || { views: 0, clicks: 0 };
+    modelMap.set(stat.model_slug, { views: m.views + stat.views, clicks: m.clicks + stat.clicks });
+
+    // Source Aggregation (Grouping by Name)
+    const sourceName = sourceMap.get(stat.traffic_source) || stat.traffic_source;
+    const s = sourceNameMap.get(sourceName) || { views: 0, clicks: 0 };
+    sourceNameMap.set(sourceName, { views: s.views + stat.views, clicks: s.clicks + stat.clicks });
+  });
+
+  // Previous period totals
+  let prevViews = 0;
+  let prevClicks = 0;
+  prevStats.forEach(stat => {
+    prevViews += stat.views;
+    prevClicks += stat.clicks;
+  });
+
+  const ctr = totalViews > 0
+    ? Math.round((totalClicks / totalViews) * 10000) / 100
+    : 0;
+
+  // Calculate percentage changes
+  const calculateChange = (curr: number, prev: number) => {
+    if (prev === 0) return curr > 0 ? 100 : 0;
+    return Math.round(((curr - prev) / prev) * 100);
+  };
+
+  // Create model metrics for sidebar (filtered)
+  const modelMetrics: ModelSummary[] = Array.from(modelMap.entries()).map(([slug, stats]) => ({
+    model_slug: slug,
+    total_views: stats.views,
+    total_clicks: stats.clicks,
+    unique_countries: 0,
+    active_days: 0,
+    first_event: '',
+    last_event: '',
+    ctr_percentage: stats.views > 0 ? Math.round((stats.clicks / stats.views) * 10000) / 100 : 0
+  } as ModelSummary)).sort((a, b) => b.total_views - a.total_views);
+
+  // Create source breakdown
+  const sourceMetrics: SourceSummary[] = Array.from(sourceNameMap.entries()).map(([name, stats]) => ({
+    source_name: name,
+    total_views: stats.views,
+    total_clicks: stats.clicks,
+    total_events: stats.views + stats.clicks,
+    subtag_name: null,
+    models_count: 0,
+    countries_count: 0,
+    first_event: '',
+    last_event: ''
+  } as SourceSummary)).sort((a, b) => b.total_views - a.total_views);
+
+  // Create country breakdown
+  const countryMetrics: CountrySummary[] = Array.from(countryMap.entries()).map(([country, stats]) => ({
+    country,
+    total_views: stats.views,
+    total_clicks: stats.clicks,
+    total_events: stats.views + stats.clicks,
+    models_visited: 0,
+    active_days: 0
+  } as CountrySummary)).sort((a, b) => b.total_views - a.total_views);
+
+  return {
+    totalViews,
+    totalClicks,
+    ctr,
+    uniqueCountries: countryMap.size,
+    visitsChange: calculateChange(totalViews, prevViews),
+    clicksChange: calculateChange(totalClicks, prevClicks),
+    topSources: sourceMetrics,
+    topCountries: countryMetrics,
+    topModels: modelMetrics.slice(0, 10),
+    modelMetrics
+  };
+}
+
+// Aggregate daily stats into model comparison data
+function aggregateModelComparison(
+  dailyStats: DailyStats[],
+  metric: 'views' | 'clicks' = 'views'
+): Record<string, Record<string, number>> {
+  const result: Record<string, Record<string, number>> = {};
+
+  dailyStats.forEach(stat => {
+    if (!result[stat.date]) {
+      result[stat.date] = {};
+    }
+
+    const currentValue = result[stat.date][stat.model_slug] || 0;
+    result[stat.date][stat.model_slug] = currentValue + stat[metric];
+  });
 
   return result;
 }
 
-export async function GET(request: Request) {
+// Format model comparison data for chart
+function formatModelComparisonForChart(
+  comparisonData: Record<string, Record<string, number>>,
+  models: string[]
+): Array<Record<string, string | number>> {
+  return Object.entries(comparisonData)
+    .map(([date, modelData]) => {
+      const point: Record<string, string | number> = { date };
+      models.forEach(model => {
+        point[model] = modelData[model] || 0;
+      });
+      return point;
+    })
+    .sort((a, b) =>
+      new Date(a.date as string).getTime() - new Date(b.date as string).getTime()
+    );
+}
+
+
+// ============================================
+// GET HANDLER
+// ============================================
+
+export async function GET(
+  request: NextRequest
+): Promise<NextResponse<{ success: boolean; data?: DashboardResponse; error?: string }>> {
+  if (!verifyAdmin(request)) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
+  const startTime = Date.now();
+
   try {
     const url = new URL(request.url);
-    const adminKey = url.searchParams.get('key');
-    const period = (url.searchParams.get('period') || '7days') as TimePeriod;
-    const country = url.searchParams.get('country') || null;
-    const sourceId = url.searchParams.get('sourceId') || null;
-    const subtagId = url.searchParams.get('subtagId') || null;
-    const modelsParam = url.searchParams.get('models') || '';
-    const sourcesParam = url.searchParams.get('sources') || '';
-    const startDate = url.searchParams.get('startDate') || undefined;
-    const endDate = url.searchParams.get('endDate') || undefined;
+    // Parse query parameters
+    const queryParams = parseQueryParams(request);
+    let {
+      startDate,
+      endDate,
+      prevStartDate,
+      prevEndDate,
+      models,
+      sources: sourceNames,
+      countries
+    } = queryParams;
 
-    const modelSlugs = modelsParam ? modelsParam.split(',') : [];
-    let selectedSources: SourceFilter[] = [];
-    if (sourcesParam) {
-      try {
-        selectedSources = JSON.parse(sourcesParam);
-      } catch (e) {
-        console.error('Failed to parse sources param:', e);
-      }
-    }
+    // 1. Fetch source mapping and link mapping
+    const [{ data: linksData }, { data: allSourcesData }] = await Promise.all([
+      supabase.from('tracking_links').select('id, source_id'),
+      supabase.from('traffic_sources').select('id, name')
+    ]);
 
-    // Verify admin access
-    if (!adminKey || adminKey !== ADMIN_KEY) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const sourceIdToName = new Map<string, string>();
+    (allSourcesData || []).forEach(s => sourceIdToName.set(s.id, s.name));
 
-    // Use service role to bypass RLS
-    const supabaseAdmin = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
+    const sourceMap = new Map<string, string>(); // Link UUID -> Source Name
+    const nameToLinkIds = new Map<string, string[]>(); // Source Name -> [Link UUIDs]
 
-    const { start, end } = getDateRange(period, startDate, endDate);
+    (linksData || []).forEach((link: any) => {
+      const name = sourceIdToName.get(link.source_id) || 'Unknown';
+      sourceMap.set(link.id, name);
 
-    // Calculate previous period for fetching data (need 2x range)
-    const periodDuration = end.getTime() - start.getTime();
-    const fetchStart = new Date(start.getTime() - periodDuration - (24 * 60 * 60 * 1000)); // Add buffer
+      const ids = nameToLinkIds.get(name) || [];
+      ids.push(link.id);
+      nameToLinkIds.set(name, ids);
+    });
 
-    // Build base query
-    let queryBuilder = supabaseAdmin
-      .from('analytics_events')
-      .select('*')
-      .gte('created_at', fetchStart.toISOString())
-      .lte('created_at', end.toISOString())
-      .order('created_at', { ascending: false });
+    sourceMap.set('organic', 'Organic');
 
-    // Fetch Sources first for filtering and response
-    const { data: sourcesData } = await supabaseAdmin
-      .from('tracking_sources')
-      .select('*, subtags:tracking_subtags(*)');
-    const sources = sourcesData || [];
-
-    // Apply filters to queryBuilder
-    if (country && country !== 'all') {
-      queryBuilder = queryBuilder.eq('country', country);
-    }
-
-    // Handle multiple sources and subtags
-    if (selectedSources.length > 0) {
-      const orConditions: string[] = [];
-      selectedSources.forEach(f => {
-        const source = sources.find(s => s.name === f.source);
-        if (!source) return;
-
-        if (f.subtags.length === 0) {
-          orConditions.push(`source_id.eq.${source.id}`);
+    // 2. Resolve source filter names to IDs if filtering
+    let sourceFilterIds: string[] = [];
+    if (sourceNames.length > 0) {
+      sourceNames.forEach(name => {
+        if (name === 'Organic') {
+          sourceFilterIds.push('organic');
         } else {
-          const subtagIds = source.subtags
-            ?.filter((st: any) => f.subtags.includes(st.name))
-            .map((st: any) => st.id) || [];
-          if (subtagIds.length > 0) {
-            orConditions.push(`and(source_id.eq.${source.id},subtag_id.in.(${subtagIds.join(',')}))`);
-          }
+          const ids = nameToLinkIds.get(name) || [];
+          sourceFilterIds.push(...ids);
         }
       });
 
-      if (orConditions.length > 0) {
-        queryBuilder = queryBuilder.or(orConditions.join(','));
-      }
-    } else {
-      // Backward compatibility / individual params
-      if (sourceId) {
-        queryBuilder = queryBuilder.eq('source_id', sourceId);
-      }
-      if (subtagId) {
-        queryBuilder = queryBuilder.eq('subtag_id', subtagId);
+      // If we are filtering by a name that has no links, use a dummy UUID 
+      // to ensure the query returns 0 records instead of returning everything.
+      if (sourceFilterIds.length === 0) {
+        sourceFilterIds.push('00000000-0000-0000-0000-000000000000');
       }
     }
 
-    // Execute paginated fetch to bypass Supabase 1000-row limit
-    let allEvents: any[] = [];
-    let from = 0;
-    let hasMore = true;
-    const MAX_EVENTS = 10000;
+    // Fetch data from materialized views in parallel
+    const isHourly = (url.searchParams.get('period') || '30days') === 'hour';
 
-    while (hasMore && allEvents.length < MAX_EVENTS) {
-      const { data, error } = await queryBuilder
-        .range(from, from + 999);
+    const [
+      dailyStats,
+      prevDailyStats,
+      refreshStatus,
+    ] = await Promise.all([
+      isHourly
+        ? fetchHourlyStats(startDate, endDate, models, sourceFilterIds, countries)
+        : fetchDailyStats(startDate, endDate, models, sourceFilterIds, countries),
+      isHourly
+        ? fetchHourlyStats(prevStartDate, prevEndDate, models, sourceFilterIds, countries)
+        : fetchDailyStats(prevStartDate, prevEndDate, models, sourceFilterIds, countries),
+      fetchRefreshStatus(),
+    ]);
 
-      if (error) {
-        console.error('Analytics fetch error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
-      }
-
-      if (!data || data.length === 0) {
-        hasMore = false;
-      } else {
-        allEvents = [...allEvents, ...data];
-        from += 1000;
-        if (data.length < 1000) hasMore = false;
-      }
-    }
-
-    const rawEvents = allEvents.reverse();
-
-
-
-    // Fetch models to join with analytics data
-    const { data: modelsData } = await supabaseAdmin
-      .from('models')
-      .select('id, name, slug, image_url');
-
-    const modelMap = new Map(
-      (modelsData || []).map(m => [m.id, { name: m.name, slug: m.slug, image_url: m.image_url }])
+    // Calculate aggregated stats with comparison data
+    const result = calculateOverallStats(
+      dailyStats,
+      prevDailyStats,
+      sourceMap
     );
 
-    // Map events and flatten model slug using the manual map
-    // This replaces the previous SQL join logic
-    const events = (rawEvents || []).map(e => {
-      // Try to find slug from model_id if not present
-      let slug = e.model_slug;
-      if (!slug && e.model_id && modelMap.has(e.model_id)) {
-        slug = modelMap.get(e.model_id)!.slug;
-      }
+    const { modelMetrics, ...stats } = result;
 
-      return {
-        ...e,
-        model_slug: slug
-      };
-    }).filter(e => {
-      // Apply in-memory model filter if needed
-      if (modelSlugs.length > 0) {
-        return e.model_slug && modelSlugs.includes(e.model_slug);
-      }
-      return true;
-    });
+    // Generate chart data merge
+    const chartData: ChartDataPoint[] = aggregateChartData(dailyStats, prevDailyStats);
 
-    // 4. Source Breakdown (already have sources from line 281)
-
-    // Process events into dashboard data - REUSING/UPDATING processEvents logic inline or separate?
-    // The requirement says "Add this function... and update the response". 
-    // It seems to replace the logic.
-    // Let's rebuild the response construction based on the prompt's request.
-
-
-    // 1. Overview
-    // Filter events for the CURRENT period for overview/stats
-    const currentPeriodEvents = events.filter(e => {
-      const d = new Date(e.created_at);
-      return d >= start && d <= end;
-    });
-
-    const foundTypes = new Set(currentPeriodEvents.map(e => e.event_type));
-
-    // Updated event types to match 020 migration ('page_view', 'link_click')
-    const visits = currentPeriodEvents.filter(e => e.event_type === 'page_view').length;
-    const clicks = currentPeriodEvents.filter(e => e.event_type === 'link_click').length;
-    const uniqueCountries = new Set(currentPeriodEvents.map(e => e.country).filter(Boolean)).size;
-    const mainLayoutVisits = currentPeriodEvents.filter(e => e.event_type === 'page_view' && !e.is_tracking_visit).length;
-    const trackingLinkVisits = currentPeriodEvents.filter(e => e.event_type === 'page_view' && e.is_tracking_visit).length;
-
-    const overview: OverviewStats & { mainLayoutVisits: number; trackingLinkVisits: number } = {
-      totalVisits: visits,
-      totalClicks: clicks,
-      conversionRate: visits > 0 ? (clicks / visits) * 100 : 0,
-      uniqueCountries,
-      visitsChange: 0,
-      clicksChange: 0,
-      mainLayoutVisits,
-      trackingLinkVisits,
-    };
-
-    // 2. Chart Data (Current vs Previous)
-    const chartData = generateComparisonData(events, start, end);
-
-    // 3. Model Comparison Data
-    let modelComparisonData: ModelComparisonDataPoint[] | null = null;
-    if (modelSlugs.length >= 2) {
-      modelComparisonData = generateModelComparisonData(events, modelSlugs, start, end);
+    // Generate model comparison data if multiple models selected
+    let modelComparison: ModelComparisonDataPoint[] | undefined;
+    if (models.length > 1) {
+      const comparisonData = aggregateModelComparison(dailyStats, 'views');
+      modelComparison = formatModelComparisonForChart(comparisonData, models) as unknown as ModelComparisonDataPoint[];
     }
 
-    // 4. Source Breakdown
-    const sourceMap = new Map<string, { name: string; views: number; clicks: number }>();
-    currentPeriodEvents.forEach(e => {
-      if (!e.source_id) return;
-      const source = sources?.find(s => s.id === e.source_id);
-      const name = source ? source.name : 'Unknown';
+    const queryTime = Date.now() - startTime;
 
-      if (!sourceMap.has(e.source_id)) {
-        sourceMap.set(e.source_id, { name, views: 0, clicks: 0 });
-      }
-      const stats = sourceMap.get(e.source_id)!;
-      if (e.event_type === 'page_view') stats.views++;
-      if (e.event_type === 'link_click') stats.clicks++;
-    });
+    // Check if refresh is needed (more than 1 hour old)
+    const lastRefreshTime = refreshStatus.timestamp
+      ? new Date(refreshStatus.timestamp).getTime()
+      : 0;
+    const refreshAgeMinutes = Math.floor((Date.now() - lastRefreshTime) / 60000);
 
-    const sourceBreakdown = Array.from(sourceMap.entries()).map(([id, stats]) => ({
-      sourceId: id,
-      sourceName: stats.name,
-      totalViews: stats.views,
-      totalClicks: stats.clicks,
-      conversionRate: stats.views > 0 ? (stats.clicks / stats.views) * 100 : 0
-    })).sort((a, b) => b.totalViews - a.totalViews);
+    // Add warning if data is stale
+    const refreshWarning = refreshAgeMinutes > 60
+      ? `Data may be stale (last refresh: ${refreshAgeMinutes} minutes ago)`
+      : undefined;
 
-    // 5. Country Breakdown
-    const countryMap = new Map<string, { views: number; clicks: number }>();
-    currentPeriodEvents.forEach(e => {
-      if (!e.country) return;
-      if (!countryMap.has(e.country)) countryMap.set(e.country, { views: 0, clicks: 0 });
-      const stats = countryMap.get(e.country)!;
-      if (e.event_type === 'page_view') stats.views++;
-      if (e.event_type === 'link_click') stats.clicks++;
-    });
-
-    const countryBreakdown = Array.from(countryMap.entries()).map(([country, stats]) => ({
-      country,
-      visits: stats.views,
-      clicks: stats.clicks
-    })).sort((a, b) => b.visits - a.visits);
-
-    // 6. Model Analytics (Individual Cards)
-    const modelDataMap = new Map<string, {
-      id: string;
-      slug: string;
-      name: string;
-      imageUrl: string | null;
-      visits: number;
-      clicks: number;
-      countries: Map<string, number>;
-      dailyData: Map<string, { views: number; clicks: number }>;
-    }>();
-
-    currentPeriodEvents.forEach(e => {
-      if (!e.model_id) return;
-      const modelInfo = modelMap.get(e.model_id);
-      if (!modelInfo) return;
-
-      if (!modelDataMap.has(e.model_id)) {
-        modelDataMap.set(e.model_id, {
-          id: e.model_id,
-          slug: modelInfo.slug,
-          name: modelInfo.name,
-          imageUrl: modelInfo.image_url,
-          visits: 0,
-          clicks: 0,
-          countries: new Map(),
-          dailyData: new Map()
-        });
-      }
-      const stats = modelDataMap.get(e.model_id)!;
-
-      if (e.event_type === 'page_view') stats.visits++;
-      if (e.event_type === 'link_click') stats.clicks++;
-
-      if (e.country) {
-        stats.countries.set(e.country, (stats.countries.get(e.country) || 0) + 1);
-      }
-
-      const dateKey = e.created_at.slice(0, 10);
-      if (!stats.dailyData.has(dateKey)) stats.dailyData.set(dateKey, { views: 0, clicks: 0 });
-      const daily = stats.dailyData.get(dateKey)!;
-      if (e.event_type === 'page_view') daily.views++;
-      if (e.event_type === 'link_click') daily.clicks++;
-    });
-
-
-    const modelAnalytics = Array.from(modelDataMap.values()).map(m => ({
-      modelSlug: m.slug,
-      modelName: m.name,
-      imageUrl: m.imageUrl,
-      visits: m.visits,
-      clicks: m.clicks,
-      conversionRate: m.visits > 0 ? (m.clicks / m.visits) * 100 : 0,
-      topCountries: Array.from(m.countries.entries())
-        .map(([c, count]) => ({ country: c, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5),
-      dailyData: Array.from(m.dailyData.entries())
-        .map(([d, v]) => ({ date: d, ...v }))
-        .sort((a, b) => a.date.localeCompare(b.date))
-    })).sort((a, b) => b.visits - a.visits);
-
-    // 7. Available Lists
-    const { data: allCountriesData, error: allCountriesError } = await supabaseAdmin
-      .from('analytics_events')
-      .select('country')
-      .not('country', 'is', null)
-      .order('created_at', { ascending: false })
-      .limit(10000);
-
-    if (allCountriesError) console.error('❌ Country fetch error:', allCountriesError);
+    // 7. Fetch Available Lists for Filters
+    const [
+      { data: allCountriesData },
+      { data: sourcesData },
+      { data: modelsData }
+    ] = await Promise.all([
+      supabase
+        .from('analytics_events')
+        .select('country')
+        .not('country', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(5000),
+      supabase
+        .from('traffic_sources')
+        .select('*, subtags:tracking_subtags(*)'),
+      supabase
+        .from('models')
+        .select('id, name, slug, image_url')
+    ]);
 
     const availableCountries = [...new Set(allCountriesData?.map((e: any) => e.country).filter(Boolean))].sort() as string[];
 
-    const availableSources: TrafficSourceOption[] = (sources || []).map(source => ({
+    const availableSources: TrafficSourceOption[] = (sourcesData || []).map(source => ({
       id: source.id,
       name: source.name,
       slug: source.slug,
@@ -561,31 +661,67 @@ export async function GET(request: Request) {
       imageUrl: model.image_url,
     }));
 
-    return NextResponse.json({
-      overview,
+    const response: DashboardResponse = {
+      stats,
       chartData,
-      modelComparisonData,
-      countryBreakdown,
-      sourceBreakdown,
-      modelAnalytics,
+      modelComparison,
+      lastRefresh: refreshStatus,
+      queryTime,
       availableCountries,
       availableSources,
       availableModels,
-      debug: {
-        now: new Date().toISOString(),
-        start: start.toISOString(),
-        end: end.toISOString(),
-        rawEventCount: rawEvents?.length || 0,
-        processedEventCount: events.length,
-        currentPeriodCount: currentPeriodEvents.length,
-        sampleEvent: currentPeriodEvents[0] || events[0] || null
-      }
+    };
+
+    return NextResponse.json({
+      success: true,
+      data: response,
+      ...(refreshWarning && { warning: refreshWarning }),
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Dashboard API error:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', details: error.message },
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch dashboard data',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+
+// ============================================
+// POST HANDLER (for triggering refresh from dashboard)
+// ============================================
+
+export async function POST(
+  request: NextRequest
+): Promise<NextResponse<{ success: boolean; error?: string }>> {
+  if (!verifyAdmin(request)) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
+
+  try {
+    // Trigger refresh via the dedicated endpoint logic
+    const { data, error } = await supabase.rpc('refresh_analytics_views');
+
+    if (error) throw error;
+
+    return NextResponse.json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error('Refresh error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to refresh views',
+      },
       { status: 500 }
     );
   }

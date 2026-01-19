@@ -439,6 +439,27 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
 - [x] **Verification:**
     - Successfully performed end-to-end manual verification of the tracking link creation, subtag management, and archival flows across both themes.
 
+### Phase 6.5: Admin Dashboard UI Overhaul & Metric Color Standardization (v1.1.5)
+**Status:** Complete
+- **iOS 26 Liquid Glass:** Fully implemented the liquid glass aesthetic for Light Mode with specialized glassmorphism effects.
+- **Unified Palette:** Standardized the "Midnight Spectrum" (Dark) and "Solar Spectrum" (Light) palettes for a consistent premium feel.
+
+### Phase 6.6: High-Volume Analytics (v1.2) - Materialized Views & Stat Sync
+**Goal:** Optimize dashboard performance for 100k+ events and ensure 100% stat synchronization.
+**Status:** [x] Complete
+
+- [x] **Materialized View Infrastructure:**
+    - Created `analytics_daily_stats` and `analytics_hourly_stats` for optimized sub-second queries.
+    - Implemented a Postgres **Materialized View Refresh System** with manual UI trigger and status logging.
+- [x] **Stat Synchronization Engine:**
+    - Refactored dashboard API to derive all breakdowns (Sources, Countries, Models) from a single filtered dataset.
+    - Resolved discrepancies between total views and source-level totals.
+- [x] **Filter Intelligence:**
+    - Fixed source filtering by mapping platform names to link UUIDs.
+    - Supported both singular (`country`) and plural (`countries`) parameters for robustness.
+- [x] **High-Volume Testing:**
+    - Verified performance and accuracy with over **400,000 analytics records**.
+
 **Next Steps:**
 - [x] Final production deployment of v1.1.
 - [x] Admin Dashboard Overhaul (Loading, Empty States, Responsive, Deletion Safety).

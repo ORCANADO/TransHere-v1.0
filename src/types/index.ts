@@ -56,3 +56,11 @@ export * from './analytics';
 // Tracking types
 export * from './tracking';
 export * from './charts';
+export * from './analytics-aggregated';
+
+// Explicitly re-export to resolve naming collisions with legacy types
+export type {
+  ChartDataPoint,
+  DashboardFilters,
+  ModelComparisonDataPoint
+} from './analytics-aggregated';

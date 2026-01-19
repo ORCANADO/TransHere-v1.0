@@ -791,13 +791,50 @@
   - Gallery Manager: Updated to use `models` bucket for gallery uploads
   - Admin Dashboard: Updated `uploadFileToR2` to support bucket parameter
   - Gallery uploads now use model-slug paths (e.g., `valentina-aguirre/timestamp-file.webp`)
-### [2026-01-16] - Phase 6.5: Admin Dashboard UI Overhaul & Metric Color Standardization
+[2026-01-19] - Phase 6.6: High-Volume Analytics (v1.2) - Materialized Views & Stat Sync
+**Status:** Complete
+
+- **Infrastructure Scaling:**
+    - Transitioned from raw event querying to **Materialized Views** for high-volume performance.
+    - Created `analytics_daily_stats` and `analytics_hourly_stats` for optimized sub-second queries.
+    - Implemented a **Materialized View Refresh System** (`refresh_analytics_views` RPC) with manual UI trigger and status logging.
+
+- **Dashboard Synchronization Engine:**
+    - **Single-Source Truth:** Completely refactored the dashboard API to derive *all* breakdowns (Traffic Sources, Countries, Sidebar) from the core filtered dataset. This eliminates discrepancies between "Total Views" and the sum of source cards.
+    - **Source Mapping Fix:** Implemented mapping from Source Names (e.g., "Instagram") to Link UUIDs in the API, resolving the "No data found" filter bug.
+    - **Country Filter Stability:** Fixed a parameter naming mismatch (`country` vs `countries`) between the frontend and API.
+
+- **Granularity & Performance:**
+    - Added **Hourly Resolution** for "Today" and "Last Hour" filters using dedicated hourly views.
+    - Verified sub-500ms query performance with **400,000+ records**.
+    - Fixed source grouping to consolidate multiple individual tracking links into unified platform buckets (Instagram, X, etc.).
+
+[2026-01-16] - Phase 6.5: Admin Dashboard UI Overhaul & Metric Color Standardization
 **Status:** Complete
 
 - **Admin Dashboard UI Refresh:**
     - Fully implemented the **iOS 26 Liquid Glass aesthetic** for Light Mode.
     - Optimized StatCards, breakdown sections, and tables with sophisticated glassmorphism effects (backdrop blur, saturation, and subtle specular highlights).
     - Unified the "Midnight Spectrum" (Dark) and "Solar Spectrum" (Light) palettes for a premium, theme-agnostic experience.
+
+### [2026-01-19] - Analytics Performance Optimization (Materialized Views)
+- **Database Migration:** Created `026_analytics_materialized_views.sql` to pre-aggregate analytics data (Daily, Hourly, Model, Country, Source).
+- **Goal:** Sub-500ms dashboard queries for 1M+ monthly events.
+- **Implementation:**
+    - `analytics_daily_stats`: Aggregates views/clicks by date, model, country, source.
+    - `analytics_hourly_stats`: 7-day hourly window for real-time charts.
+    - `analytics_source_summary`: Pre-calculated totals for traffic sources.
+    - `analytics_model_summary`: CTR and performance metrics per model.
+    - `analytics_country_summary`: Geographic distribution stats.
+
+### [2026-01-19] - Analytics Refresh Automation Architecture (v1.1.9)
+- **Database Migration:** Created `027_analytics_refresh_system.sql`.
+- **System Configuration:** Introduced `system_config` table to track global settings and last refresh metadata.
+- **Refresh Engine:**
+    - `refresh_analytics_views()`: Atomic function that refreshes all materialized views concurrently with error recovery.
+    - `analytics_refresh_needed()`: Intelligent threshold check for automated refresh triggers.
+- **Permissions:** Secured functions with `SECURITY DEFINER` and appropriate role-based execution grants.
+
 - **Metric Color Standardization:**
     - Established a definitive color coding for key metrics: **Views = Apple Blue (#007AFF)** and **Clicks = Apple Purple (#AF52DE)**.
     - Applied this scheme consistently across all dashboard components, including Chart lines, StatCard values, Sidebar indicators, and breakdown pills.
