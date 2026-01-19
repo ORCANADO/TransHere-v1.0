@@ -55,12 +55,25 @@ export * from './analytics';
 
 // Tracking types
 export * from './tracking';
-export * from './charts';
-export * from './analytics-aggregated';
 
-// Explicitly re-export to resolve naming collisions with legacy types
+// Charts types (contains legacy filter types)
+export * from './charts';
+
+// Aggregated Analytics types (contains new dashboard types)
+// We list types explicitly to avoid collisions with './charts'
 export type {
+  DailyStats,
+  DailyStatsAggregated,
+  HourlyStats,
+  SourceSummary,
+  ModelSummary,
+  CountrySummary,
+  RefreshStatus,
+  SystemConfig,
+  DashboardStats,
   ChartDataPoint,
-  DashboardFilters,
-  ModelComparisonDataPoint
+  DashboardResponse,
+  RefreshViewsResponse,
+  DashboardQueryParams,
+  AggregatedDashboardFilters // We'll rename this in the source file
 } from './analytics-aggregated';

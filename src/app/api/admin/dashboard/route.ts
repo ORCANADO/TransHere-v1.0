@@ -9,9 +9,9 @@ import type {
   DashboardResponse,
   ChartDataPoint,
   DashboardStats,
-  ModelComparisonDataPoint,
-  TrafficSourceOption,
-  ModelFilterOption,
+  AggregatedModelComparisonDataPoint,
+  AggregatedTrafficSourceOption,
+  AggregatedModelFilterOption,
 } from '@/types/analytics-aggregated';
 
 const supabase = createClient(
@@ -602,10 +602,10 @@ export async function GET(
     const chartData: ChartDataPoint[] = aggregateChartData(dailyStats, prevDailyStats);
 
     // Generate model comparison data if multiple models selected
-    let modelComparison: ModelComparisonDataPoint[] | undefined;
+    let modelComparison: AggregatedModelComparisonDataPoint[] | undefined;
     if (models.length > 1) {
       const comparisonData = aggregateModelComparison(dailyStats, 'views');
-      modelComparison = formatModelComparisonForChart(comparisonData, models) as unknown as ModelComparisonDataPoint[];
+      modelComparison = formatModelComparisonForChart(comparisonData, models) as unknown as AggregatedModelComparisonDataPoint[];
     }
 
     const queryTime = Date.now() - startTime;
@@ -643,7 +643,7 @@ export async function GET(
 
     const availableCountries = [...new Set(allCountriesData?.map((e: any) => e.country).filter(Boolean))].sort() as string[];
 
-    const availableSources: TrafficSourceOption[] = (sourcesData || []).map(source => ({
+    const availableSources: AggregatedTrafficSourceOption[] = (sourcesData || []).map(source => ({
       id: source.id,
       name: source.name,
       slug: source.slug,
@@ -654,7 +654,7 @@ export async function GET(
       })) || [],
     }));
 
-    const availableModels: ModelFilterOption[] = (modelsData || []).map(model => ({
+    const availableModels: AggregatedModelFilterOption[] = (modelsData || []).map(model => ({
       id: model.id,
       name: model.name,
       slug: model.slug,

@@ -127,12 +127,12 @@ export interface ChartDataPoint {
     label?: string;
 }
 
-export interface ModelComparisonDataPoint {
+export interface AggregatedModelComparisonDataPoint {
     date: string;
     [modelSlug: string]: number | string;  // Dynamic keys for each model
 }
 
-export interface DashboardFilters {
+export interface AggregatedDashboardFilters {
     startDate: string;
     endDate: string;
     models: string[];
@@ -141,7 +141,7 @@ export interface DashboardFilters {
     countries: string[];
 }
 
-export interface TrafficSourceOption {
+export interface AggregatedTrafficSourceOption {
     id: string;
     name: string;
     slug: string;
@@ -152,7 +152,7 @@ export interface TrafficSourceOption {
     }[];
 }
 
-export interface ModelFilterOption {
+export interface AggregatedModelFilterOption {
     id: string;
     name: string;
     slug: string;
@@ -162,12 +162,12 @@ export interface ModelFilterOption {
 export interface DashboardResponse {
     stats: DashboardStats;
     chartData: ChartDataPoint[];
-    modelComparison?: ModelComparisonDataPoint[];
+    modelComparison?: AggregatedModelComparisonDataPoint[];
     lastRefresh: RefreshStatus;
     queryTime: number;
     availableCountries: string[];
-    availableSources: TrafficSourceOption[];
-    availableModels: ModelFilterOption[];
+    availableSources: AggregatedTrafficSourceOption[];
+    availableModels: AggregatedModelFilterOption[];
 }
 
 // ============================================
