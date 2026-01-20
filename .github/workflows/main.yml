@@ -1,0 +1,145 @@
+name: Link Health Monitor
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+env:
+  SITE_URL: https://transhere.vip
+  DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check Main Domain Health
+        id: main-check
+        run: |
+          # Check if site is accessible
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$SITE_URL")
+          echo "main_status=$HTTP_CODE" >> $GITHUB_OUTPUT
+          
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "::error::Main domain returned HTTP $HTTP_CODE"
+          fi
+
+      - name: Check Facebook Sharing Debugger
+        id: facebook-check
+        run: |
+          # Facebook Sharing Debugger API (requires access token)
+          # This scrapes the debugger to check for warnings
+          
+          FB_RESPONSE=$(curl -s "https://graph.facebook.com/v18.0/?id=${SITE_URL}&scrape=true&access_token=${{ secrets.FB_ACCESS_TOKEN }}" 2>/dev/null || echo '{"error":"failed"}')
+          
+          # Check for common error indicators
+          if echo "$FB_RESPONSE" | grep -q '"error"'; then
+            echo "fb_status=error" >> $GITHUB_OUTPUT
+            echo "::warning::Facebook scrape returned an error"
+          else
+            echo "fb_status=ok" >> $GITHUB_OUTPUT
+          fi
+          
+          # Extract OG data for verification
+          OG_TITLE=$(echo "$FB_RESPONSE" | jq -r '.og_object.title // "none"')
+          echo "og_title=$OG_TITLE" >> $GITHUB_OUTPUT
+
+      - name: Check Burner Subdomains
+        id: subdomain-check
+        run: |
+          SUBDOMAINS=("valentina" "maria" "sofia" "test")
+          FAILED=""
+          
+          for sub in "${SUBDOMAINS[@]}"; do
+            URL="https://${sub}.transhere.vip"
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -L "$URL" --max-time 10)
+            
+            if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "301" ] && [ "$HTTP_CODE" != "302" ]; then
+              FAILED="${FAILED}${sub}:${HTTP_CODE} "
+            fi
+          done
+          
+          if [ -n "$FAILED" ]; then
+            echo "subdomain_failures=$FAILED" >> $GITHUB_OUTPUT
+            echo "::warning::Some subdomains failed: $FAILED"
+          else
+            echo "subdomain_failures=none" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for Platform Blocks (Instagram/TikTok simulation)
+        id: platform-check
+        run: |
+          # Simulate Instagram's link checker user agent
+          IG_UA="Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 Instagram 262.0.0.19.84"
+          
+          IG_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "User-Agent: $IG_UA" \
+            "$SITE_URL" --max-time 10)
+          
+          echo "instagram_status=$IG_CODE" >> $GITHUB_OUTPUT
+          
+          # Simulate TikTok's link checker
+          TT_UA="Mozilla/5.0 (compatible; TikTok)"
+          
+          TT_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "User-Agent: $TT_UA" \
+            "$SITE_URL" --max-time 10)
+          
+          echo "tiktok_status=$TT_CODE" >> $GITHUB_OUTPUT
+
+      - name: Send Discord Alert on Failure
+        if: |
+          steps.main-check.outputs.main_status != '200' ||
+          steps.facebook-check.outputs.fb_status == 'error' ||
+          steps.subdomain-check.outputs.subdomain_failures != 'none'
+        run: |
+          curl -X POST "$DISCORD_WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "embeds": [{
+                "title": "⚠️ TransHere Link Health Alert",
+                "color": 15158332,
+                "fields": [
+                  {
+                    "name": "Main Domain",
+                    "value": "HTTP ${{ steps.main-check.outputs.main_status }}",
+                    "inline": true
+                  },
+                  {
+                    "name": "Facebook Status",
+                    "value": "${{ steps.facebook-check.outputs.fb_status }}",
+                    "inline": true
+                  },
+                  {
+                    "name": "Subdomain Failures",
+                    "value": "${{ steps.subdomain-check.outputs.subdomain_failures }}",
+                    "inline": false
+                  },
+                  {
+                    "name": "Instagram Sim",
+                    "value": "HTTP ${{ steps.platform-check.outputs.instagram_status }}",
+                    "inline": true
+                  },
+                  {
+                    "name": "TikTok Sim",
+                    "value": "HTTP ${{ steps.platform-check.outputs.tiktok_status }}",
+                    "inline": true
+                  }
+                ],
+                "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+              }]
+            }'
+
+      - name: Generate Health Report
+        run: |
+          echo "## Link Health Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Main Domain | ${{ steps.main-check.outputs.main_status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Facebook | ${{ steps.facebook-check.outputs.fb_status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Instagram Sim | ${{ steps.platform-check.outputs.instagram_status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| TikTok Sim | ${{ steps.platform-check.outputs.tiktok_status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Subdomain Failures | ${{ steps.subdomain-check.outputs.subdomain_failures }} |" >> $GITHUB_STEP_SUMMARY
