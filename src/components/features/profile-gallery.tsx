@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Lock } from "lucide-react";
 import { cn, getImageUrl } from "@/lib/utils";
 import { useAnalytics } from "@/hooks/use-analytics";
+import { BridgeProtector } from "@/components/features/bridge-protector";
 import type { GalleryItem } from "@/types";
 
 // Video Player Component with Intersection Observer
@@ -85,12 +86,23 @@ interface ProfileGalleryProps {
   items: GalleryItem[];
   name: string;
   socialLink: string;
+  encodedDestination: string;
+  isCrawler: boolean;
   modelId: string;
   modelSlug?: string;
   redirectUrl?: string; // Optional: specific redirect URL for locked VIP teaser (falls back to socialLink)
 }
 
-export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, redirectUrl }: ProfileGalleryProps) {
+export function ProfileGallery({
+  items,
+  name,
+  socialLink,
+  encodedDestination,
+  isCrawler,
+  modelId,
+  modelSlug,
+  redirectUrl
+}: ProfileGalleryProps) {
   const [current, setCurrent] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -232,17 +244,6 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
     // Check if this is the last gallery item (becomes the locked VIP teaser)
     const isLastItem = index === validItems.length - 1;
 
-    // Handle click for locked item
-    const handleLockedClick = async (e: React.MouseEvent) => {
-      e.preventDefault();
-      // Use redirectUrl if provided, otherwise fall back to socialLink
-      const url = redirectUrl || socialLink;
-      if (url && url.trim() !== '' && url !== '#') {
-        await handleUnlockClick();
-        window.open(url, '_blank', 'noopener,noreferrer');
-      }
-    };
-
     // Render locked VIP teaser for last item (merged conversion card)
     if (isLastItem) {
       if (slide.type === 'video' && slide.url) {
@@ -251,8 +252,7 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
 
         return (
           <div
-            className="relative w-full h-full overflow-hidden group cursor-pointer bg-card"
-            onClick={handleLockedClick}
+            className="relative w-full h-full overflow-hidden group bg-card"
           >
             <VideoPlayer
               mp4Url={mp4Url}
@@ -268,16 +268,25 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
               <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
 
               {/* Content */}
-              <div className="relative z-10 flex flex-col items-center">
+              <div className="relative z-10 flex flex-col items-center w-full">
                 {/* Lock icon with Rich Gold Glassmorphism */}
                 <div className="rounded-full bg-black/60 backdrop-blur-[13px] p-4 mb-4 border-2 border-[#D4AF37]/40 shadow-[0_0_20px_rgba(212,175,55,0.3)] shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
                   <Lock className="h-7 w-7 text-[#D4AF37] drop-shadow-[0_0_6px_rgba(212,175,55,0.6)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]" strokeWidth={1.5} />
                 </div>
                 <h3 className="text-2xl font-sans font-semibold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] mb-5">Want to see more?</h3>
-                {/* VIP Button - Rich Gold Glassmorphism */}
-                <div className="px-7 py-3.5 rounded-full bg-black/50 backdrop-blur-[19px] text-[#D4AF37] font-semibold border-2 border-[#D4AF37]/40 shadow-[0_0_15px_rgba(212,175,55,0.25)] shadow-[0_4px_12px_rgba(0,0,0,0.8)] transition-all duration-300 hover:bg-black/60 hover:border-[#D4AF37]/60 hover:shadow-[0_0_20px_rgba(212,175,55,0.35)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.9)] hover:scale-[1.02] drop-shadow-[0_0_6px_rgba(212,175,55,0.7)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-                  Unlock VIP Content
-                </div>
+
+                {/* Secure Bridge for Locked Teaser */}
+                <BridgeProtector
+                  encodedDestination={encodedDestination}
+                  isCrawler={isCrawler}
+                  modelId={modelId}
+                  modelSlug={modelSlug || ''}
+                  modelName={name}
+                  isVerified={false}
+                  buttonVariant="secondary"
+                  variant="inline"
+                  className="!h-12 !text-base border-[#D4AF37]/40 text-[#D4AF37] hover:border-[#D4AF37]/60 hover:text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.25)]"
+                />
               </div>
             </div>
           </div>
@@ -288,8 +297,7 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
       if (slide.url) {
         return (
           <div
-            className="relative w-full h-full overflow-hidden group cursor-pointer bg-card"
-            onClick={handleLockedClick}
+            className="relative w-full h-full overflow-hidden group bg-card"
           >
             <Image
               src={slide.url}
@@ -308,16 +316,25 @@ export function ProfileGallery({ items, name, socialLink, modelId, modelSlug, re
               <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
 
               {/* Content */}
-              <div className="relative z-10 flex flex-col items-center">
+              <div className="relative z-10 flex flex-col items-center w-full">
                 {/* Lock icon with Rich Gold Glassmorphism */}
                 <div className="rounded-full bg-black/60 backdrop-blur-[13px] p-4 mb-4 border-2 border-[#D4AF37]/40 shadow-[0_0_20px_rgba(212,175,55,0.3)] shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
                   <Lock className="h-7 w-7 text-[#D4AF37] drop-shadow-[0_0_6px_rgba(212,175,55,0.6)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]" strokeWidth={1.5} />
                 </div>
                 <h3 className="text-2xl font-sans font-semibold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] mb-5">Want to see more?</h3>
-                {/* VIP Button - Rich Gold Glassmorphism */}
-                <div className="px-7 py-3.5 rounded-full bg-black/50 backdrop-blur-[19px] text-[#D4AF37] font-semibold border-2 border-[#D4AF37]/40 shadow-[0_0_15px_rgba(212,175,55,0.25)] shadow-[0_4px_12px_rgba(0,0,0,0.8)] transition-all duration-300 hover:bg-black/60 hover:border-[#D4AF37]/60 hover:shadow-[0_0_20px_rgba(212,175,55,0.35)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.9)] hover:scale-[1.02] drop-shadow-[0_0_6px_rgba(212,175,55,0.7)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-                  Unlock VIP Content
-                </div>
+
+                {/* Secure Bridge for Locked Teaser */}
+                <BridgeProtector
+                  encodedDestination={encodedDestination}
+                  isCrawler={isCrawler}
+                  modelId={modelId}
+                  modelSlug={modelSlug || ''}
+                  modelName={name}
+                  isVerified={false}
+                  buttonVariant="secondary"
+                  variant="inline"
+                  className="!h-12 !text-base border-[#D4AF37]/40 text-[#D4AF37] hover:border-[#D4AF37]/60 hover:text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.25)]"
+                />
               </div>
             </div>
           </div>
