@@ -460,19 +460,25 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
 - [x] **High-Volume Testing:**
     - Verified performance and accuracy with over **400,000 analytics records**.
 
-### Phase 6.7: Edge Middleware "The Sentry" (v1.2.5)
-**Goal:** Implement a global security and bot detection layer at the network edge to protect content and optimize resource usage.
+- [x] Configured an optimized middleware `matcher` to bypass execution on all static assets (`.webp`, `.jpg`), API routes, and public system files.
+
+### Phase 6.8: The "Ghost Link" System (v1.3)
+**Goal:** Implement client-side URL obfuscation to prevent social media crawlers and bots from scrapings sensitive destination links while maintaining high conversion for human users.
 **Status:** [x] Complete
 
-- [x] **Crawler Detection Engine:**
-    - Implemented a case-insensitive regex engine matching 15+ social media and performance crawlers (Instagram, TikTok, X, Lighthouse).
-    - Established a **Whitelist System** using Cloudflare's `cf-verified-bot` header to exempt search engines (Google, Bing) from content restrictions.
-- [x] **Downstream Communication:**
-    - Implemented the `x-is-crawler: 1` custom header to allow Server Components to adjust rendering (e.g., serving static HTML to bots).
-- [x] **Site Hardening:**
-    - Deployed global security headers: `X-Frame-Options` (Clickjacking), `X-Content-Type-Options` (MIME sniffing), and `Referrer-Policy`.
-- [x] **Performance Optimization:**
-    - Configured an optimized middleware `matcher` to bypass execution on all static assets (`.webp`, `.jpg`), API routes, and public system files.
+- [x] **URL Obfuscation Library:**
+    - Created `encodeDestination` (Server/Edge) and `decodeDestination` (Client) using Base64 with a custom `TH_` signature.
+    - Ensures raw OnlyFans/Fansly URLs never appear in the server-rendered HTML or static build assets.
+- [x] **BridgeProtector Component:**
+    - Implemented a "security-aware" conversion button that detects crawler status.
+    - **Bot UX:** Renders an inert "View Profile" button with `data-blocked="true"`.
+    - **Human UX:** Renders a functional "Chat with Me" button that decodes the link and tracks the click only after a real user interaction.
+    - **Hydration safety:** Mount-check pattern prevents SSR/CSR mismatches.
+- [x] **Profile Gallery Integration:**
+    - Extended the "Locked VIP Teaser" to handle obfuscated redirects internally.
+    - Replaced raw `redirectUrl` with `encodedDestination` and `isCrawler` checks.
+- [x] **Universal Deployment:**
+    - Integrated across all model profile pages, protecting both primary CTA buttons and gallery teasers.
 
 **Next Steps:**
 - [x] Final production deployment of v1.1.
