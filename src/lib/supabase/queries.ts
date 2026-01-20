@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/client'
 
 export interface BridgeProfile {
+    id: string
     slug: string
     name: string
     image_url: string
@@ -13,7 +14,7 @@ export async function getProfileBySlug(slug: string): Promise<BridgeProfile | nu
 
     const { data, error } = await supabase
         .from('models')
-        .select('slug, name, image_url, social_link, is_verified')
+        .select('id, slug, name, image_url, social_link, is_verified')
         .eq('slug', slug)
         .single()
 
