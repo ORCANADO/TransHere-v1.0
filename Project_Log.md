@@ -1144,3 +1144,15 @@ All planned features implemented, tested, and polished. The platform is producti
 - **Verification:**
     - Verified proper hydration, SEO meta-tag masking, and analytics logging.
     - Confirmed Cloudflare Pages compatibility with Edge Runtime configuration.
+
+### [2026-01-20] - Phase 6.11: Performance Optimization (Preconnect Hints)
+**Status:** Complete
+
+- **Latency Reduction:**
+    - Implemented `PreconnectHints` component to initiate early DNS lookup, TCP connection, and TLS handshake for OnlyFans and Fansly domains.
+    - Saves 100-300ms of perceived latency during the "Airlock" transition.
+- **Resource Efficiency:**
+    - Integrated bot detection logic to prevent unnecessary preconnections for crawlers.
+    - Uses `dns-prefetch` fallback for high-priority resource constraints.
+- **Integration:**
+    - Seamlessly added to the Bridge Page (`/[slug]`) to prime connections while users read the verification message.

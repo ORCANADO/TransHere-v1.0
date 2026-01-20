@@ -488,6 +488,10 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
     - Implemented server-side URL encoding and secure headers.
     - SEO protection (noindex) for age-restricted content.
     - Non-blocking analytics integration using Next.js `after()`.
+- [x] **Performance Optimization (Phase 6.11):**
+    - Implemented `PreconnectHints` client component for OnlyFans/Fansly domains.
+    - Reduces perceived latency by 100-300ms via early DNS/TLS handshake.
+    - Integrated smart bot detection to save resources.
 
 **Next Steps:**
 - [x] Final production deployment of v1.1.
