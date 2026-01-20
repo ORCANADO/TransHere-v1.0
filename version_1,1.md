@@ -115,7 +115,7 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
     * [x] **Database Migration:** Create `003_add_gallery_array.sql` to add `gallery_urls` (TEXT array) to the `models` table.
     * [x] **UI Implementation:** Replace static hero image in Profile View with `Shadcn Carousel`.
       - Logic: Map `gallery_urls`.
-      - Feature: "End Card" logic (If index == last, show "See Explicit Content" CTA).
+      - Feature: "End Card" logic (If index == last, show "See Exclusive Content" CTA).
     * [x] Database Migration: Added `is_verified`, `is_new`, and `gallery_urls`. 
     * [x] UI Implementation: Profile View with Glassmorphism Header and Money Button. 
     * [x] Logic: "Online Priority Shuffle" implemented in FeedManager. 
@@ -144,7 +144,7 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
    * [x] **Solution:** Implemented "Split Screen" architecture.
   - Left Col: Sticky Bio & Chat Button (Always visible).
   - Right Col: Vertical Image Stack.
-  - **Constraint:** `max-w-4xl` container to fit standard Laptop viewports (MacBook Air/Pro).
+  - **Constraint:** `max-w-4xl` container to fit standard Laptop viewports (MaxBook Air/Pro).
 
 
 3. Functional Repairs 
@@ -460,6 +460,20 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
 - [x] **High-Volume Testing:**
     - Verified performance and accuracy with over **400,000 analytics records**.
 
+### Phase 6.7: Edge Middleware "The Sentry" (v1.2.5)
+**Goal:** Implement a global security and bot detection layer at the network edge to protect content and optimize resource usage.
+**Status:** [x] Complete
+
+- [x] **Crawler Detection Engine:**
+    - Implemented a case-insensitive regex engine matching 15+ social media and performance crawlers (Instagram, TikTok, X, Lighthouse).
+    - Established a **Whitelist System** using Cloudflare's `cf-verified-bot` header to exempt search engines (Google, Bing) from content restrictions.
+- [x] **Downstream Communication:**
+    - Implemented the `x-is-crawler: 1` custom header to allow Server Components to adjust rendering (e.g., serving static HTML to bots).
+- [x] **Site Hardening:**
+    - Deployed global security headers: `X-Frame-Options` (Clickjacking), `X-Content-Type-Options` (MIME sniffing), and `Referrer-Policy`.
+- [x] **Performance Optimization:**
+    - Configured an optimized middleware `matcher` to bypass execution on all static assets (`.webp`, `.jpg`), API routes, and public system files.
+
 **Next Steps:**
 - [x] Final production deployment of v1.1.
 - [x] Admin Dashboard Overhaul (Loading, Empty States, Responsive, Deletion Safety).
@@ -472,4 +486,3 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
 * **Comments/Likes on Content:** Removed to save database costs.
 * **Random/Roulette Button:** Excluded by request.
 * **Content Uploading:** Models cannot upload their own content; managed centrally by the CEO *via Secret Dashboard*.
-

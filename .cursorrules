@@ -56,6 +56,12 @@ Client Components for filtering.
 ### 2.5 Geolocation Handling
 - Always use request.headers.get('x-user-city') in Server Components.
 - In Middleware, use cf-ipcity. Default to 'Unknown' if missing.
+- **Crawler Detection (Sentry Phase):**
+    - Middleware MUST detect social media crawlers using the standard regex pattern.
+    - If `cf-verified-bot` exists, WHITE LIST the crawler (set `isCrawler = false`).
+    - Propagate `x-is-crawler: '1'` header only when a bot is detected.
+- **Security Headers:**
+    - Middleware MUST set `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, and `Referrer-Policy: strict-origin-when-cross-origin` on ALL responses.
 
 ### 2.6 Navigation
 - Do not use <Link> for feed tab switching.

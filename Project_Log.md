@@ -1078,3 +1078,22 @@ All planned features implemented, tested, and polished. The platform is producti
     - Optimized the "Add to Recent" trigger in `StoryManager` to intelligently switch between file input (images) and modal trigger (videos).
     - Refactored `PinnedBlocksManager` state management to resolve dragging and ordering conflicts introduced during the shift.
     - Applied consistent "Liquid Glass" styling across all new upload components.
+
+### [2026-01-20] - Phase 1: The Sentry - Edge Middleware Implementation
+**Status:** Complete
+
+- **Crawler Detection Engine:**
+    - Deployed a case-insensitive regex engine matching 15+ social media scrapers and performance tools (Instagram, TikTok, X, Lighthouse, GTmetrix).
+    - Implemented **Legitimate Crawler Whitelisting** using the `cf-verified-bot` header, allowing search engines (Googlebot, Bingbot) to bypass restrictions via Cloudflare's verified reverse DNS system.
+- **Server-Side Communication:**
+    - Implemented the `x-is-crawler: '1'` custom header for downstream Server Components, enabling conditional rendering for bots vs. real users.
+- **Global Site Hardening:**
+    - Applied a suite of essential security headers to all responses:
+        - `X-Frame-Options: SAMEORIGIN` (Clickjacking protection while preserving social previews).
+        - `X-Content-Type-Options: nosniff` (MIME sniffing prevention).
+        - `Referrer-Policy: strict-origin-when-cross-origin` (Enhanced privacy).
+- **Performance Matching:**
+    - Optimized the middleware `matcher` with an advanced negative lookahead regex.
+    - Explicitly bypassed execution for static assets (`.webp`, `.jpg`, etc.), API routes, and system files (`robots.txt`, `favicon.ico`) to minimize edge execution costs.
+- **Verification:**
+    - Successfully validated the implementation via `npm run build` and finalized manual testing procedures.

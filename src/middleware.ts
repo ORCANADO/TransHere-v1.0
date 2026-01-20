@@ -1,52 +1,67 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest): NextResponse {
-  const requestHeaders = new Headers(request.headers);
+/**
+ * Phase 1: The Sentry - Bot Detection & Security Headers
+ * 
+ * Identifies social media crawlers and sets security policies at the edge.
+ * Runs before all Server Components to enable conditional rendering logic.
+ */
+export default async function middleware(request: NextRequest): Promise<NextResponse> {
+  const response = NextResponse.next();
 
-  // 1. Try standard Cloudflare header
-  // 2. Try Vercel/Next compatibility header
-  // 3. Fallback to 'Unknown'
-  let city = request.headers.get('cf-ipcity') || request.headers.get('x-vercel-ip-city') || 'Unknown';
+  // Extract User-Agent
+  const userAgent = request.headers.get('user-agent') || '';
 
-  // Decode URI components in case the city has special chars (e.g. São Paulo)
-  try {
-    city = decodeURIComponent(city);
-  } catch (e) {
-    // Keep original if decode fails
+  // Comprehensive crawler detection pattern
+  const crawlerPattern = /facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|telegram|snapchat|tiktok|bytespider|prerender|lighthouse|gtmetrix|pingdom/i;
+
+  // Default to not a crawler
+  let isCrawler = false;
+
+  // Test User-Agent against pattern
+  if (crawlerPattern.test(userAgent)) {
+    isCrawler = true;
   }
 
-  // Force Dev Fallback
-  if (city === 'Unknown' && process.env.NODE_ENV === 'development') {
-    city = 'Miami';
+  // Cloudflare reverse DNS verification - whitelist legitimate crawlers
+  const cfVerifiedBot = request.headers.get('cf-verified-bot');
+
+  // If Cloudflare verified this as a legitimate bot (Google, Bing), do NOT tag as crawler
+  if (cfVerifiedBot) {
+    isCrawler = false;
   }
 
-  // Extract Country
-  let country = request.headers.get('cf-ipcountry') || 'XX';
-
-  // Dev Fallback: Set to 'US' for English testing (or 'CO' for Spanish testing)
-  if (country === 'XX' && process.env.NODE_ENV === 'development') {
-    country = 'US'; // Change to 'CO' to test Spanish
+  // Set custom header for downstream Server Components to detect crawlers
+  if (isCrawler) {
+    response.headers.set('x-is-crawler', '1');
   }
 
-  // Inject standardized headers
-  requestHeaders.set('x-user-city', city);
-  requestHeaders.set('x-user-country', country);
+  // Security headers (applied to all responses)
+  // Prevents clickjacking: site cannot be embedded in iframes on untrusted origins
+  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
 
-  // Log for debugging (Check Cloudflare Logs)
-  console.log(`Middleware Geo: ${city}, Country: ${country}`);
+  // Prevents MIME type sniffing attacks
+  response.headers.set('X-Content-Type-Options', 'nosniff');
 
-  return NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
+  // Strict referrer policy: only send origin on cross-origin requests
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+  return response;
 }
 
+// Matcher configuration: run middleware on all routes EXCEPT static assets and API routes
 export const config = {
   matcher: [
-    // Match all routes except API, static assets, and images
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - robots.txt (SEO file)
+     * - *.webp, *.jpg, *.jpeg, *.png, *.gif, *.svg (static images)
+     * - /api/* (API routes)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|.*\\.(?:webp|jpg|jpeg|png|gif|svg|ico)$|api).*)',
   ],
 };
-
