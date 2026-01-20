@@ -1,6 +1,70 @@
-User-agent: *
+# TransHere.vip robots.txt
+# Version 1.2 - Link Safety System
+
+# Block AI Training Crawlers
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+# Allow Social Media Crawlers
+User-agent: facebookexternalhit
 Allow: /
-Allow: /model/*
-Disallow: /?tag=*
-Disallow: /?feed=*
-Disallow: /admin
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: Discordbot
+Allow: /
+
+User-agent: TelegramBot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+# Allow Search Engines (for discovery)
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+
+# Default rule
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
