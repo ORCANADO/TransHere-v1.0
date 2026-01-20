@@ -43,12 +43,33 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted }: M
     is_verified: model?.is_verified || false,
     is_new: model?.is_new !== undefined ? model.is_new : true,
     is_pinned: model?.is_pinned || false,
+    organization_id: model?.organization_id || null,
   });
 
   const [newTag, setNewTag] = useState('');
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [organizations, setOrganizations] = useState<Array<{ id: string; name: string }>>([]);
+  const [loadingOrgs, setLoadingOrgs] = useState(true);
+
+  // Fetch organizations on mount
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      try {
+        const res = await fetch(`/api/admin/organizations?key=${adminKey}`);
+        const json = await res.json();
+        if (json.success) {
+          setOrganizations(json.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch organizations:', err);
+      } finally {
+        setLoadingOrgs(false);
+      }
+    };
+    fetchOrganizations();
+  }, [adminKey]);
 
   // Update form data when model changes
   useEffect(() => {
@@ -64,6 +85,7 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted }: M
         is_verified: model.is_verified || false,
         is_new: model.is_new !== undefined ? model.is_new : true,
         is_pinned: model.is_pinned || false,
+        organization_id: model.organization_id || null,
       });
     }
   }, [model]);
@@ -260,6 +282,29 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted }: M
         />
         <p className="text-xs text-muted-foreground mt-1">
           Path in R2 bucket (e.g., model-slug/profile.webp)
+        </p>
+      </div>
+
+      {/* Organization */}
+      <div>
+        <label className="block text-sm font-bold text-muted-foreground mb-1 px-1">
+          Organization <span className="text-xs font-medium opacity-70">(Optional)</span>
+        </label>
+        <select
+          value={formData.organization_id || ''}
+          onChange={(e) => handleChange('organization_id', e.target.value || null)}
+          disabled={loadingOrgs}
+          className="w-full px-4 py-2.5 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <option value="">No Organization (Unassigned)</option>
+          {organizations.map((org) => (
+            <option key={org.id} value={org.id}>
+              {org.name}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-muted-foreground mt-1">
+          Assign this model to an organization for dashboard access
         </p>
       </div>
 

@@ -57,6 +57,9 @@ export * from './analytics';
 // Tracking types
 export * from './tracking';
 
+// Organization types
+export * from './organization';
+
 // Charts types (contains legacy filter types)
 export * from './charts';
 

@@ -1,13 +1,33 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { organizationMiddleware } from './middleware-org';
 
 /**
  * Phase 1: The Sentry - Bot Detection & Security Headers
  * 
  * Identifies social media crawlers and sets security policies at the edge.
  * Runs before all Server Components to enable conditional rendering logic.
+ * 
+ * Phase 2: Organization Authentication
+ * 
+ * Validates API keys for organization-specific routes (/org/*).
+ * Provides secure multi-tenant access control.
  */
 export default async function middleware(request: NextRequest): Promise<NextResponse> {
+  // Check if this is an organization route
+  if (request.nextUrl.pathname.startsWith('/org')) {
+    const orgResponse = await organizationMiddleware(request);
+    // If organizationMiddleware returns a response (401), return it immediately
+    if (orgResponse && orgResponse.status !== 200) {
+      return orgResponse;
+    }
+    // If validation succeeded, continue with the response that has org headers
+    if (orgResponse) {
+      return orgResponse;
+    }
+  }
+
+  // Standard middleware for all other routes
   const response = NextResponse.next();
 
   // Extract User-Agent

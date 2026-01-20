@@ -17,6 +17,7 @@ import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
 import { ModelEditor } from '@/components/admin/model-editor';
 import { TrackingLinkManager } from '@/app/admin/components/TrackingLinkManager';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { OrganizationManager } from '@/components/admin/organization-manager';
 import { createClient } from '@/lib/supabase/client';
 import type { Model } from '@/types';
 
@@ -28,6 +29,7 @@ function AdminContent() {
   const [editingModelId, setEditingModelId] = useState<string | null>(null);
   const [isAddingModel, setIsAddingModel] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState<'analytics' | 'organizations'>('analytics');
 
   // Initialize model selection hook
   const { selectedIds, toggleModel, selectMultiple } = useModelSelection();
@@ -225,15 +227,53 @@ function AdminContent() {
             </button>
           )}
 
-          {/* Analytics Dashboard - Always Visible */}
+          {/* Main Content with Tabs */}
           <div className="p-4 lg:p-6">
-            <AnalyticsDashboard
-              adminKey={adminKey}
-              selectedModelIds={selectedIds}
-              onModelSelectionChange={selectMultiple}
-              onDataLoaded={handleDataLoaded}
-              isSidebarCollapsed={isSidebarCollapsed}
-            />
+            {/* Tab Navigation */}
+            <div className="flex items-center gap-2 mb-6 border-b border-[#E5E5EA] dark:border-white/10">
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className={cn(
+                  "px-4 py-2.5 font-semibold text-sm transition-all relative",
+                  activeTab === 'analytics'
+                    ? "text-[#007AFF] dark:text-[#7A27FF]"
+                    : "text-[#86868B] dark:text-muted-foreground hover:text-[#1D1D1F] dark:hover:text-white"
+                )}
+              >
+                Analytics
+                {activeTab === 'analytics' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#007AFF] dark:bg-[#7A27FF]" />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('organizations')}
+                className={cn(
+                  "px-4 py-2.5 font-semibold text-sm transition-all relative",
+                  activeTab === 'organizations'
+                    ? "text-[#007AFF] dark:text-[#7A27FF]"
+                    : "text-[#86868B] dark:text-muted-foreground hover:text-[#1D1D1F] dark:hover:text-white"
+                )}
+              >
+                Organizations
+                {activeTab === 'organizations' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#007AFF] dark:bg-[#7A27FF]" />
+                )}
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === 'analytics' && (
+              <AnalyticsDashboard
+                adminKey={adminKey}
+                selectedModelIds={selectedIds}
+                onModelSelectionChange={selectMultiple}
+                onDataLoaded={handleDataLoaded}
+                isSidebarCollapsed={isSidebarCollapsed}
+              />
+            )}
+            {activeTab === 'organizations' && (
+              <OrganizationManager adminKey={adminKey} />
+            )}
           </div>
         </main>
       </div>
