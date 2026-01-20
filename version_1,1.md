@@ -492,6 +492,8 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
     - Implemented `PreconnectHints` client component for OnlyFans/Fansly domains.
     - Reduces perceived latency by 100-300ms via early DNS/TLS handshake.
     - Integrated smart bot detection to save resources.
+    - Created `StealthLogger` for non-blocking telemetry via Next.js 15 `after()` API.
+    - Integrated performance and analytics into the [slug] bridge page.
 
 **Next Steps:**
 - [x] Final production deployment of v1.1.

@@ -10,6 +10,7 @@ const isBot = (): boolean => {
         /facebookexternalhit/i, /twitterbot/i, /linkedinbot/i,
         /whatsapp/i, /telegrambot/i, /discordbot/i,
         /googlebot/i, /bingbot/i, /yandex/i, /baiduspider/i,
+        /bytespider/i, /gptbot/i,
     ]
 
     const ua = navigator.userAgent

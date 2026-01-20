@@ -1,16 +1,15 @@
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
-import { after } from 'next/server'
 import { headers } from 'next/headers'
+import { after } from 'next/server'
 import { getProfileBySlug } from '@/lib/supabase/queries'
-import BridgeAirlock from '@/components/features/bridge-airlock'
-import { PreconnectHints } from '@/components/features/preconnect-hints'
+import BridgeProtector from '@/components/features/bridge-protector'
+import PreconnectHints from '@/components/features/preconnect-hints'
+import { captureTelemetry, logBridgeView } from '@/lib/stealth-logger'
 
 interface PageProps {
     params: Promise<{ slug: string }>
 }
-
-export const runtime = 'edge'
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { slug } = await params
@@ -46,90 +45,40 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function BridgePage({ params }: PageProps) {
+    // Next.js 15: params must be awaited
     const { slug } = await params
 
+    // Fetch profile data
     const profile = await getProfileBySlug(slug)
 
+    // Handle 404
     if (!profile) {
         notFound()
     }
 
-    // === STEALTH TELEMETRY: Capture headers BEFORE after() ===
-    // Headers must be read synchronously before the response is sent
+    // === STEALTH TELEMETRY ===
+    // Headers must be captured BEFORE after() - context is gone inside callback
     const headersList = await headers()
+    const telemetry = captureTelemetry(slug, profile.id || null, headersList)
 
-    const telemetryData = {
-        // Core identifiers
-        slug: slug,
-        modelId: profile.id || null,
-
-        // Bot detection (set by middleware in Phase 1)
-        isCrawler: headersList.get('x-is-crawler') === 'true',
-
-        // User identification (privacy-conscious)
-        userAgent: headersList.get('user-agent') || 'unknown',
-        ip: headersList.get('cf-connecting-ip') ||
-            headersList.get('x-forwarded-for')?.split(',')[0] ||
-            'unknown',
-
-        // Geolocation (from Cloudflare)
-        country: headersList.get('cf-ipcountry') ||
-            headersList.get('x-user-country') ||
-            'unknown',
-        city: headersList.get('cf-ipcity') ||
-            headersList.get('x-user-city') ||
-            'unknown',
-
-        // Traffic source
-        referrer: headersList.get('referer') || 'direct',
-
-        // Timestamp
-        timestamp: new Date().toISOString(),
-    }
-
+    // THE GHOST LINK: Server-side Base64 encoding
     const destinationUrl = profile.social_link || 'https://onlyfans.com'
     const encodedDestination = Buffer.from(destinationUrl).toString('base64')
 
-    // === NON-BLOCKING ANALYTICS: Fires AFTER response is sent ===
+    // === NON-BLOCKING ANALYTICS ===
+    // Fires AFTER response is sent to user
     after(async () => {
-        // BOT FILTERING: Skip analytics for crawlers
-        if (telemetryData.isCrawler) {
-            console.log(`[Analytics] Skipped crawler: ${telemetryData.userAgent.substring(0, 50)}...`)
-            return
-        }
-
-        try {
-            // Log to Supabase analytics table
-            const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/analytics`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    eventType: 'bridge_view',
-                    modelId: telemetryData.modelId,
-                    modelSlug: telemetryData.slug,
-                    pagePath: `/${telemetryData.slug}`,
-                    country: telemetryData.country,
-                    city: telemetryData.city,
-                    userAgent: telemetryData.userAgent,
-                    ip: telemetryData.ip,
-                    referrer: telemetryData.referrer,
-                    timestamp: telemetryData.timestamp,
-                }),
-            })
-
-            if (!response.ok) {
-                console.error(`[Analytics] Failed to log: ${response.status}`)
-            }
-        } catch (error) {
-            // Silently fail - analytics should never break the page
-            console.error('[Analytics] Error:', error)
-        }
+        await logBridgeView(
+            telemetry,
+            process.env.NEXT_PUBLIC_SITE_URL || 'https://transhere.vip'
+        )
     })
 
+    // Render the Airlock UI with PreconnectHints
     return (
         <main className="min-h-screen bg-background">
             <PreconnectHints priority={true} />
-            <BridgeAirlock
+            <BridgeProtector
                 encodedDestination={encodedDestination}
                 profileName={profile.name}
                 avatarUrl={profile.image_url}
