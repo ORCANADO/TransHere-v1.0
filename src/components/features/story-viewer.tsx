@@ -7,17 +7,21 @@ import { X, Share2, Check, Link2, ChevronLeft, ChevronRight } from "lucide-react
 import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { StoryGroup } from "@/types";
-import { getImageUrl } from "@/lib/utils";
+import { cn, getImageUrl } from "@/lib/utils";
 import { useShare } from "@/hooks/use-share";
 import { useViewedStories } from "@/hooks/use-viewed-stories";
+import { decodeDestination } from "@/lib/url-obfuscation";
+import { useAnalytics } from "@/hooks/use-analytics";
 
 interface StoryViewerProps {
   group: StoryGroup;
   onClose: () => void;
-  socialLink?: string;
+  encodedDestination?: string;
+  isCrawler?: boolean;
   modelName?: string;
   modelImage?: string;
   modelSlug?: string;
+  modelId?: string;
   isVerified?: boolean;
   // Playlist navigation props
   nextGroupId?: string;
@@ -52,23 +56,25 @@ function formatStoryDate(dateString: string, isPinned: boolean): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export function StoryViewer({ 
-  group, 
-  onClose, 
-  socialLink, 
-  modelName, 
-  modelImage, 
-  modelSlug, 
-  isVerified, 
-  nextGroupId, 
-  prevGroupId, 
+export function StoryViewer({
+  group,
+  onClose,
+  encodedDestination,
+  isCrawler = false,
+  modelName,
+  modelImage,
+  modelSlug,
+  modelId,
+  isVerified,
+  nextGroupId,
+  prevGroupId,
   onNavigate,
   disableLongPress = false,
   initialStoryIndex
 }: StoryViewerProps) {
   // Share hook
   const { share, copyAndGo, isCopied, isCopiedAndGo } = useShare();
-  
+
   // Visual Memory hook - track viewed stories
   const { markStoryAsViewed } = useViewedStories();
 
@@ -97,10 +103,23 @@ export function StoryViewer({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [nextModelName, setNextModelName] = useState<string | null>(null); // For transition indicator
   const [showCopiedToast, setShowCopiedToast] = useState(false); // For "Link Copied" toast in model profile
-  
+  const [decodedUrl, setDecodedUrl] = useState<string | null>(null);
+  const [hasHydrated, setHasHydrated] = useState(false);
+
+  const { trackClick } = useAnalytics();
+
+  // Hydration-safe decoding
+  useEffect(() => {
+    setHasHydrated(true);
+    if (!isCrawler && encodedDestination) {
+      const decoded = decodeDestination(encodedDestination);
+      setDecodedUrl(decoded);
+    }
+  }, [encodedDestination, isCrawler]);
+
   // Animation state
   const [isClosing, setIsClosing] = useState(false);
-  
+
   // Swipe detection state (no visual feedback, just detection)
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const hasSwiped = useRef(false); // Track if a swipe occurred to prevent tap
@@ -109,7 +128,7 @@ export function StoryViewer({
 
   // Desktop detection
   const [isDesktop, setIsDesktop] = useState(false);
-  
+
   useEffect(() => {
     const checkDesktop = () => {
       setIsDesktop(window.innerWidth >= 1024);
@@ -182,7 +201,7 @@ export function StoryViewer({
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
     }
-    
+
     // Instant close - no animation delay (Instagram mobile behavior)
     setIsClosing(true);
     setSlideDirection(null);
@@ -199,12 +218,12 @@ export function StoryViewer({
     // Ensure UI is visible when navigating
     setIsUIHidden(false);
     setIsLongPress(false);
-    
+
     if (nextGroupId && onNavigate) {
       setAnimationType('model');
       setSlideDirection('left'); // Content slides LEFT (new comes from right)
       setIsTransitioning(true);
-      
+
       // Delay navigation to allow exit animation to start
       // 150ms = enough time for exit to be visible, but fast enough to feel instant
       setTimeout(() => {
@@ -229,12 +248,12 @@ export function StoryViewer({
     // Ensure UI is visible when navigating
     setIsUIHidden(false);
     setIsLongPress(false);
-    
+
     if (prevGroupId && onNavigate) {
       setAnimationType('model');
       setSlideDirection('right'); // Content slides RIGHT (new comes from left)
       setIsTransitioning(true);
-      
+
       // Delay navigation to allow exit animation to start
       setTimeout(() => {
         onNavigate(prevGroupId);
@@ -258,7 +277,7 @@ export function StoryViewer({
     // Ensure UI is visible when navigating
     setIsUIHidden(false);
     setIsLongPress(false);
-    
+
     if (currentStoryIndex < stories.length - 1) {
       setAnimationType('story');
       setIsAnimating(false);
@@ -280,7 +299,7 @@ export function StoryViewer({
     // Ensure UI is visible when navigating
     setIsUIHidden(false);
     setIsLongPress(false);
-    
+
     if (currentStoryIndex > 0) {
       setAnimationType('story');
       setIsAnimating(false);
@@ -306,6 +325,23 @@ export function StoryViewer({
     }
   }, [handlePrevStory, handlePrevModel]);
 
+  // Handle "Respond to Story" CTA click - Ghost Link Logic
+  const handleRespondToStory = useCallback(async () => {
+    if (isCrawler || !hasHydrated || !decodedUrl) {
+      return;
+    }
+
+    // Track click if requested (same as BridgeProtector logic)
+    await trackClick('social', {
+      modelId,
+      modelSlug,
+      pagePath: modelSlug ? `/model/${modelSlug}` : undefined,
+    });
+
+    // Use current page URL for deep linking
+    copyAndGo(window.location.href, decodedUrl, { delay: 800 });
+  }, [isCrawler, hasHydrated, decodedUrl, trackClick, modelId, modelName, modelSlug, copyAndGo]);
+
   // Progress tracking with JavaScript interval (replaces CSS-only approach)
   useEffect(() => {
     if (!currentStory) return;
@@ -319,18 +355,18 @@ export function StoryViewer({
     const now = Date.now();
     // If resuming from pause, calculate adjusted start time using saved progress
     // Otherwise, reset progress to 0 for new story
-    const adjustedStartTime = pausedProgress > 0 
+    const adjustedStartTime = pausedProgress > 0
       ? now - (pausedProgress / 100 * duration * 1000)
       : now;
-    
+
     // Only reset progress if we're starting fresh (pausedProgress is 0)
     // If resuming, keep the current progress value
     if (pausedProgress === 0) {
       setProgress(0);
     }
-    
+
     setStoryStartTime(adjustedStartTime);
-    
+
     // Progress update interval (60fps feel)
     const progressInterval = setInterval(() => {
       // Double-check pause state inside interval to prevent updates when paused
@@ -338,11 +374,11 @@ export function StoryViewer({
         clearInterval(progressInterval);
         return;
       }
-      
+
       const elapsed = Date.now() - adjustedStartTime;
       const newProgress = Math.min((elapsed / (duration * 1000)) * 100, 100);
       setProgress(newProgress);
-      
+
       // Auto-advance when complete
       if (newProgress >= 100) {
         clearInterval(progressInterval);
@@ -388,7 +424,7 @@ export function StoryViewer({
   useEffect(() => {
     // Add class to body to blur background content
     document.body.classList.add('story-open');
-    
+
     // Cleanup: remove class when component unmounts
     return () => {
       document.body.classList.remove('story-open');
@@ -413,16 +449,16 @@ export function StoryViewer({
     setPausedProgress(0);
     setIsUIHidden(false);
     setIsLongPress(false);
-    
+
     // Reset animation state - IMPORTANT: Don't reset slideDirection here
     // as it's needed for the enter animation
     setAnimationType('story');
-    
+
     // Reset slideDirection after enter animation completes
     const resetTimer = setTimeout(() => {
       setSlideDirection(null);
     }, 400);
-    
+
     return () => clearTimeout(resetTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [group.id, initialStoryIndex]); // Depend on group.id and initialStoryIndex
@@ -439,7 +475,7 @@ export function StoryViewer({
       setIsUIHidden(false);
       setIsLongPress(false);
     }
-    
+
     if (isLongPress) {
       setIsLongPress(false);
       setIsUIHidden(false);
@@ -506,17 +542,17 @@ export function StoryViewer({
   const handleMouseDown = useCallback(() => {
     // Disable long press if disabled (model profile)
     if (disableLongPress) return;
-    
+
     // Clear any existing timer first
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
       longPressTimerId.current = null;
     }
-    
+
     // Record touch start time to detect quick taps
     touchStartTime.current = Date.now();
-    
+
     // Create new timer and store its ID
     const timerId = setTimeout(() => {
       // Only execute if this timer is still the active one
@@ -526,7 +562,7 @@ export function StoryViewer({
         setIsLongPress(true);
       }
     }, 150); // Slightly faster for snappier feel
-    
+
     longPressTimerRef.current = timerId;
     longPressTimerId.current = timerId;
   }, [pauseStory, disableLongPress]);
@@ -534,7 +570,7 @@ export function StoryViewer({
   const handleMouseUp = useCallback(() => {
     // Disable long press if disabled (model profile)
     if (disableLongPress) return;
-    
+
     // Clear long press timer immediately and ensure UI is visible
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
@@ -544,7 +580,7 @@ export function StoryViewer({
       setIsUIHidden(false);
       setIsLongPress(false);
     }
-    
+
     // If long press was active, resume story
     if (isLongPress) {
       resumeStory();
@@ -607,7 +643,7 @@ export function StoryViewer({
   // Handle Share button click - Pause while share sheet is open
   const handleShare = async () => {
     const storyUrl = getCurrentStoryUrl();
-    
+
     // In model profile: copy to clipboard and show toast
     if (disableLongPress) {
       try {
@@ -624,11 +660,11 @@ export function StoryViewer({
       }
       return;
     }
-    
+
     // Main layout: use native share with pause/resume
     // Only pause if long press is enabled (main layout)
     pauseStory();
-    
+
     try {
       await share({
         url: storyUrl,
@@ -646,12 +682,7 @@ export function StoryViewer({
   };
 
   // Handle "Respond to Story" CTA click - Copy & Go
-  const handleRespondToStory = () => {
-    if (socialLink && socialLink !== "#") {
-      // Use current page URL for deep linking
-      copyAndGo(window.location.href, socialLink, { delay: 800 });
-    }
-  };
+  // This function is now handled by handleRespondToStory with Ghost Link logic
 
   // Handle profile redirect - navigate to model profile page
   const handleProfileClick = (e: React.MouseEvent) => {
@@ -668,16 +699,16 @@ export function StoryViewer({
   }
 
   const mediaUrl = getImageUrl(currentStory?.media_url);
-  
+
   // Avatar logic: modelImage for Recent (non-pinned), cover_url for pinned
-  const avatarUrl = !group.is_pinned && modelImage 
-    ? modelImage 
+  const avatarUrl = !group.is_pinned && modelImage
+    ? modelImage
     : group.cover_url;
 
 
   // Get portal container - render outside main content to avoid blur
-  const portalContainer = typeof document !== 'undefined' 
-    ? document.getElementById('story-portal') || document.body 
+  const portalContainer = typeof document !== 'undefined'
+    ? document.getElementById('story-portal') || document.body
     : null;
 
   // If no portal container (SSR), don't render
@@ -710,386 +741,388 @@ export function StoryViewer({
             touchAction: 'none', // Prevent browser gestures but allow our handlers
           }}
         >
-      {/* Dark overlay - the page content behind is already blurred via CSS */}
-      <div 
-        className="absolute inset-0 bg-background"
-        aria-hidden="true"
-      />
+          {/* Dark overlay - the page content behind is already blurred via CSS */}
+          <div
+            className="absolute inset-0 bg-background"
+            aria-hidden="true"
+          />
 
-      {/* Progress Bars - JavaScript-based progress tracking */}
-      {/* Main layout: Always show. Model profile recent block: Always show. Model profile pinned: Only show if more than one story */}
-      {(!disableLongPress || !group.is_pinned || stories.length > 1) && (
-      <div 
-        key={`progress-${group.id}`}
-        className={`absolute top-0 left-0 right-0 z-[102] flex gap-1 p-2 safe-area-top transition-opacity duration-200 ${
-          isUIHidden ? 'opacity-0' : 'opacity-100'
-        }`}
-      >
-        {stories.map((story, index) => {
-          // TEMPORARY FIX: For pinned stories in model profile, show static bars (no animation)
-          // Only the current story bar is filled, previous bars are empty for clarity
-          const isStatic = disableLongPress && group.is_pinned;
-          
-          // Main layout: Show completed stories as 100% filled (subtle mask effect)
-          // Model profile pinned: Only current story filled, others empty
-          const barWidth = isStatic
-            ? (index === currentStoryIndex ? '100%' : '0%') // Pinned in model profile: only current filled
-            : (index < currentStoryIndex 
-                ? '100%' 
-                : index === currentStoryIndex 
-                  ? `${progress}%` 
-                  : '0%'); // Main layout: completed stories stay filled
-          
-          return (
+          {/* Progress Bars - JavaScript-based progress tracking */}
+          {/* Main layout: Always show. Model profile recent block: Always show. Model profile pinned: Only show if more than one story */}
+          {(!disableLongPress || !group.is_pinned || stories.length > 1) && (
             <div
-              key={story.id}
-              className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden"
+              key={`progress-${group.id}`}
+              className={`absolute top-0 left-0 right-0 z-[102] flex gap-1 p-2 safe-area-top transition-opacity duration-200 ${isUIHidden ? 'opacity-0' : 'opacity-100'
+                }`}
             >
+              {stories.map((story, index) => {
+                // TEMPORARY FIX: For pinned stories in model profile, show static bars (no animation)
+                // Only the current story bar is filled, previous bars are empty for clarity
+                const isStatic = disableLongPress && group.is_pinned;
+
+                // Main layout: Show completed stories as 100% filled (subtle mask effect)
+                // Model profile pinned: Only current story filled, others empty
+                const barWidth = isStatic
+                  ? (index === currentStoryIndex ? '100%' : '0%') // Pinned in model profile: only current filled
+                  : (index < currentStoryIndex
+                    ? '100%'
+                    : index === currentStoryIndex
+                      ? `${progress}%`
+                      : '0%'); // Main layout: completed stories stay filled
+
+                return (
+                  <div
+                    key={story.id}
+                    className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden"
+                  >
+                    <div
+                      className="h-full bg-white rounded-full"
+                      style={{
+                        width: barWidth,
+                        // Only animate if not static (pinned in model profile)
+                        transition: isStatic ? 'none' : 'width 0.05s linear',
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Header - Group info and close button */}
+          {/* Key by group.id to prevent duplication during transitions */}
+          <div
+            key={`header-${group.id}`}
+            className={`absolute top-4 left-0 right-0 z-[102] flex items-center justify-between px-4 mt-2 transition-opacity duration-200 ${isUIHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'
+              }`}
+          >
+            {/* Profile Link - Avatar and Name (clickable) */}
+            {modelSlug ? (
+              <button
+                onClick={handleProfileClick}
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+                aria-label={`View ${modelName || group.title || "model"} profile`}
+              >
+                {/* Group thumbnail - Gold ring accent */}
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 ring-2 ring-[#D4AF37]/40">
+                  {avatarUrl && (
+                    <Image
+                      src={getImageUrl(avatarUrl)}
+                      alt={group.title || "Story"}
+                      width={40}
+                      height={40}
+                      className="object-cover w-full h-full pointer-events-none"
+                      draggable={false}
+                      sizes="40px"
+                      priority
+                    />
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-white font-semibold text-sm">
+                    {modelName || group.title || "Recent"}
+                  </span>
+                  {isVerified && (
+                    <VerifiedBadge size={16} />
+                  )}
+                  {/* Date Display - Relative for Recent, Absolute for Pinned */}
+                  {/* TEMPORARY FIX: Hide date for pinned stories in model profile */}
+                  {currentStory?.posted_date && !(disableLongPress && group.is_pinned) && (
+                    <span className="text-white/50 text-xs">
+                      {formatStoryDate(currentStory.posted_date, group.is_pinned)}
+                    </span>
+                  )}
+                </div>
+              </button>
+            ) : (
+              <div className="flex items-center gap-3">
+                {/* Group thumbnail - Gold ring accent */}
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 ring-2 ring-[#D4AF37]/40">
+                  {avatarUrl && (
+                    <Image
+                      src={getImageUrl(avatarUrl)}
+                      alt={group.title || "Story"}
+                      width={40}
+                      height={40}
+                      className="object-cover w-full h-full pointer-events-none"
+                      draggable={false}
+                      sizes="40px"
+                      priority
+                    />
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-white font-semibold text-sm">
+                    {modelName || group.title || "Recent"}
+                  </span>
+                  {isVerified && (
+                    <VerifiedBadge size={16} />
+                  )}
+                  {/* Date Display - Relative for Recent, Absolute for Pinned */}
+                  {/* TEMPORARY FIX: Hide date for pinned stories in model profile */}
+                  {currentStory?.posted_date && !(disableLongPress && group.is_pinned) && (
+                    <span className="text-white/50 text-xs">
+                      {formatStoryDate(currentStory.posted_date, group.is_pinned)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Close button - Glassmorphism with Gold hover */}
+            <button
+              onClick={handleClose}
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/10 hover:bg-white/15 hover:border-[#D4AF37]/30 transition-all active:scale-95"
+              aria-label="Close stories"
+            >
+              <X className="w-6 h-6 text-white" />
+            </button>
+          </div>
+
+          {/* Story Container - with AnimatePresence for model transitions */}
+          <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+
+            {/* Desktop Navigation Arrows */}
+            {isDesktop && (
+              <>
+                {/* Previous Arrow */}
+                {prevGroupId && (
+                  <button
+                    onClick={handlePrevModel}
+                    className="absolute left-4 z-[103] w-12 h-12 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-xl border border-white/20 hover:bg-black/60 hover:border-white/30 transition-all active:scale-95"
+                    aria-label="Previous story group"
+                  >
+                    <ChevronLeft className="w-6 h-6 text-white" />
+                  </button>
+                )}
+
+                {/* Next Arrow */}
+                {nextGroupId && (
+                  <button
+                    onClick={handleNextModel}
+                    className="absolute right-4 z-[103] w-12 h-12 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-xl border border-white/20 hover:bg-black/60 hover:border-white/30 transition-all active:scale-95"
+                    aria-label="Next story group"
+                  >
+                    <ChevronRight className="w-6 h-6 text-white" />
+                  </button>
+                )}
+              </>
+            )}
+
+            {/* Animated Story Card - AnimatePresence handles exit animations */}
+            <AnimatePresence mode="popLayout" custom={slideDirection}>
+              <motion.div
+                key={group.id} // Key by group.id so AnimatePresence detects model changes
+                custom={slideDirection}
+                variants={slideVariants}
+                initial={slideDirection ? "enter" : false}
+                animate="center"
+                exit="exit"
+                className="absolute inset-0 flex items-center justify-center cursor-pointer"
+                style={{ pointerEvents: 'auto' }}
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  if (!disableLongPress) handleMouseDown();
+                  if (!isDesktop) handleSwipeStart(e);
+                }}
+                onPointerUp={(e) => {
+                  e.stopPropagation();
+                  // Always clear long press timer on pointer up (especially important for mobile)
+                  if (longPressTimerRef.current) {
+                    clearTimeout(longPressTimerRef.current);
+                    longPressTimerRef.current = null;
+                    longPressTimerId.current = null;
+                    // Immediately ensure UI is visible
+                    setIsUIHidden(false);
+                    setIsLongPress(false);
+                  }
+                  if (!disableLongPress) handleMouseUp();
+                  if (!isDesktop) handleSwipeEnd(e);
+                }}
+                onPointerLeave={(e) => {
+                  e.stopPropagation();
+                  if (!disableLongPress) handleMouseUp();
+                  if (!isDesktop && swipeStart.current) handleSwipeEnd(e);
+                }}
+                onPointerCancel={(e) => {
+                  e.stopPropagation();
+                  if (!disableLongPress) handleMouseUp();
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleTap(e);
+                }}
+                onTouchStart={(e) => {
+                  e.stopPropagation();
+                  if (!disableLongPress) handleMouseDown();
+                }}
+                onTouchEnd={(e) => {
+                  e.stopPropagation();
+                  if (!disableLongPress) handleMouseUp();
+                }}
+                onTouchCancel={(e) => {
+                  e.stopPropagation();
+                  if (!disableLongPress) handleMouseUp();
+                }}
+              >
+                {/* Story content wrapper */}
+                <div
+                  className="relative w-full h-full"
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    if (!disableLongPress) handleMouseDown();
+                    if (!isDesktop) handleSwipeStart(e);
+                  }}
+                  onPointerUp={(e) => {
+                    e.stopPropagation();
+                    // Always clear long press timer on pointer up (especially important for mobile)
+                    if (longPressTimerRef.current) {
+                      clearTimeout(longPressTimerRef.current);
+                      longPressTimerRef.current = null;
+                      longPressTimerId.current = null;
+                      // Immediately ensure UI is visible
+                      setIsUIHidden(false);
+                      setIsLongPress(false);
+                    }
+                    if (!disableLongPress) handleMouseUp();
+                    if (!isDesktop) handleSwipeEnd(e);
+                  }}
+                  onPointerLeave={(e) => {
+                    e.stopPropagation();
+                    if (!disableLongPress) handleMouseUp();
+                    if (!isDesktop && swipeStart.current) handleSwipeEnd(e);
+                  }}
+                  onPointerCancel={(e) => {
+                    e.stopPropagation();
+                    if (!disableLongPress) handleMouseUp();
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTap(e);
+                  }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation();
+                    if (!disableLongPress) handleMouseDown();
+                  }}
+                  onTouchEnd={(e) => {
+                    e.stopPropagation();
+                    if (!disableLongPress) handleMouseUp();
+                  }}
+                  onTouchCancel={(e) => {
+                    e.stopPropagation();
+                    if (!disableLongPress) handleMouseUp();
+                  }}
+                >
+                  {currentStory?.media_type === "video" ? (
+                    (() => {
+                      const mp4Url = getImageUrl(currentStory.media_url);
+                      const webmUrl = mp4Url.endsWith('.mp4')
+                        ? mp4Url.slice(0, -4) + '.webm'
+                        : mp4Url.replace(/\.mp4(\?|$)/, '.webm$1');
+                      const posterUrl = getImageUrl(group.cover_url);
+
+                      return (
+                        <video
+                          key={currentStory.id}
+                          className="w-full h-full object-contain pointer-events-none"
+                          poster={posterUrl}
+                          autoPlay
+                          muted
+                          playsInline
+                          onEnded={goToNext}
+                        >
+                          <source src={webmUrl} type="video/webm" />
+                          <source src={mp4Url} type="video/mp4" />
+                        </video>
+                      );
+                    })()
+                  ) : (
+                    <div className="relative w-full h-full bg-background">
+                      {mediaUrl && (
+                        <Image
+                          key={currentStory?.id}
+                          src={mediaUrl}
+                          alt={`Story ${currentStoryIndex + 1}`}
+                          fill
+                          className="object-contain pointer-events-none transition-opacity duration-300"
+                          draggable={false}
+                          sizes="100vw"
+                          priority
+                          placeholder="empty"
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Model Transition Overlay - Blurred overlay to prevent main layout flash during model-to-model navigation */}
+            {isTransitioning && animationType === 'model' && (
               <div
-                className="h-full bg-white rounded-full"
+                className="absolute inset-0 bg-[#050A14]/40 backdrop-blur-xl z-[110] pointer-events-none"
                 style={{
-                  width: barWidth,
-                  // Only animate if not static (pinned in model profile)
-                  transition: isStatic ? 'none' : 'width 0.05s linear',
+                  backdropFilter: 'blur(20px) saturate(120%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(120%)',
                 }}
               />
-            </div>
-          );
-        })}
-      </div>
-      )}
-
-      {/* Header - Group info and close button */}
-      {/* Key by group.id to prevent duplication during transitions */}
-      <div 
-        key={`header-${group.id}`}
-        className={`absolute top-4 left-0 right-0 z-[102] flex items-center justify-between px-4 mt-2 transition-opacity duration-200 ${
-          isUIHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'
-        }`}
-      >
-        {/* Profile Link - Avatar and Name (clickable) */}
-        {modelSlug ? (
-          <button
-            onClick={handleProfileClick}
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
-            aria-label={`View ${modelName || group.title || "model"} profile`}
-          >
-            {/* Group thumbnail - Gold ring accent */}
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 ring-2 ring-[#D4AF37]/40">
-              {avatarUrl && (
-                <Image
-                  src={getImageUrl(avatarUrl)}
-                  alt={group.title || "Story"}
-                  width={40}
-                  height={40}
-                  className="object-cover w-full h-full pointer-events-none"
-                  draggable={false}
-                  sizes="40px"
-                  priority
-                />
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-white font-semibold text-sm">
-                {modelName || group.title || "Recent"}
-              </span>
-              {isVerified && (
-                <VerifiedBadge size={16} />
-              )}
-              {/* Date Display - Relative for Recent, Absolute for Pinned */}
-              {/* TEMPORARY FIX: Hide date for pinned stories in model profile */}
-              {currentStory?.posted_date && !(disableLongPress && group.is_pinned) && (
-                <span className="text-white/50 text-xs">
-                  {formatStoryDate(currentStory.posted_date, group.is_pinned)}
-                </span>
-              )}
-            </div>
-          </button>
-        ) : (
-          <div className="flex items-center gap-3">
-            {/* Group thumbnail - Gold ring accent */}
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 ring-2 ring-[#D4AF37]/40">
-              {avatarUrl && (
-                <Image
-                  src={getImageUrl(avatarUrl)}
-                  alt={group.title || "Story"}
-                  width={40}
-                  height={40}
-                  className="object-cover w-full h-full pointer-events-none"
-                  draggable={false}
-                  sizes="40px"
-                  priority
-                />
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-white font-semibold text-sm">
-                {modelName || group.title || "Recent"}
-              </span>
-              {isVerified && (
-                <VerifiedBadge size={16} />
-              )}
-              {/* Date Display - Relative for Recent, Absolute for Pinned */}
-              {/* TEMPORARY FIX: Hide date for pinned stories in model profile */}
-              {currentStory?.posted_date && !(disableLongPress && group.is_pinned) && (
-                <span className="text-white/50 text-xs">
-                  {formatStoryDate(currentStory.posted_date, group.is_pinned)}
-                </span>
-              )}
-            </div>
+            )}
           </div>
-        )}
 
-        {/* Close button - Glassmorphism with Gold hover */}
-        <button
-          onClick={handleClose}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/10 hover:bg-white/15 hover:border-[#D4AF37]/30 transition-all active:scale-95"
-          aria-label="Close stories"
-        >
-          <X className="w-6 h-6 text-white" />
-        </button>
-      </div>
-
-      {/* Story Container - with AnimatePresence for model transitions */}
-      <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-        
-        {/* Desktop Navigation Arrows */}
-        {isDesktop && (
-          <>
-            {/* Previous Arrow */}
-            {prevGroupId && (
-              <button
-                onClick={handlePrevModel}
-                className="absolute left-4 z-[103] w-12 h-12 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-xl border border-white/20 hover:bg-black/60 hover:border-white/30 transition-all active:scale-95"
-                aria-label="Previous story group"
-              >
-                <ChevronLeft className="w-6 h-6 text-white" />
-              </button>
-            )}
-            
-            {/* Next Arrow */}
-            {nextGroupId && (
-              <button
-                onClick={handleNextModel}
-                className="absolute right-4 z-[103] w-12 h-12 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-xl border border-white/20 hover:bg-black/60 hover:border-white/30 transition-all active:scale-95"
-                aria-label="Next story group"
-              >
-                <ChevronRight className="w-6 h-6 text-white" />
-              </button>
-            )}
-          </>
-        )}
-        
-        {/* Animated Story Card - AnimatePresence handles exit animations */}
-        <AnimatePresence mode="popLayout" custom={slideDirection}>
-          <motion.div
-            key={group.id} // Key by group.id so AnimatePresence detects model changes
-            custom={slideDirection}
-            variants={slideVariants}
-            initial={slideDirection ? "enter" : false}
-            animate="center"
-            exit="exit"
-            className="absolute inset-0 flex items-center justify-center cursor-pointer"
-            style={{ pointerEvents: 'auto' }}
-            onPointerDown={(e) => {
-              e.stopPropagation();
-              if (!disableLongPress) handleMouseDown();
-              if (!isDesktop) handleSwipeStart(e);
-            }}
-            onPointerUp={(e) => {
-              e.stopPropagation();
-              // Always clear long press timer on pointer up (especially important for mobile)
-              if (longPressTimerRef.current) {
-                clearTimeout(longPressTimerRef.current);
-                longPressTimerRef.current = null;
-                longPressTimerId.current = null;
-                // Immediately ensure UI is visible
-                setIsUIHidden(false);
-                setIsLongPress(false);
-              }
-              if (!disableLongPress) handleMouseUp();
-              if (!isDesktop) handleSwipeEnd(e);
-            }}
-            onPointerLeave={(e) => {
-              e.stopPropagation();
-              if (!disableLongPress) handleMouseUp();
-              if (!isDesktop && swipeStart.current) handleSwipeEnd(e);
-            }}
-            onPointerCancel={(e) => {
-              e.stopPropagation();
-              if (!disableLongPress) handleMouseUp();
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleTap(e);
-            }}
-            onTouchStart={(e) => {
-              e.stopPropagation();
-              if (!disableLongPress) handleMouseDown();
-            }}
-            onTouchEnd={(e) => {
-              e.stopPropagation();
-              if (!disableLongPress) handleMouseUp();
-            }}
-            onTouchCancel={(e) => {
-              e.stopPropagation();
-              if (!disableLongPress) handleMouseUp();
-            }}
-          >
-            {/* Story content wrapper */}
-            <div 
-              className="relative w-full h-full"
-              onPointerDown={(e) => {
-                e.stopPropagation();
-                if (!disableLongPress) handleMouseDown();
-                if (!isDesktop) handleSwipeStart(e);
-              }}
-              onPointerUp={(e) => {
-                e.stopPropagation();
-                // Always clear long press timer on pointer up (especially important for mobile)
-                if (longPressTimerRef.current) {
-                  clearTimeout(longPressTimerRef.current);
-                  longPressTimerRef.current = null;
-                  longPressTimerId.current = null;
-                  // Immediately ensure UI is visible
-                  setIsUIHidden(false);
-                  setIsLongPress(false);
-                }
-                if (!disableLongPress) handleMouseUp();
-                if (!isDesktop) handleSwipeEnd(e);
-              }}
-              onPointerLeave={(e) => {
-                e.stopPropagation();
-                if (!disableLongPress) handleMouseUp();
-                if (!isDesktop && swipeStart.current) handleSwipeEnd(e);
-              }}
-              onPointerCancel={(e) => {
-                e.stopPropagation();
-                if (!disableLongPress) handleMouseUp();
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleTap(e);
-              }}
-              onTouchStart={(e) => {
-                e.stopPropagation();
-                if (!disableLongPress) handleMouseDown();
-              }}
-              onTouchEnd={(e) => {
-                e.stopPropagation();
-                if (!disableLongPress) handleMouseUp();
-              }}
-              onTouchCancel={(e) => {
-                e.stopPropagation();
-                if (!disableLongPress) handleMouseUp();
-              }}
-            >
-                {currentStory?.media_type === "video" ? (
-                  (() => {
-                    const mp4Url = getImageUrl(currentStory.media_url);
-                    const webmUrl = mp4Url.endsWith('.mp4') 
-                      ? mp4Url.slice(0, -4) + '.webm' 
-                      : mp4Url.replace(/\.mp4(\?|$)/, '.webm$1');
-                    const posterUrl = getImageUrl(group.cover_url);
-                    
-                    return (
-                      <video
-                        key={currentStory.id}
-                        className="w-full h-full object-contain pointer-events-none"
-                        poster={posterUrl}
-                        autoPlay
-                        muted
-                        playsInline
-                        onEnded={goToNext}
-                      >
-                        <source src={webmUrl} type="video/webm" />
-                        <source src={mp4Url} type="video/mp4" />
-                      </video>
-                    );
-                  })()
-                ) : (
-                  <div className="relative w-full h-full bg-background">
-                    {mediaUrl && (
-                      <Image
-                        key={currentStory?.id}
-                        src={mediaUrl}
-                        alt={`Story ${currentStoryIndex + 1}`}
-                        fill
-                        className="object-contain pointer-events-none transition-opacity duration-300"
-                        draggable={false}
-                        sizes="100vw"
-                        priority
-                        placeholder="empty"
-                      />
-                    )}
-                  </div>
-                )}
+          {/* Micro-Toast - Link Copied Confirmation (Electric Emerald) */}
+          {(isCopiedAndGo || showCopiedToast) && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[200] pointer-events-none animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex items-center gap-2 px-4 py-3 bg-black/70 backdrop-blur-xl border border-[#00FF85]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,133,0.2)]">
+                <Link2 className="w-5 h-5 text-[#00FF85]" />
+                <span className="text-white font-medium text-sm">
+                  {isCopiedAndGo ? 'Link Copied! Opening...' : 'Link Copied!'}
+                </span>
               </div>
-          </motion.div>
-        </AnimatePresence>
-        
-        {/* Model Transition Overlay - Blurred overlay to prevent main layout flash during model-to-model navigation */}
-        {isTransitioning && animationType === 'model' && (
-          <div
-            className="absolute inset-0 bg-[#050A14]/40 backdrop-blur-xl z-[110] pointer-events-none"
-            style={{ 
-              backdropFilter: 'blur(20px) saturate(120%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(120%)',
-            }}
-          />
-        )}
-      </div>
+            </div>
+          )}
 
-      {/* Micro-Toast - Link Copied Confirmation (Electric Emerald) */}
-      {(isCopiedAndGo || showCopiedToast) && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[200] pointer-events-none animate-in fade-in zoom-in-95 duration-200">
-          <div className="flex items-center gap-2 px-4 py-3 bg-black/70 backdrop-blur-xl border border-[#00FF85]/30 rounded-xl shadow-[0_0_20px_rgba(0,255,133,0.2)]">
-            <Link2 className="w-5 h-5 text-[#00FF85]" />
-            <span className="text-white font-medium text-sm">
-              {isCopiedAndGo ? 'Link Copied! Opening...' : 'Link Copied!'}
-            </span>
-          </div>
-        </div>
-      )}
+          {/* Action Bar Background - Opaque glass shadow at bottom */}
+          {encodedDestination && (
+            <div
+              className={`absolute bottom-0 left-0 right-0 z-[101] h-32 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none transition-opacity duration-200 ${isUIHidden ? 'opacity-0' : 'opacity-100'
+                }`}
+            />
+          )}
 
-      {/* Action Bar Background - Opaque glass shadow at bottom */}
-      {socialLink && socialLink !== "#" && (
-        <div 
-          className={`absolute bottom-0 left-0 right-0 z-[101] h-32 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none transition-opacity duration-200 ${
-            isUIHidden ? 'opacity-0' : 'opacity-100'
-          }`}
-        />
-      )}
+          {/* Action Bar - Respond to Story + Share */}
+          {encodedDestination && (
+            <div
+              className={`absolute bottom-8 left-0 right-0 z-[102] flex items-center justify-center gap-3 px-4 safe-area-bottom transition-opacity duration-200 ${isUIHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                }`}
+            >
+              {/* Respond to Story Button - iOS Glassmorphism Style */}
+              <button
+                onClick={handleRespondToStory}
+                disabled={isCrawler || !hasHydrated || !decodedUrl}
+                className={cn(
+                  "flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-xl text-[#00FF85] border border-white/20 rounded-full font-bold transition-all duration-300 shadow-[0_0_20px_rgba(0,255,133,0.15)] active:scale-[0.98] active:bg-white/20",
+                  isCrawler || !hasHydrated || !decodedUrl
+                    ? "opacity-80 cursor-default grayscale-[0.5]"
+                    : "hover:bg-white/15 hover:border-[#00FF85]/40 hover:shadow-[0_0_25px_rgba(0,255,133,0.25)]"
+                )}
+              >
+                <span>{isCrawler ? "Premium Content" : "Respond to Story"}</span>
+              </button>
 
-      {/* Action Bar - Respond to Story + Share */}
-      {socialLink && socialLink !== "#" && (
-        <div 
-          className={`absolute bottom-8 left-0 right-0 z-[102] flex items-center justify-center gap-3 px-4 safe-area-bottom transition-opacity duration-200 ${
-            isUIHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'
-          }`}
-        >
-          {/* Respond to Story Button - iOS Glassmorphism Style */}
-          <button
-            onClick={handleRespondToStory}
-            className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-xl text-[#00FF85] border border-white/20 rounded-full font-bold transition-all duration-300 shadow-[0_0_20px_rgba(0,255,133,0.15)] hover:bg-white/15 hover:border-[#00FF85]/40 hover:shadow-[0_0_25px_rgba(0,255,133,0.25)] active:scale-[0.98] active:bg-white/20"
-          >
-            <span>Respond to Story</span>
-          </button>
-
-          {/* Share Button - Neon Cyber Violet Dark Glass */}
-          <button
-            onClick={handleShare}
-            className="relative flex items-center justify-center w-12 h-12 bg-black/50 backdrop-blur-xl rounded-full transition-all duration-300 shadow-[0_0_20px_rgba(192,132,252,0.3)] hover:bg-black/60 hover:shadow-[0_0_30px_rgba(192,132,252,0.5)] hover:scale-105 active:scale-95 active:bg-black/70"
-            aria-label="Share story"
-          >
-            {isCopied ? (
-              <Check className="w-5 h-5 text-[#C084FC] drop-shadow-[0_0_10px_rgba(192,132,252,1)]" />
-            ) : (
-              <Share2 className="w-5 h-5 text-[#C084FC] drop-shadow-[0_0_10px_rgba(192,132,252,1)]" />
-            )}
-          </button>
-        </div>
-      )}
+              {/* Share Button - Neon Cyber Violet Dark Glass */}
+              <button
+                onClick={handleShare}
+                className="relative flex items-center justify-center w-12 h-12 bg-black/50 backdrop-blur-xl rounded-full transition-all duration-300 shadow-[0_0_20px_rgba(192,132,252,0.3)] hover:bg-black/60 hover:shadow-[0_0_30px_rgba(192,132,252,0.5)] hover:scale-105 active:scale-95 active:bg-black/70"
+                aria-label="Share story"
+              >
+                {isCopied ? (
+                  <Check className="w-5 h-5 text-[#C084FC] drop-shadow-[0_0_10px_rgba(192,132,252,1)]" />
+                ) : (
+                  <Share2 className="w-5 h-5 text-[#C084FC] drop-shadow-[0_0_10px_rgba(192,132,252,1)]" />
+                )}
+              </button>
+            </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>,

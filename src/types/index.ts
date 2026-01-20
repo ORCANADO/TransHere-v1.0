@@ -46,6 +46,7 @@ export interface Model {
   bio?: string;
   bio_es?: string | null;
   social_link?: string;
+  encoded_social_link?: string;
   // Stories linked to the model
   story_groups?: StoryGroup[];
 }

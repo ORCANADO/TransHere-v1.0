@@ -477,6 +477,10 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
 - [x] **Profile Gallery Integration:**
     - Extended the "Locked VIP Teaser" to handle obfuscated redirects internally.
     - Replaced raw `redirectUrl` with `encodedDestination` and `isCrawler` checks.
+- [x] **Story Viewer Integration (Phase 6.9):**
+    - Secured the "Respond to Story" CTA with Ghost Link protection.
+    - Hydration-safe decoding for hydration-mismatch prevention.
+    - Crawler-aware UI: "Respond to Story" (Human) vs "Premium Content" (Bot).
 - [x] **Universal Deployment:**
     - Integrated across all model profile pages, protecting both primary CTA buttons and gallery teasers.
 

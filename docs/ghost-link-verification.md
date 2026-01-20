@@ -72,6 +72,28 @@ This guide outlines the mandatory checks and manual testing scenarios to verify 
    - Normal clicks: `eventType` includes 'click_social' or 'click_content'.
    - Crawler clicks: Verify tracking logic (should ideally log the block or ignore).
 
+### Test 9: Story Viewer Verification
+1. Navigate to a profile with stories (or Home page 'near' feed).
+2. Open a story.
+3. **EXPECTED**: "Respond to Story" button appears.
+4. **Action**: Click "Respond to Story".
+5. **EXPECTED**: 
+   - New tab opens with encoded social link (human).
+   - Button is disabled and says "Premium Content" (crawler simulation).
+6. **Action**: Long press on story (mobile).
+7. **EXPECTED**: Story pauses, UI hides.
+
+### Test 9: Story Viewer Verification
+1. Navigate to a profile with stories (or Home page 'near' feed).
+2. Open a story.
+3. **EXPECTED**: "Respond to Story" button appears.
+4. **Action**: Click "Respond to Story".
+5. **EXPECTED**: 
+   - New tab opens with encoded social link (human).
+   - Button is disabled and says "Premium Content" (crawler simulation).
+6. **Action**: Long press on story (mobile).
+7. **EXPECTED**: Story pauses, UI hides.
+
 ## Emergency Rollback
 
 If issues are discovered in production:

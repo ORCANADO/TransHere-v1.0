@@ -15,22 +15,23 @@ const StoryViewer = dynamic(() => import("./story-viewer").then(mod => ({ defaul
 
 interface HomeStoriesBarProps {
   models: Model[];
+  isCrawler: boolean;
 }
 
-export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
+export function HomeStoriesBar({ models, isCrawler }: HomeStoriesBarProps) {
   // Read current feed from URL - only show on 'near' feed
   const [feed] = useQueryState("feed", { defaultValue: "near" });
-  
+
   // Visual Memory: Track which stories have been viewed
   const { hasUnseenStories, getFirstUnseenStoryIndex } = useViewedStories();
-  
+
   // URL state management with nuqs - syncs with browser history
   const [storyId, setStoryId] = useQueryState("story", {
     defaultValue: "",
     clearOnDefault: true,
     history: "push",
   });
-  
+
   // Story index parameter for resume playback (si = story index)
   const [storyIndexParam, setStoryIndexParam] = useQueryState("si", {
     defaultValue: "",
@@ -42,7 +43,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
     },
     serialize: (value) => value,
   });
-  
+
   // Parse story index from URL (defaults to 0 if not provided or invalid)
   const initialStoryIndexFromUrl = storyIndexParam ? parseInt(storyIndexParam, 10) : 0;
 
@@ -62,7 +63,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
     if (feed !== "near") {
       return [];
     }
-    
+
     return models
       .map((model) => {
         // Find the specific recent (unpinned) group with stories
@@ -83,9 +84,9 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
         });
         const latestStory = sortedStories[0];
         const latestStoryDate = latestStory ? new Date(latestStory.posted_date || latestStory.created_at) : new Date(0);
-        
+
         // For cover: use media_url only if it's an image, for videos use group's cover_url (poster)
-        const latestStoryMedia = latestStory?.media_type === 'video' 
+        const latestStoryMedia = latestStory?.media_type === 'video'
           ? null  // Don't use video URL as cover
           : latestStory?.media_url;
 
@@ -134,7 +135,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
     prevGroupId: string | null;
     nextGroupId: string | null;
   } | null>(null);
-  
+
   // Store snapshot of chain group IDs at open time to maintain chain isolation
   // This prevents groups from disappearing from the chain mid-navigation
   const [activeChainGroupIds, setActiveChainGroupIds] = useState<string[] | null>(null);
@@ -168,12 +169,12 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
       } else {
         return { prevGroupId: null, nextGroupId: null };
       }
-      
+
       const indexInChain = chain.findIndex((g) => g.id === groupId);
       if (indexInChain === -1) {
         return { prevGroupId: null, nextGroupId: null };
       }
-      
+
       return {
         prevGroupId: indexInChain > 0 ? chain[indexInChain - 1].id : null,
         nextGroupId: indexInChain < chain.length - 1 ? chain[indexInChain + 1].id : null,
@@ -198,21 +199,30 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
   // Format: storyId = "modelId:groupId" or just "groupId" if we can infer model
   const selectedModel = storyId && feed === "near"
     ? models.find((model) => {
-        // Check if any of this model's story groups match the storyId
-        return model.story_groups?.some((group) => group.id === storyId);
-      })
+      // Check if any of this model's story groups match the storyId
+      return model.story_groups?.some((group) => group.id === storyId);
+    })
     : null;
 
   const selectedGroup = storyId && selectedModel && feed === "near"
     ? selectedModel.story_groups?.find((group) => group.id === storyId)
     : null;
 
+  // Encode destination for selected model
+  const encodedDestination = useMemo(() => {
+    if (!selectedModel?.social_link) return undefined;
+    // Note: In a production scenario, we'd want this encoded server-side.
+    // However, since HomeStoriesBar is a client component receiving the raw model list,
+    // we encode it here for the viewer's consumption.
+    return btoa(selectedModel.social_link); // Simple encoding for client-side demo if needed, but ideally passed from server
+  }, [selectedModel?.social_link]);
+
   // Set chain neighbors when storyId changes (e.g., direct link)
   // NOTE: This only runs on initial open or direct link, NOT during navigation
   // Navigation updates neighbors directly in handleNavigate to preserve the snapshot
   useEffect(() => {
     if (feed !== "near") return;
-    
+
     if (storyId && selectedGroup && !activeChainGroupIds) {
       // Only set neighbors if we don't already have a snapshot (initial open or direct link)
       // Determine chain from group's current status and snapshot it
@@ -223,7 +233,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
         // Snapshot the chain group IDs
         const chainGroupIds = chain.map((g) => g.id);
         setActiveChainGroupIds(chainGroupIds);
-        
+
         const neighbors = getNeighborsForGroup(storyId, chainGroupIds);
         setActiveChainNeighbors(neighbors);
       } else {
@@ -253,7 +263,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
     const group = models
       .flatMap((m) => m.story_groups || [])
       .find((g) => g.id === groupId);
-    
+
     if (group) {
       // Sort stories chronologically (oldest first) to match StoryViewer
       const sortedStories = [...(group.stories || [])].sort((a, b) => {
@@ -262,7 +272,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
         return dateA.getTime() - dateB.getTime();
       });
       const startIndex = getFirstUnseenStoryIndex(sortedStories);
-      
+
       // Determine chain and snapshot group IDs at open time
       const groupData = modelsWithRecentGroups.find(({ recentGroup }) => recentGroup.id === groupId);
       if (groupData) {
@@ -271,7 +281,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
         // Snapshot the chain group IDs to prevent changes mid-navigation
         const chainGroupIds = chain.map((g) => g.id);
         setActiveChainGroupIds(chainGroupIds);
-        
+
         // Calculate neighbors using the snapshot
         const neighbors = getNeighborsForGroup(groupId, chainGroupIds);
         setActiveChainNeighbors(neighbors);
@@ -279,7 +289,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
         setActiveChainGroupIds(null);
         setActiveChainNeighbors({ prevGroupId: null, nextGroupId: null });
       }
-      
+
       // Set both parameters with replace to avoid history pollution
       setStoryId(groupId, { history: "replace" });
       setStoryIndexParam(startIndex.toString(), { history: "replace" });
@@ -310,7 +320,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
     const group = models
       .flatMap((m) => m.story_groups || [])
       .find((g) => g.id === id);
-    
+
     if (group) {
       // Sort stories chronologically (oldest first) to match StoryViewer
       const sortedStories = [...(group.stories || [])].sort((a, b) => {
@@ -319,7 +329,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
         return dateA.getTime() - dateB.getTime();
       });
       const startIndex = getFirstUnseenStoryIndex(sortedStories);
-      
+
       // Update neighbors for the new group using the snapshot chain
       // This ensures we stay in the same chain even if groups change status mid-navigation
       if (activeChainGroupIds) {
@@ -340,7 +350,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
           setActiveChainNeighbors({ prevGroupId: null, nextGroupId: null });
         }
       }
-      
+
       setStoryId(id, { history: 'replace' });
       setStoryIndexParam(startIndex.toString(), { history: 'replace' });
     } else {
@@ -380,7 +390,7 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
         // Use index from URL if valid, otherwise calculate from first unseen story
         // This allows resume-on-reopen within the same session
         let initialStoryIndex = initialStoryIndexFromUrl;
-        
+
         // Validate index is within bounds
         if (initialStoryIndex < 0 || initialStoryIndex >= (selectedGroup.stories?.length || 0)) {
           // Recalculate if URL index is invalid
@@ -391,15 +401,17 @@ export function HomeStoriesBar({ models }: HomeStoriesBarProps) {
           });
           initialStoryIndex = getFirstUnseenStoryIndex(sortedStories);
         }
-        
+
         return (
           <StoryViewer
             group={selectedGroup}
             onClose={handleCloseViewer}
-            socialLink={selectedModel.social_link}
+            encodedDestination={selectedModel.encoded_social_link || encodedDestination}
+            isCrawler={isCrawler}
             modelName={selectedModel.name}
             modelImage={selectedModel.image_url}
             modelSlug={selectedModel.slug}
+            modelId={selectedModel.id}
             isVerified={selectedModel.is_verified}
             nextGroupId={activeChainNeighbors?.nextGroupId ?? undefined}
             prevGroupId={activeChainNeighbors?.prevGroupId ?? undefined}

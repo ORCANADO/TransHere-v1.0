@@ -1114,3 +1114,17 @@ All planned features implemented, tested, and polished. The platform is producti
 - **Documentation & Quality Assurance:**
     - Created a comprehensive manual testing guide (`docs/ghost-link-verification.md`) for production verification.
     - Successfully verified the complete system with a full production build on the Edge runtime.
+
+### [2026-01-20] - Phase 6.9: Story Viewer Integration (Ghost Link System)
+**Status:** Complete
+
+- **Story Viewer Security:**
+    - Extended URL obfuscation to the "Respond to Story" CTA in `StoryViewer.tsx`.
+    - Implemented hydration-safe link decoding to prevent hydration mismatches.
+    - Added crawler-aware UI logic: renders "Premium Content" (disabled) for bots vs. "Respond to Story" (functional) for humans.
+- **Component Chain Updates:**
+    - Updated `StoriesContainer` and `HomeStoriesBar` to propagate crawler status and encoded links.
+    - Wired up `page.tsx` (Home & Model) to provide necessary security context.
+- **Verification:**
+    - Validated all flows via manual testing scenarios (`docs/ghost-link-verification.md`).
+    - Successfully built for Edge runtime with strict TypeScript compliance.

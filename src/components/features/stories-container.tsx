@@ -14,17 +14,19 @@ const StoryViewer = dynamic(() => import("./story-viewer").then(mod => ({ defaul
 
 interface StoriesContainerProps {
   groups?: StoryGroup[];
-  socialLink?: string;
+  encodedDestination?: string;
+  isCrawler?: boolean;
   modelName?: string;
   modelImage?: string;
   modelSlug?: string;
+  modelId?: string;
   isVerified?: boolean;
 }
 
-export function StoriesContainer({ groups, socialLink, modelName, modelImage, modelSlug, isVerified }: StoriesContainerProps) {
+export function StoriesContainer({ groups, encodedDestination, isCrawler, modelName, modelImage, modelSlug, modelId, isVerified }: StoriesContainerProps) {
   // Visual Memory: Track which stories have been viewed
   const { getFirstUnseenStoryIndex, hasUnseenStories } = useViewedStories();
-  
+
   // URL state management with nuqs - syncs with browser history
   // history: 'push' creates entries in browser history for back button support
   const [storyId, setStoryId] = useQueryState("story", {
@@ -32,7 +34,7 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
     clearOnDefault: true,
     history: "push",
   });
-  
+
   // Story index parameter for resume playback (si = story index)
   const [storyIndexParam, setStoryIndexParam] = useQueryState("si", {
     defaultValue: "",
@@ -44,7 +46,7 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
     },
     serialize: (value) => value,
   });
-  
+
   // Parse story index from URL (defaults to 0 if not provided or invalid)
   const initialStoryIndexFromUrl = storyIndexParam ? parseInt(storyIndexParam, 10) : 0;
 
@@ -59,17 +61,17 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
     () => groups.filter((g) => g.is_pinned && g.stories && g.stories.length > 0),
     [groups]
   );
-  
+
   // Split recent (non-pinned) groups into seen/unseen chains
   const recentGroups = useMemo(
     () => groups.filter((g) => !g.is_pinned && g.stories && g.stories.length > 0),
     [groups]
   );
-  
+
   const unseenGroups = useMemo(() => {
     return recentGroups.filter((g) => hasUnseenStories(g.stories || []));
   }, [recentGroups, hasUnseenStories]);
-  
+
   const seenGroups = useMemo(() => {
     return recentGroups.filter((g) => !hasUnseenStories(g.stories || []));
   }, [recentGroups, hasUnseenStories]);
@@ -131,7 +133,7 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
   // Calculate initial index and set both URL parameters
   const handleStoryClick = (groupId: string) => {
     const group = groups.find((g) => g.id === groupId);
-    
+
     if (group) {
       // Sort stories chronologically (oldest first) to match StoryViewer
       const sortedStories = [...(group.stories || [])].sort((a, b) => {
@@ -140,11 +142,11 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
         return dateA.getTime() - dateB.getTime();
       });
       const startIndex = getFirstUnseenStoryIndex(sortedStories);
-      
+
       // Calculate and store chain neighbors at open time
       const neighbors = getNeighborsForGroup(groupId);
       setActiveChainNeighbors(neighbors);
-      
+
       // Set both parameters with push for initial open (allows back button)
       setStoryId(groupId);
       setStoryIndexParam(startIndex.toString());
@@ -168,7 +170,7 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
   // Note: Neighbors remain from the original chain (stored at open time)
   const handleNavigate = (groupId: string) => {
     const group = groups.find((g) => g.id === groupId);
-    
+
     if (group) {
       // Sort stories chronologically (oldest first) to match StoryViewer
       const sortedStories = [...(group.stories || [])].sort((a, b) => {
@@ -177,11 +179,11 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
         return dateA.getTime() - dateB.getTime();
       });
       const startIndex = getFirstUnseenStoryIndex(sortedStories);
-      
+
       // Update neighbors for the new group (still within same chain)
       const neighbors = getNeighborsForGroup(groupId);
       setActiveChainNeighbors(neighbors);
-      
+
       setStoryId(groupId, { history: "replace" });
       setStoryIndexParam(startIndex.toString(), { history: "replace" });
     } else {
@@ -199,8 +201,8 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
       <div className="lg:hidden w-[calc(100%+2rem)] overflow-x-auto scrollbar-hide -mx-4 bg-background/30 backdrop-blur-xl border-y border-white/10">
         <div className="flex gap-3 py-4 px-1">
           {groups.map((group, index) => (
-            <div 
-              key={group.id} 
+            <div
+              key={group.id}
               className={index === groups.length - 1 ? "pr-4" : ""}
             >
               <StoryCircle
@@ -234,7 +236,7 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
         // Use index from URL if valid, otherwise calculate from first unseen story
         // This allows resume-on-reopen within the same session
         let initialStoryIndex = initialStoryIndexFromUrl;
-        
+
         // Validate index is within bounds
         if (initialStoryIndex < 0 || initialStoryIndex >= (selectedGroup.stories?.length || 0)) {
           // Recalculate if URL index is invalid
@@ -247,15 +249,17 @@ export function StoriesContainer({ groups, socialLink, modelName, modelImage, mo
           });
           initialStoryIndex = getFirstUnseenStoryIndex(sortedStories);
         }
-        
+
         return (
           <StoryViewer
             group={selectedGroup}
             onClose={handleCloseViewer}
-            socialLink={socialLink}
+            encodedDestination={encodedDestination}
+            isCrawler={isCrawler}
             modelName={modelName}
             modelImage={modelImage}
             modelSlug={modelSlug}
+            modelId={modelId}
             isVerified={isVerified}
             nextGroupId={activeChainNeighbors?.nextGroupId ?? undefined}
             prevGroupId={activeChainNeighbors?.prevGroupId ?? undefined}

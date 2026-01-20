@@ -6,6 +6,7 @@ import { FilterableFeed } from '@/components/features/filterable-feed';
 import { createClient } from '@/lib/supabase/server';
 import { Model } from '@/types';
 import { DICTIONARY, getLanguage } from '@/lib/i18n';
+import { encodeDestination } from '@/lib/url-obfuscation';
 
 // Force dynamic to ensure geolocation works on every request
 export const dynamic = 'force-dynamic';
@@ -39,9 +40,12 @@ export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams;
   const feed = params.feed || 'near';
 
+  // 4. Crawler Detection
+  const isCrawler = headersList.get('x-is-crawler') === '1';
+
   // 3. Fetch models from Supabase
   const supabase = await createClient();
-  
+
   let query = supabase
     .from('models')
     .select('id, created_at, name, image_url, tags, is_pinned, is_verified, is_new, slug');
@@ -139,6 +143,7 @@ export default async function Home({ searchParams }: HomeProps) {
     bio: model.bio,
     bio_es: model.bio_es,
     social_link: model.social_link,
+    encoded_social_link: model.social_link ? encodeDestination(model.social_link) : undefined,
     story_groups: model.story_groups || [],
   }));
 
@@ -170,7 +175,7 @@ export default async function Home({ searchParams }: HomeProps) {
         {/* 3. Home Stories Bar - Featured models with stories (visibility handled by client component) */}
         {validStoryModels.length > 0 && (
           <>
-            <HomeStoriesBar models={validStoryModels} />
+            <HomeStoriesBar models={validStoryModels} isCrawler={isCrawler} />
             {/* Separator line between stories and pills - 376px width on mobile, full width on desktop */}
             <div className="border-b border-white/10 w-[376px] lg:w-full mx-auto" />
           </>
@@ -185,7 +190,7 @@ export default async function Home({ searchParams }: HomeProps) {
             language={lang}
             buttons={dict.buttons}
           />
-          
+
           {/* 5. Scarcity Block - Hidden for favorites feed (client-side controlled) */}
           <ScarcityBlockWrapper city={city} scarcity={dict.scarcity} />
         </div>
