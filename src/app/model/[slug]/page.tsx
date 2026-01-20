@@ -330,13 +330,12 @@ export default async function ModelPage({ params }: PageProps) {
           }} />
           <ProfileGallery
             items={galleryItems}
-            name={model.name}
-            socialLink={socialLink}
+            modelName={model.name}
             encodedDestination={encodedDestination}
             isCrawler={isCrawler}
             modelId={model.id}
             modelSlug={slug}
-            redirectUrl={socialLink}
+            isVerified={model.is_verified || false}
           />
         </div>
       </div>

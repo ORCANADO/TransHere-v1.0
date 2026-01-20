@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Lock } from "lucide-react";
 import { cn, getImageUrl } from "@/lib/utils";
 import { useAnalytics } from "@/hooks/use-analytics";
-import { BridgeProtector } from "@/components/features/bridge-protector";
+import { decodeDestination } from "@/lib/url-obfuscation";
 import type { GalleryItem } from "@/types";
 
 // Video Player Component with Intersection Observer
@@ -84,27 +84,26 @@ function VideoPlayer({ mp4Url, webmUrl, posterUrl, isLocked = false }: VideoPlay
 
 interface ProfileGalleryProps {
   items: GalleryItem[];
-  name: string;
-  socialLink: string;
+  modelName: string;
+  modelSlug: string;
   encodedDestination: string;
   isCrawler: boolean;
+  isVerified: boolean;
   modelId: string;
-  modelSlug?: string;
-  redirectUrl?: string; // Optional: specific redirect URL for locked VIP teaser (falls back to socialLink)
 }
 
 export function ProfileGallery({
   items,
-  name,
-  socialLink,
+  modelName,
+  modelSlug,
   encodedDestination,
   isCrawler,
-  modelId,
-  modelSlug,
-  redirectUrl
+  isVerified,
+  modelId
 }: ProfileGalleryProps) {
   const [current, setCurrent] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
+  const [decodedUrl, setDecodedUrl] = useState<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { trackClick } = useAnalytics();
@@ -127,12 +126,34 @@ export function ProfileGallery({
     }
   }, []);
 
-  const handleUnlockClick = async () => {
+  // Hydration-safe decoding for humans only
+  useEffect(() => {
+    if (!isCrawler && encodedDestination) {
+      setDecodedUrl(decodeDestination(encodedDestination));
+    }
+  }, [isCrawler, encodedDestination]);
+
+  const handleLockedClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    if (isCrawler || !decodedUrl) {
+      // Do nothing for crawlers except track the attempt if desired
+      await trackClick('content', {
+        modelId,
+        modelSlug,
+        pagePath: `/model/${modelSlug}`,
+      });
+      return;
+    }
+
+    // Track human intent before redirect
     await trackClick('content', {
       modelId,
       modelSlug,
-      pagePath: modelSlug ? `/model/${modelSlug}` : undefined,
+      pagePath: `/model/${modelSlug}`,
     });
+
+    window.open(decodedUrl, '_blank', 'noopener,noreferrer');
   };
 
   // Filter valid items (must have media_url)
@@ -172,23 +193,17 @@ export function ProfileGallery({
 
   // Helper: derive WebM URL from Video URL
   const deriveWebmUrl = (url: string): string => {
-    // List of common video extensions to replace
     const videoExts = ['.mp4', '.mov', '.avi', '.wmv', '.mkv', '.m4v'];
-
     for (const ext of videoExts) {
       if (url.toLowerCase().endsWith(ext)) {
         return url.slice(0, -ext.length) + '.webm';
       }
     }
-
-    // Fallback: If no extension matched or it's unknown, replace whatever extension is there
-    // but only if it looks like there is one
     const parts = url.split('.');
     if (parts.length > 1) {
       parts.pop();
       return parts.join('.') + '.webm';
     }
-
     return url + '.webm';
   };
 
@@ -200,7 +215,7 @@ export function ProfileGallery({
     );
   }
 
-  // Build slides array from gallery items (no separate end-card - last item becomes the locked VIP teaser)
+  // Build slides array from gallery items
   const allSlides = [
     ...validItems.map((item, index) => ({
       type: item.media_type as 'image' | 'video',
@@ -214,7 +229,6 @@ export function ProfileGallery({
   const scrollToSlide = (index: number) => {
     const container = scrollContainerRef.current;
     if (!container) return;
-
     const containerWidth = container.clientWidth;
     container.scrollTo({
       left: index * containerWidth,
@@ -223,151 +237,90 @@ export function ProfileGallery({
   };
 
   const scrollPrev = () => {
-    if (current > 0) {
-      scrollToSlide(current - 1);
-    }
+    if (current > 0) scrollToSlide(current - 1);
   };
 
   const scrollNext = () => {
-    const totalSlides = allSlides.length;
-    if (current < totalSlides - 1) {
-      scrollToSlide(current + 1);
-    }
+    if (current < allSlides.length - 1) scrollToSlide(current + 1);
   };
 
   // Render media element (image or video)
   const renderMedia = (
     slide: { type: 'image' | 'video'; url: string | null; posterUrl: string | null },
-    index: number,
-    isDesktop: boolean
+    index: number
   ) => {
     // Check if this is the last gallery item (becomes the locked VIP teaser)
     const isLastItem = index === validItems.length - 1;
 
-    // Render locked VIP teaser for last item (merged conversion card)
+    // Render locked VIP teaser for last item
     if (isLastItem) {
-      if (slide.type === 'video' && slide.url) {
-        const mp4Url = slide.url;
-        const webmUrl = deriveWebmUrl(mp4Url);
+      const teaserContent = (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center">
+          <div className="absolute inset-0 bg-background/40 backdrop-blur-[10px]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
 
-        return (
-          <div
-            className="relative w-full h-full overflow-hidden group bg-card"
-          >
-            <VideoPlayer
-              mp4Url={mp4Url}
-              webmUrl={webmUrl}
-              posterUrl={slide.posterUrl}
-              isLocked={true}
-            />
-            {/* Frosted Glass Midnight Overlay */}
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center">
-              {/* Frosted backdrop layer - reduced blur for teaser visibility */}
-              <div className="absolute inset-0 bg-background/40 backdrop-blur-[10px]" />
-              {/* Gradient vignette - softened for better content preview */}
-              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-
-              {/* Content */}
-              <div className="relative z-10 flex flex-col items-center w-full">
-                {/* Lock icon with Rich Gold Glassmorphism */}
-                <div className="rounded-full bg-black/60 backdrop-blur-[13px] p-4 mb-4 border-2 border-[#D4AF37]/40 shadow-[0_0_20px_rgba(212,175,55,0.3)] shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
-                  <Lock className="h-7 w-7 text-[#D4AF37] drop-shadow-[0_0_6px_rgba(212,175,55,0.6)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]" strokeWidth={1.5} />
-                </div>
-                <h3 className="text-2xl font-sans font-semibold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] mb-5">Want to see more?</h3>
-
-                {/* Secure Bridge for Locked Teaser */}
-                <BridgeProtector
-                  encodedDestination={encodedDestination}
-                  isCrawler={isCrawler}
-                  modelId={modelId}
-                  modelSlug={modelSlug || ''}
-                  modelName={name}
-                  isVerified={false}
-                  buttonVariant="secondary"
-                  variant="inline"
-                  className="!h-12 !text-base border-[#D4AF37]/40 text-[#D4AF37] hover:border-[#D4AF37]/60 hover:text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.25)]"
-                />
-              </div>
+          <div className="relative z-10 flex flex-col items-center w-full">
+            <div className="rounded-full bg-black/60 backdrop-blur-[13px] p-4 mb-4 border-2 border-[#D4AF37]/40 shadow-[0_0_20px_rgba(212,175,55,0.3)]">
+              <Lock className="h-7 w-7 text-[#D4AF37]" strokeWidth={1.5} />
             </div>
+            <h3 className="text-2xl font-sans font-semibold text-white mb-5">
+              {isCrawler ? "Premium Content" : "Want to see more?"}
+            </h3>
+
+            <div
+              onClick={handleLockedClick}
+              className={cn(
+                "px-7 py-3.5 rounded-full bg-black/50 backdrop-blur-[19px] text-[#D4AF37] font-semibold border-2 border-[#D4AF37]/40 shadow-[0_0_15px_rgba(212,175,55,0.25)] transition-all duration-300",
+                !isCrawler && "hover:bg-black/60 hover:border-[#D4AF37]/60 hover:scale-[1.02] cursor-pointer"
+              )}
+            >
+              {isCrawler ? "Premium Content" : "Unlock VIP Content"}
+            </div>
+          </div>
+        </div>
+      );
+
+      if (slide.type === 'video' && slide.url) {
+        return (
+          <div className="relative w-full h-full overflow-hidden group bg-card">
+            <VideoPlayer mp4Url={slide.url} webmUrl={deriveWebmUrl(slide.url)} posterUrl={slide.posterUrl} isLocked={true} />
+            {teaserContent}
           </div>
         );
       }
 
-      // Default: Image (locked VIP teaser)
       if (slide.url) {
         return (
-          <div
-            className="relative w-full h-full overflow-hidden group bg-card"
-          >
+          <div className="relative w-full h-full overflow-hidden group bg-card">
             <Image
               src={slide.url}
-              alt={`Model ${name} profile photo`}
+              alt={`Model ${modelName} profile photo`}
               fill
-              className="object-cover scale-105 transition-all duration-500 group-hover:scale-110 transition-opacity duration-300"
+              className="object-cover scale-105 transition-all duration-500 group-hover:scale-110"
               sizes="(max-width: 1024px) 100vw, 450px"
               priority={false}
-              placeholder="empty"
             />
-            {/* Frosted Glass Midnight Overlay */}
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center">
-              {/* Frosted backdrop layer - reduced blur for teaser visibility */}
-              <div className="absolute inset-0 bg-background/40 backdrop-blur-[10px]" />
-              {/* Gradient vignette - softened for better content preview */}
-              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-
-              {/* Content */}
-              <div className="relative z-10 flex flex-col items-center w-full">
-                {/* Lock icon with Rich Gold Glassmorphism */}
-                <div className="rounded-full bg-black/60 backdrop-blur-[13px] p-4 mb-4 border-2 border-[#D4AF37]/40 shadow-[0_0_20px_rgba(212,175,55,0.3)] shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
-                  <Lock className="h-7 w-7 text-[#D4AF37] drop-shadow-[0_0_6px_rgba(212,175,55,0.6)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]" strokeWidth={1.5} />
-                </div>
-                <h3 className="text-2xl font-sans font-semibold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] mb-5">Want to see more?</h3>
-
-                {/* Secure Bridge for Locked Teaser */}
-                <BridgeProtector
-                  encodedDestination={encodedDestination}
-                  isCrawler={isCrawler}
-                  modelId={modelId}
-                  modelSlug={modelSlug || ''}
-                  modelName={name}
-                  isVerified={false}
-                  buttonVariant="secondary"
-                  variant="inline"
-                  className="!h-12 !text-base border-[#D4AF37]/40 text-[#D4AF37] hover:border-[#D4AF37]/60 hover:text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.25)]"
-                />
-              </div>
-            </div>
+            {teaserContent}
           </div>
         );
       }
     }
 
-    // Regular (non-locked) items
+    // Regular items
     if (slide.type === 'video' && slide.url) {
-      const mp4Url = slide.url;
-      const webmUrl = deriveWebmUrl(mp4Url);
-
-      return (
-        <VideoPlayer
-          mp4Url={mp4Url}
-          webmUrl={webmUrl}
-          posterUrl={slide.posterUrl}
-        />
-      );
+      return <VideoPlayer mp4Url={slide.url} webmUrl={deriveWebmUrl(slide.url)} posterUrl={slide.posterUrl} />;
     }
 
-    // Default: Image
     if (slide.url) {
       return (
         <div className="relative w-full h-full bg-card">
           <Image
             src={slide.url}
-            alt={`Model ${name} gallery image ${index + 1}`}
+            alt={`Model ${modelName} gallery image ${index + 1}`}
             fill
-            className="object-cover transition-opacity duration-300"
+            className="object-cover"
             sizes="(max-width: 1024px) 100vw, 450px"
             priority={index === 0}
-            placeholder="empty"
           />
         </div>
       );
@@ -378,100 +331,45 @@ export function ProfileGallery({
 
   return (
     <>
-      {/* Mobile Carousel - Hidden on desktop (lg+) */}
-      <div
-        ref={containerRef}
-        className="relative w-full aspect-[3/4] group overflow-hidden lg:hidden"
-      >
-        {/* Scroll Container with CSS Scroll Snap */}
-        <div
-          ref={scrollContainerRef}
-          className="w-full h-full overflow-x-auto overflow-y-hidden scrollbar-hide gallery-scroll-container overscroll-x-contain"
-        >
+      {/* Mobile Carousel */}
+      <div ref={containerRef} className="relative w-full aspect-[3/4] group overflow-hidden lg:hidden">
+        <div ref={scrollContainerRef} className="w-full h-full overflow-x-auto overflow-y-hidden scrollbar-hide gallery-scroll-container overscroll-x-contain">
           {allSlides.map((slide, index) => (
-            <div
-              key={slide.key}
-              className="h-full gallery-slide bg-card"
-            >
-              {renderMedia(slide, index, false)}
+            <div key={slide.key} className="h-full gallery-slide bg-card">
+              {renderMedia(slide, index)}
             </div>
           ))}
         </div>
 
-        {/* Glassmorphism Desktop Arrows - Hidden on mobile */}
         <div className="hidden md:block lg:hidden absolute inset-0 pointer-events-none z-50">
-          <button
-            onClick={scrollPrev}
-            disabled={current === 0}
-            className={cn(
-              "pointer-events-auto absolute left-4 top-1/2 -translate-y-1/2",
-              "h-12 w-12 rounded-full flex items-center justify-center",
-              "bg-white/20 backdrop-blur-sm border border-white/10",
-              "text-white hover:bg-white/40 transition-colors",
-              "shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            )}
-            aria-label="Previous slide"
-          >
+          <button onClick={scrollPrev} disabled={current === 0} className="pointer-events-auto absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full flex items-center justify-center bg-white/20 backdrop-blur-sm border border-white/10 text-white disabled:opacity-50">
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <button
-            onClick={scrollNext}
-            disabled={current === allSlides.length - 1}
-            className={cn(
-              "pointer-events-auto absolute right-4 top-1/2 -translate-y-1/2",
-              "h-12 w-12 rounded-full flex items-center justify-center",
-              "bg-white/20 backdrop-blur-sm border border-white/10",
-              "text-white hover:bg-white/40 transition-colors",
-              "shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            )}
-            aria-label="Next slide"
-          >
+          <button onClick={scrollNext} disabled={current === allSlides.length - 1} className="pointer-events-auto absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full flex items-center justify-center bg-white/20 backdrop-blur-sm border border-white/10 text-white disabled:opacity-50">
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
         </div>
 
-        {/* Bottom Gradient Shadow - Smooth blend with Obsidian Navy background */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none z-40"
-          style={{
-            background: 'linear-gradient(to top, #050A14 0%, #050A14 15%, rgba(5, 10, 20, 0.85) 30%, rgba(5, 10, 20, 0.60) 50%, rgba(5, 10, 20, 0.30) 70%, rgba(5, 10, 20, 0.10) 85%, transparent 100%)'
-          }}
-        />
+        <div className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none z-40" style={{ background: 'linear-gradient(to top, #050A14 0%, #050A14 15%, rgba(5, 10, 20, 0.85) 30%, rgba(5, 10, 20, 0.60) 50%, rgba(5, 10, 20, 0.30) 70%, rgba(5, 10, 20, 0.10) 85%, transparent 100%)' }} />
 
-        {/* Pagination Dots */}
         {allSlides.length > 1 && (
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-50">
             {allSlides.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => scrollToSlide(index)}
-                className={cn(
-                  "h-1.5 rounded-full transition-all duration-300",
-                  current === index ? "w-8 bg-white" : "w-2 bg-white/40 hover:bg-white/60"
-                )}
-                aria-label={`Go to slide ${index + 1}`}
-              />
+              <button key={index} onClick={() => scrollToSlide(index)} className={cn("h-1.5 rounded-full transition-all duration-300", current === index ? "w-8 bg-white" : "w-2 bg-white/40")} />
             ))}
           </div>
         )}
       </div>
 
-      {/* Desktop Vertical Stack - Hidden on mobile, visible on lg+ */}
-      <div className="hidden lg:flex lg:flex-col w-full lg:pt-0 gap-6">
+      {/* Desktop Vertical Stack */}
+      <div className="hidden lg:flex lg:flex-col w-full gap-6">
         {allSlides.map((slide, index) => (
-          <div
-            key={slide.key}
-            className={cn(
-              "w-full rounded-xl overflow-hidden bg-card",
-              // Use aspect ratio based on media type for consistent layout
-              slide.type === 'video' ? "aspect-video" : "aspect-[3/4]"
-            )}
-          >
-            {renderMedia(slide, index, true)}
+          <div key={slide.key} className={cn("w-full rounded-xl overflow-hidden bg-card", slide.type === 'video' ? "aspect-video" : "aspect-[3/4]")}>
+            {renderMedia(slide, index)}
           </div>
         ))}
       </div>
