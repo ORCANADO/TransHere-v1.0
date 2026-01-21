@@ -1183,3 +1183,27 @@ All planned features implemented, tested, and polished. The platform is producti
     - Implemented secure API key authentication based on organization domain/profile ownership.
 - **Bug Fixes:**
     - Resolved `unstable_cache` issues in middleware and addressed multiple TypeScript type collisions across the analytics stack.
+
+[21/01/26] - Organization Tracking Links & Analytics
+- **Feature Addition: Organization-Scoped Tracking Links**
+  - Implemented a complete tracking link management system within the organization dashboard.
+  - **Database Migration**: `028_expand_tracking_links_for_organizations.sql` adds `organization_id`, `destination_url`, and creates a `tracking_link_clicks` table for detailed attribution.
+  - **Security**: Strict RLS policies ensure organizations can only manage their own links.
+  - **API**: Updated GET/POST/PATCH/DELETE routes to use `createServiceClient` for safe administrative actions (bypassing RLS for specific authorized flows).
+
+- **Dashboard Integration**
+  - **New Tab**: Added "Tracking Links" navigation to `src/app/org/[orgId]/page.tsx`.
+  - **UI Manager**: Created `TrackingLinksManager` with:
+    - Real-time click stats.
+    - Automatic slug generation.
+    - Copy-to-clipboard functionality.
+    - Direct action buttons (Edit, View, Delete) replacing the complex dropdown menu.
+
+- **Redirect System**
+  - **Performance**: Utilized Next.js 15 `after()` API to log clicks asynchronously, ensuring non-blocking redirects.
+  - **Geolocation**: Integrated Cloudflare Edge headers for country/city tracking.
+  - **Route**: `src/app/go/[slug]/route.ts` handles redirects with Model fallbacks.
+
+- **Quality Assurance**
+  - **Verification**: Verified full CRUD lifecycle via API and UI testing.
+  - **Fixes**: Resolved build errors in `OrgModelsTable` and authentication issues in API routes.

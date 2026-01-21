@@ -27,22 +27,31 @@ export const metadata: Metadata = {
   description: "Discernment is a Virtue. Your Private World.",
 };
 
+import { ThemeProvider } from '@/components/theme-provider';
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${montserrat.variable} ${playfair.variable} font-sans antialiased bg-background text-foreground`}>
-        <NuqsAdapter>
-          {/* Main content wrapper - gets blurred when story opens */}
-          <div id="main-content">
-            {children}
-          </div>
-          {/* Portal target for story viewer - outside blur scope */}
-          <div id="story-portal" />
-        </NuqsAdapter>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <NuqsAdapter>
+            {/* Main content wrapper - gets blurred when story opens */}
+            <div id="main-content">
+              {children}
+            </div>
+            {/* Portal target for story viewer - outside blur scope */}
+            <div id="story-portal" />
+          </NuqsAdapter>
+        </ThemeProvider>
       </body>
     </html>
   );

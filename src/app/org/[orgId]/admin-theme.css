@@ -1,0 +1,809 @@
+/* ============================================
+   TRANSHERE v1.1 - ADMIN SOLAR SPECTRUM THEME
+   iOS 26 Liquid Glass Design System
+   ============================================
+   
+   Color Philosophy:
+   - OKLCH color space for perceptual uniformity
+   - "Solar Spectrum" - warm titanium whites with cool undertones
+   - High-contrast text for accessibility (WCAG AA)
+   
+   Glass Physics:
+   - Refraction: backdrop-filter blur simulates light bending
+   - Specular highlights: overlay borders simulate reflections
+   - Depth: layered transparency creates z-axis perception
+   ============================================ */
+
+/* ============================================
+   SECTION 1: LIGHT MODE COLOR TOKENS
+   Applied when .admin-light-mode class is present
+   ============================================ */
+
+.admin-light-mode {
+    /* === BACKGROUND LAYERS === */
+    /* Titanium White - cool grey-blue undertone */
+    --admin-bg-primary: oklch(97% 0.005 250);
+    /* #F5F7FA equivalent */
+    --admin-bg-secondary: oklch(99% 0.002 250);
+    /* Near white */
+    --admin-bg-tertiary: oklch(95% 0.008 250);
+    /* Subtle depth */
+
+    /* === TEXT HIERARCHY === */
+    --admin-text-primary: oklch(15% 0.01 250);
+    /* Near black, slight cool */
+    --admin-text-secondary: oklch(40% 0.02 250);
+    /* Medium grey */
+    --admin-text-tertiary: oklch(55% 0.015 250);
+    /* Light grey */
+    --admin-text-muted: oklch(65% 0.01 250);
+    /* Very light */
+
+    /* === BORDER SYSTEM === */
+    --admin-border-default: oklch(90% 0.01 250 / 0.6);
+    /* Subtle separator */
+    --admin-border-strong: oklch(85% 0.015 250 / 0.8);
+    /* Emphasis border */
+    --admin-border-glass: oklch(100% 0 0 / 0.2);
+    /* Glass edge highlight */
+
+    /* === GLASS SURFACE TOKENS === */
+    /* High brightness, controlled opacity for light refraction */
+    --glass-surface-1: oklch(100% 0 0 / 0.65);
+    /* Primary glass */
+    --glass-surface-2: oklch(100% 0 0 / 0.75);
+    /* Elevated glass */
+    --glass-surface-3: oklch(100% 0 0 / 0.85);
+    /* Maximum opacity */
+    --glass-tint: oklch(97% 0.01 250 / 0.4);
+    /* Subtle blue tint */
+
+    /* === SHADOW SYSTEM === */
+    /* Soft, diffused shadows for depth perception */
+    --admin-shadow-sm: 0 1px 2px oklch(20% 0.02 250 / 0.05);
+    --admin-shadow-md: 0 4px 8px oklch(20% 0.02 250 / 0.08);
+    --admin-shadow-lg: 0 8px 24px oklch(20% 0.02 250 / 0.12);
+    --admin-shadow-glow: 0 0 20px oklch(85% 0.15 155 / 0.15);
+
+    /* === ACCENT COLORS (Preserved from dark mode) === */
+    --admin-emerald: oklch(72% 0.19 155);
+    /* Primary CTA */
+    --admin-emerald-hover: oklch(76% 0.21 155);
+    --admin-violet: oklch(55% 0.25 295);
+    /* Secondary accent */
+    --admin-violet-hover: oklch(60% 0.27 295);
+    --admin-gold: oklch(78% 0.15 85);
+    /* Premium/verified */
+    --admin-red: oklch(60% 0.22 25);
+    /* Destructive */
+
+    /* === CHART COLORS (High contrast for light bg) === */
+    --chart-line-1: oklch(55% 0.25 295);
+    /* Violet */
+    --chart-line-2: oklch(65% 0.22 155);
+    /* Emerald */
+    --chart-line-3: oklch(70% 0.18 85);
+    /* Gold */
+    --chart-line-4: oklch(55% 0.20 200);
+    /* Teal */
+    --chart-line-5: oklch(60% 0.22 25);
+    /* Coral */
+    --chart-line-6: oklch(50% 0.25 320);
+    /* Magenta */
+    --chart-line-7: oklch(65% 0.15 250);
+    /* Steel blue */
+    --chart-line-8: oklch(60% 0.20 130);
+    /* Lime */
+
+    /* === OVERRIDE BASE THEME VARIABLES === */
+    --background: var(--admin-bg-primary);
+    --foreground: var(--admin-text-primary);
+    --card: var(--glass-surface-2);
+    --card-foreground: var(--admin-text-primary);
+    --muted: var(--admin-bg-tertiary);
+    --muted-foreground: var(--admin-text-tertiary);
+    --border: var(--admin-border-default);
+    --input: var(--admin-bg-secondary);
+    --ring: var(--admin-violet);
+
+    /* Missing Shadcn variables */
+    --popover: var(--glass-surface-2);
+    --popover-foreground: var(--admin-text-primary);
+    --primary: var(--admin-violet);
+    --primary-foreground: oklch(100% 0 0);
+    --secondary: var(--admin-bg-secondary);
+    --secondary-foreground: var(--admin-text-secondary);
+    --accent: var(--admin-bg-secondary);
+    --accent-foreground: var(--admin-text-primary);
+    --destructive: var(--admin-red);
+    --destructive-foreground: oklch(100% 0 0);
+}
+
+/* ============================================
+   SECTION 2: LIQUID GLASS UTILITY CLASSES
+   Core visual effects for glassmorphism
+   ============================================ */
+
+/* --- Primary Glass Surface --- */
+.admin-light-mode .liquid-glass {
+    background: var(--glass-surface-1);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--admin-border-glass);
+    box-shadow:
+        var(--admin-shadow-md),
+        inset 0 1px 0 oklch(100% 0 0 / 0.5),
+        inset 0 -1px 0 oklch(0% 0 0 / 0.05);
+    position: relative;
+    isolation: isolate;
+}
+
+/* Specular highlight simulation - top edge reflection */
+.admin-light-mode .liquid-glass::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+            oklch(100% 0 0 / 0) 0%,
+            oklch(100% 0 0 / 0.8) 20%,
+            oklch(100% 0 0 / 0.9) 50%,
+            oklch(100% 0 0 / 0.8) 80%,
+            oklch(100% 0 0 / 0) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* --- Elevated Glass (Cards, Modals) --- */
+.admin-light-mode .liquid-glass-elevated {
+    background: var(--glass-surface-2);
+    backdrop-filter: blur(30px) saturate(200%);
+    -webkit-backdrop-filter: blur(30px) saturate(200%);
+    border: 1px solid oklch(100% 0 0 / 0.3);
+    box-shadow:
+        var(--admin-shadow-lg),
+        inset 0 1px 0 oklch(100% 0 0 / 0.6),
+        inset 0 -1px 0 oklch(0% 0 0 / 0.03);
+    position: relative;
+}
+
+.admin-light-mode .liquid-glass-elevated::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+            oklch(100% 0 0 / 0) 0%,
+            oklch(100% 0 0 / 0.95) 30%,
+            oklch(100% 0 0 / 1) 50%,
+            oklch(100% 0 0 / 0.95) 70%,
+            oklch(100% 0 0 / 0) 100%);
+    pointer-events: none;
+}
+
+/* --- Subtle Glass (Input fields, Selects) --- */
+.admin-light-mode .liquid-glass-subtle {
+    background: oklch(100% 0 0 / 0.5);
+    backdrop-filter: blur(10px) saturate(150%);
+    -webkit-backdrop-filter: blur(10px) saturate(150%);
+    border: 1px solid var(--admin-border-default);
+    box-shadow: inset 0 1px 2px oklch(0% 0 0 / 0.05);
+}
+
+/* --- Glass Button --- */
+.admin-light-mode .liquid-glass-button {
+    background: oklch(100% 0 0 / 0.7);
+    backdrop-filter: blur(15px) saturate(160%);
+    -webkit-backdrop-filter: blur(15px) saturate(160%);
+    border: 1px solid oklch(100% 0 0 / 0.4);
+    box-shadow:
+        0 2px 4px oklch(0% 0 0 / 0.06),
+        inset 0 1px 0 oklch(100% 0 0 / 0.5);
+    transition: all 0.2s ease;
+}
+
+.admin-light-mode .liquid-glass-button:hover {
+    background: oklch(100% 0 0 / 0.85);
+    box-shadow:
+        0 4px 8px oklch(0% 0 0 / 0.1),
+        inset 0 1px 0 oklch(100% 0 0 / 0.6);
+    transform: translateY(-1px);
+}
+
+.admin-light-mode .liquid-glass-button:active {
+    transform: translateY(0);
+    box-shadow:
+        0 1px 2px oklch(0% 0 0 / 0.08),
+        inset 0 1px 2px oklch(0% 0 0 / 0.05);
+}
+
+/* ============================================
+   SECTION 3: COMPONENT OVERRIDES
+   Specific styling for admin dashboard elements
+   ============================================ */
+
+/* --- Header Bar --- */
+.admin-light-mode .admin-header {
+    background: var(--glass-surface-2);
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    border-bottom: 1px solid var(--admin-border-default);
+    box-shadow: 0 1px 3px oklch(0% 0 0 / 0.05);
+}
+
+/* --- Stat Cards --- */
+.admin-light-mode .stat-card {
+    background: var(--glass-surface-1);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--admin-border-glass);
+    box-shadow: var(--admin-shadow-md);
+    transition: all 0.3s ease;
+}
+
+.admin-light-mode .stat-card:hover {
+    box-shadow: var(--admin-shadow-lg);
+    transform: translateY(-2px);
+}
+
+.admin-light-mode .stat-card-value {
+    color: var(--admin-text-primary);
+    font-weight: 600;
+}
+
+.admin-light-mode .stat-card-label {
+    color: var(--admin-text-secondary);
+}
+
+/* --- Form Inputs --- */
+.admin-light-mode input,
+.admin-light-mode select,
+.admin-light-mode textarea {
+    background: oklch(100% 0 0 / 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--admin-border-default);
+    color: var(--admin-text-primary);
+    transition: all 0.2s ease;
+}
+
+.admin-light-mode input::placeholder,
+.admin-light-mode textarea::placeholder {
+    color: var(--admin-text-muted);
+}
+
+.admin-light-mode input:focus,
+.admin-light-mode select:focus,
+.admin-light-mode textarea:focus {
+    border-color: var(--admin-violet);
+    box-shadow: 0 0 0 3px oklch(55% 0.25 295 / 0.15);
+    outline: none;
+}
+
+/* --- Buttons --- */
+.admin-light-mode .btn-primary {
+    background: var(--admin-emerald);
+    color: oklch(15% 0.01 155);
+    border: none;
+    box-shadow: 0 2px 8px oklch(65% 0.22 155 / 0.3);
+    font-weight: 600;
+}
+
+.admin-light-mode .btn-primary:hover {
+    background: var(--admin-emerald-hover);
+    box-shadow: 0 4px 12px oklch(65% 0.22 155 / 0.4);
+}
+
+.admin-light-mode .btn-secondary {
+    background: var(--admin-violet);
+    color: oklch(98% 0 0);
+    border: none;
+    box-shadow: 0 2px 8px oklch(55% 0.25 295 / 0.25);
+}
+
+.admin-light-mode .btn-secondary:hover {
+    background: var(--admin-violet-hover);
+    box-shadow: 0 4px 12px oklch(55% 0.25 295 / 0.35);
+}
+
+.admin-light-mode .btn-ghost {
+    background: transparent;
+    color: var(--admin-text-secondary);
+    border: 1px solid transparent;
+}
+
+.admin-light-mode .btn-ghost:hover {
+    background: oklch(0% 0 0 / 0.05);
+    color: var(--admin-text-primary);
+}
+
+.admin-light-mode .btn-destructive {
+    background: var(--admin-red);
+    color: oklch(98% 0 0);
+    box-shadow: 0 2px 8px oklch(60% 0.22 25 / 0.25);
+}
+
+/* ============================================
+   SECTION 4: CHART STYLING
+   Recharts customization for light mode
+   ============================================ */
+
+.admin-light-mode .recharts-cartesian-grid-horizontal line,
+.admin-light-mode .recharts-cartesian-grid-vertical line {
+    stroke: var(--admin-border-default);
+    stroke-opacity: 0.6;
+}
+
+.admin-light-mode .recharts-text {
+    fill: var(--admin-text-secondary);
+}
+
+.admin-light-mode .recharts-legend-item-text {
+    color: var(--admin-text-secondary) !important;
+}
+
+.admin-light-mode .recharts-tooltip-wrapper .recharts-default-tooltip {
+    background: var(--glass-surface-2) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--admin-border-glass) !important;
+    border-radius: 12px !important;
+    box-shadow: var(--admin-shadow-lg) !important;
+}
+
+.admin-light-mode .recharts-tooltip-label {
+    color: var(--admin-text-primary) !important;
+    font-weight: 600 !important;
+}
+
+.admin-light-mode .recharts-tooltip-item {
+    color: var(--admin-text-secondary) !important;
+}
+
+/* ============================================
+   SECTION 5: TABLE STYLING
+   Data tables with glass effect
+   ============================================ */
+
+.admin-light-mode table {
+    background: var(--glass-surface-1);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.admin-light-mode th {
+    background: oklch(95% 0.005 250 / 0.8);
+    color: var(--admin-text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--admin-border-strong);
+}
+
+.admin-light-mode td {
+    color: var(--admin-text-primary);
+    border-bottom: 1px solid var(--admin-border-default);
+}
+
+.admin-light-mode tr:hover td {
+    background: oklch(0% 0 0 / 0.02);
+}
+
+.admin-light-mode tr:last-child td {
+    border-bottom: none;
+}
+
+/* ============================================
+   SECTION 6: MODAL & OVERLAY
+   Popup glass effects
+   ============================================ */
+
+.admin-light-mode .modal-backdrop {
+    background: oklch(50% 0.02 250 / 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.admin-light-mode .modal-content {
+    background: var(--glass-surface-3);
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+    border: 1px solid oklch(100% 0 0 / 0.3);
+    box-shadow:
+        0 25px 50px oklch(0% 0 0 / 0.2),
+        inset 0 1px 0 oklch(100% 0 0 / 0.5);
+    border-radius: 20px;
+}
+
+/* ============================================
+   SECTION 7: SCROLLBAR STYLING
+   Custom scrollbars for glass aesthetic
+   ============================================ */
+
+.admin-light-mode ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.admin-light-mode ::-webkit-scrollbar-track {
+    background: oklch(95% 0.005 250 / 0.5);
+    border-radius: 4px;
+}
+
+.admin-light-mode ::-webkit-scrollbar-thumb {
+    background: oklch(75% 0.01 250 / 0.5);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.admin-light-mode ::-webkit-scrollbar-thumb:hover {
+    background: oklch(65% 0.015 250 / 0.7);
+    background-clip: content-box;
+}
+
+/* Firefox scrollbar */
+.admin-light-mode {
+    scrollbar-width: thin;
+    scrollbar-color: oklch(75% 0.01 250 / 0.5) oklch(95% 0.005 250 / 0.5);
+}
+
+/* ============================================
+   SECTION 8: ANIMATIONS & TRANSITIONS
+   Smooth theme switching and interactions
+   ============================================ */
+
+.admin-light-mode * {
+    transition:
+        background-color 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease,
+        color 0.15s ease;
+}
+
+/* Disable transitions for elements that shouldn't animate */
+.admin-light-mode .no-transition,
+.admin-light-mode .no-transition * {
+    transition: none !important;
+}
+
+/* Focus ring animation */
+.admin-light-mode .focus-ring:focus {
+    animation: focus-pulse 0.3s ease;
+}
+
+@keyframes focus-pulse {
+    0% {
+        box-shadow: 0 0 0 0 oklch(55% 0.25 295 / 0.4);
+    }
+
+    100% {
+        box-shadow: 0 0 0 4px oklch(55% 0.25 295 / 0);
+    }
+}
+
+/* ============================================
+   SECTION 9: UTILITY CLASSES
+   Helper classes for light mode
+   ============================================ */
+
+/* Text colors */
+.admin-light-mode .text-admin-primary {
+    color: var(--admin-text-primary);
+}
+
+.admin-light-mode .text-admin-secondary {
+    color: var(--admin-text-secondary);
+}
+
+.admin-light-mode .text-admin-muted {
+    color: var(--admin-text-muted);
+}
+
+.admin-light-mode .text-admin-emerald {
+    color: var(--admin-emerald);
+}
+
+.admin-light-mode .text-admin-violet {
+    color: var(--admin-violet);
+}
+
+.admin-light-mode .text-admin-gold {
+    color: var(--admin-gold);
+}
+
+.admin-light-mode .text-admin-red {
+    color: var(--admin-red);
+}
+
+/* Background utilities */
+.admin-light-mode .bg-admin-primary {
+    background: var(--admin-bg-primary);
+}
+
+.admin-light-mode .bg-admin-secondary {
+    background: var(--admin-bg-secondary);
+}
+
+.admin-light-mode .bg-admin-glass {
+    background: var(--glass-surface-1);
+}
+
+/* Border utilities */
+.admin-light-mode .border-admin {
+    border-color: var(--admin-border-default);
+}
+
+.admin-light-mode .border-admin-strong {
+    border-color: var(--admin-border-strong);
+}
+
+/* Depth layers for z-axis hierarchy */
+.admin-light-mode .depth-0 {
+    z-index: 0;
+}
+
+.admin-light-mode .depth-1 {
+    z-index: 10;
+    box-shadow: var(--admin-shadow-sm);
+}
+
+.admin-light-mode .depth-2 {
+    z-index: 20;
+    box-shadow: var(--admin-shadow-md);
+}
+
+.admin-light-mode .depth-3 {
+    z-index: 30;
+    box-shadow: var(--admin-shadow-lg);
+}
+
+/* ============================================
+   SECTION 10: TEXT COLOR OVERRIDES
+   Fix white text visibility in light mode
+   ============================================ */
+
+/* Override all headings to use dark text - using descendant selector for headings is okay as they usually don't have custom text- color classes in this project */
+.admin-light-mode h1,
+.admin-light-mode h2,
+.admin-light-mode h3,
+.admin-light-mode h4,
+.admin-light-mode h5,
+.admin-light-mode h6 {
+    color: var(--admin-text-primary);
+}
+
+/* Set default text color on the root class to allow inheritance. 
+   Tailwind classes on child elements will now correctly override this. */
+.admin-light-mode {
+    color: var(--admin-text-primary);
+}
+
+/* Specific overrides for common Tailwind classes */
+.admin-light-mode .text-white {
+    color: var(--admin-text-primary) !important;
+}
+
+.admin-light-mode .text-muted-foreground {
+    color: var(--admin-text-secondary) !important;
+}
+
+/* Button text should inherit or use primary text by default */
+.admin-light-mode button {
+    color: inherit;
+}
+
+/* Keep specific colored text as-is */
+.admin-light-mode .text-emerald-500,
+.admin-light-mode .text-\[#00FF85\] {
+    color: var(--admin-emerald) !important;
+}
+
+.admin-light-mode .text-violet-500,
+.admin-light-mode .text-\[#7A27FF\] {
+    color: var(--admin-violet) !important;
+}
+
+.admin-light-mode .text-red-400,
+.admin-light-mode .text-red-500 {
+    color: var(--admin-red) !important;
+}
+
+.admin-light-mode .text-yellow-400,
+.admin-light-mode .text-yellow-500 {
+    color: oklch(70% 0.18 85) !important;
+}
+
+/* Table header text */
+.admin-light-mode thead {
+    color: var(--admin-text-secondary) !important;
+}
+
+/* ============================================
+   SECTION 11: ICON \u0026 SVG FIXES
+   Fix icon visibility in light mode
+   ============================================ */
+
+/* Fix SVG icons in light mode - use currentColor to allow Tailwind text- color classes to work */
+.admin-light-mode svg {
+    color: var(--admin-text-primary);
+}
+
+/* Keep lucide icons visible */
+.admin-light-mode svg.lucide {
+    stroke: var(--admin-text-primary);
+    fill: none;
+}
+
+/* Fix calendar and globe icons in filter buttons */
+.admin-light-mode button svg,
+.admin-light-mode a svg {
+    color: var(--admin-text-primary);
+}
+
+/* ============================================
+   SECTION 12: CALENDAR COMPONENT STYLING
+   Fix DatePicker light mode appearance
+   ============================================ */
+
+/* Calendar popup background */
+.admin-light-mode .rdp {
+    background: var(--glass-surface-2) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid var(--admin-border-default) !important;
+    border-radius: 12px !important;
+    box-shadow: var(--admin-shadow-lg) !important;
+    color: var(--admin-text-primary) !important;
+}
+
+/* Calendar header */
+.admin-light-mode .rdp-caption {
+    color: var(--admin-text-primary) !important;
+}
+
+/* Calendar weekday labels */
+.admin-light-mode .rdp-head_cell {
+    color: var(--admin-text-secondary) !important;
+}
+
+/* Calendar day cells */
+.admin-light-mode .rdp-day {
+    color: var(--admin-text-primary) !important;
+}
+
+/* Calendar day hover */
+.admin-light-mode .rdp-day:hover {
+    background: oklch(0% 0 0 / 0.05) !important;
+}
+
+/* Calendar selected day */
+.admin-light-mode .rdp-day_selected {
+    background: var(--admin-violet) !important;
+    color: white !important;
+}
+
+/* Calendar today */
+.admin-light-mode .rdp-day_today {
+    font-weight: 600;
+    color: var(--admin-violet) !important;
+}
+
+/* Calendar navigation buttons */
+.admin-light-mode .rdp-nav_button {
+    color: var(--admin-text-primary) !important;
+}
+
+.admin-light-mode .rdp-nav_button:hover {
+    background: oklch(0% 0 0 / 0.05) !important;
+}
+
+/* Calendar footer buttons (Today, Clear) */
+.admin-light-mode .rdp-footer button {
+    color: var(--admin-text-primary) !important;
+    background: transparent !important;
+}
+
+.admin-light-mode .rdp-footer button:hover {
+    background: oklch(0% 0 0 / 0.05) !important;
+}
+
+/* ============================================
+   SECTION 13: COUNTRY PILLS \u0026 BADGES
+   Fix pill backgrounds in light mode
+   ============================================ */
+
+/* Country code pills in Top Countries section */
+.admin-light-mode .bg-card {
+    background: var(--glass-surface-1) !important;
+    backdrop-filter: blur(15px) saturate(170%) !important;
+    -webkit-backdrop-filter: blur(15px) saturate(170%) !important;
+}
+
+/* Ensure pill text is visible */
+.admin-light-mode .bg-card span,
+.admin-light-mode .bg-card p {
+    color: var(--admin-text-primary) !important;
+}
+
+/* ============================================
+   SECTION 14: DARK MODE TAG VISIBILITY FIX
+   Improve model tag contrast in dark mode
+   ============================================ */
+
+/* This targets the main app (not admin) dark mode tags */
+body:not(.admin-light-mode) .dark .model-tag,
+body:not(.admin-light-mode) .dark [class*="tag"],
+body:not(.admin-light-mode) .dark .text-muted-foreground {
+    /* Increase contrast for better visibility */
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Specific fix for model card tags in dark mode */
+body:not(.admin-light-mode) .dark .text-white\/60 {
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
+body:not(.admin-light-mode) .dark .text-white\/70 {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* ============================================
+   SECTION 15: ENHANCED 3D GLASS CARDS
+   iOS 26 Style - Depth, transparency, borders
+   ============================================ */
+
+.admin-light-mode .bg-card,
+.admin-light-mode .stat-card,
+.admin-light-mode .liquid-glass-elevated,
+.admin-light-mode .card {
+    /* Multi-layered background for depth */
+    background: linear-gradient(135deg,
+            oklch(100% 0 0 / 0.75) 0%,
+            oklch(98% 0 0 / 0.6) 100%) !important;
+
+    /* Strong blur for refraction */
+    backdrop-filter: blur(24px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(140%) !important;
+
+    /* Reflective glass border */
+    border-width: 1px !important;
+    border-style: solid !important;
+    border-color: oklch(100% 0 0 / 0.6) !important;
+    border-bottom-color: oklch(85% 0.01 250 / 0.2) !important;
+    border-right-color: oklch(90% 0.01 250 / 0.3) !important;
+
+    /* 3D Depth Shadow */
+    box-shadow:
+        0 12px 40px -8px oklch(20% 0.02 250 / 0.12),
+        0 4px 16px -4px oklch(20% 0.02 250 / 0.08),
+        inset 0 1px 0 oklch(100% 0 0 / 0.8),
+        inset 0 0 20px oklch(100% 0 0 / 0.1) !important;
+
+    border-radius: 20px !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Hover lift effect for interactive cards */
+.admin-light-mode .stat-card:hover,
+.admin-light-mode .bg-card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+        0 20px 48px -10px oklch(20% 0.02 250 / 0.15),
+        0 8px 20px -6px oklch(20% 0.02 250 / 0.1),
+        inset 0 1px 0 oklch(100% 0 0 / 0.9) !important;
+}
+
+/* Ensure text remains legible on glass */
+.admin-light-mode .bg-card h3,
+.admin-light-mode .stat-card h3,
+.admin-light-mode .bg-card .font-semibold {
+    text-shadow: 0 1px 0 oklch(100% 0 0 / 0.5);
+}

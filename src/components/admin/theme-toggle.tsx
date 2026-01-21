@@ -3,7 +3,7 @@
 // iOS-style toggle switch for admin theme
 // ============================================
 
-'use client';
+import { useState, useEffect } from 'react';
 
 import { Moon, Sun } from 'lucide-react';
 import { useAdminTheme } from '@/hooks/use-admin-theme';
@@ -29,10 +29,15 @@ export function ThemeToggle({
     showLabels = false,
     compact = false
 }: ThemeToggleProps) {
-    const { isLightMode, toggleTheme, isHydrated } = useAdminTheme();
+    const { isLightMode, setTheme } = useAdminTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Don't render interactive element until hydrated
-    if (!isHydrated) {
+    if (!mounted) {
         return (
             <div
                 className={cn(
@@ -60,7 +65,7 @@ export function ThemeToggle({
         >
             {/* Dark Mode Button */}
             <button
-                onClick={() => !isLightMode || toggleTheme()}
+                onClick={() => setTheme('dark')}
                 className={cn(
                     "flex items-center gap-2 rounded-lg px-3 font-medium transition-all duration-200",
                     compact ? "py-1 text-xs" : "py-1.5 text-sm",
@@ -77,7 +82,7 @@ export function ThemeToggle({
 
             {/* Light Mode Button */}
             <button
-                onClick={() => isLightMode || toggleTheme()}
+                onClick={() => setTheme('light')}
                 className={cn(
                     "flex items-center gap-2 rounded-lg px-3 font-medium transition-all duration-200",
                     compact ? "py-1 text-xs" : "py-1.5 text-sm",
@@ -100,9 +105,14 @@ export function ThemeToggle({
  * For use in compact headers or toolbars.
  */
 export function ThemeToggleIcon({ className }: { className?: string }) {
-    const { isLightMode, toggleTheme, isHydrated } = useAdminTheme();
+    const { isLightMode, setTheme } = useAdminTheme();
+    const [mounted, setMounted] = useState(false);
 
-    if (!isHydrated) {
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) {
         return (
             <div
                 className={cn(
@@ -115,7 +125,7 @@ export function ThemeToggleIcon({ className }: { className?: string }) {
 
     return (
         <button
-            onClick={toggleTheme}
+            onClick={() => setTheme(isLightMode ? 'dark' : 'light')}
             className={cn(
                 "p-2 rounded-lg transition-all duration-200",
                 "hover:bg-white/10 active:scale-95",

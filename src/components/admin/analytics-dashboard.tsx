@@ -31,6 +31,7 @@ interface AnalyticsDashboardProps {
   onModelSelectionChange: (ids: string[]) => void;
   onDataLoaded?: (data: DashboardData) => void;
   isSidebarCollapsed?: boolean;
+  endpoint?: string;
 }
 
 interface DashboardData {
@@ -88,6 +89,7 @@ export function AnalyticsDashboard({
   onModelSelectionChange,
   onDataLoaded,
   isSidebarCollapsed = false,
+  endpoint,
 }: AnalyticsDashboardProps) {
   // State
   const [data, setData] = useState<DashboardData | null>(null);
@@ -137,7 +139,7 @@ export function AnalyticsDashboard({
         ...(filters.period === 'custom' && filters.endDate && { endDate: filters.endDate }),
       });
 
-      const res = await fetch(`/api/admin/dashboard?${params}`);
+      const res = await fetch(`${endpoint || '/api/admin/dashboard'}?${params}`);
       const result = await res.json();
 
       if (!res.ok || !result.success) {
@@ -204,7 +206,7 @@ export function AnalyticsDashboard({
     } finally {
       setLoading(false);
     }
-  }, [adminKey, filters, selectedModelIds, onDataLoaded]);
+  }, [adminKey, filters, selectedModelIds, onDataLoaded, endpoint]);
 
   // Fetch on mount and filter changes
   useEffect(() => {

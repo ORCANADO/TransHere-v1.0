@@ -27,17 +27,26 @@ export interface TrackingSubtag {
  */
 export interface TrackingLink {
   id: string;
-  model_id: string;
+  organization_id: string | null;
+  model_id: string | null;
+  name: string | null;
   slug: string;
+  destination_url: string | null;
   source_id: string | null;
   subtag_id: string | null;
   preview_url: string | null;
   click_count: number;
+  is_active?: boolean;
   is_archived: boolean;
   created_at: string;
+  updated_at?: string;
   // Joined fields
   source?: TrackingSource;
   subtag?: TrackingSubtag;
+  model?: {
+    name: string;
+    slug: string;
+  };
 }
 
 export interface TrackingLinkWithDetails extends TrackingLink {
@@ -126,4 +135,18 @@ export interface TrackingLinkLookupResult {
 export interface GeoData {
   country: string | null;
   city: string | null;
+}
+
+/**
+ * Detailed tracking link click record
+ */
+export interface TrackingLinkClick {
+  id: string;
+  tracking_link_id: string;
+  clicked_at: string;
+  ip_address?: string;
+  user_agent?: string;
+  referrer?: string;
+  country?: string;
+  city?: string;
 }

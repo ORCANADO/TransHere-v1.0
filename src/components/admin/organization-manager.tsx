@@ -114,8 +114,8 @@ export function OrganizationManager({ adminKey }: OrganizationManagerProps) {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-[#1D1D1F] dark:text-white">Organizations</h2>
-                    <p className="text-sm text-[#86868B] dark:text-muted-foreground mt-1">
+                    <h2 className="text-2xl font-bold text-foreground">Organizations</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
                         Manage organizations and their API keys
                     </p>
                 </div>
@@ -132,9 +132,9 @@ export function OrganizationManager({ adminKey }: OrganizationManagerProps) {
             {loading && (
                 <div className="grid gap-4">
                     {[...Array(3)].map((_, i) => (
-                        <div key={i} className="bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-6 animate-pulse">
-                            <div className="h-4 bg-white/10 rounded w-1/4 mb-4" />
-                            <div className="h-3 bg-white/10 rounded w-1/2" />
+                        <div key={i} className="bg-muted border border-border rounded-2xl p-6 animate-pulse">
+                            <div className="h-4 bg-foreground/10 rounded w-1/4 mb-4" />
+                            <div className="h-3 bg-foreground/10 rounded w-1/2" />
                         </div>
                     ))}
                 </div>
@@ -142,10 +142,10 @@ export function OrganizationManager({ adminKey }: OrganizationManagerProps) {
 
             {/* Organizations Table */}
             {!loading && organizations.length === 0 && (
-                <div className="bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-12 text-center">
-                    <Shield className="w-12 h-12 text-[#86868B] dark:text-muted-foreground/30 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-white mb-2">No organizations yet</h3>
-                    <p className="text-sm text-[#86868B] dark:text-muted-foreground mb-6">
+                <div className="bg-muted border border-border rounded-2xl p-12 text-center">
+                    <Shield className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-foreground mb-2">No organizations yet</h3>
+                    <p className="text-sm text-muted-foreground mb-6">
                         Create your first organization to get started
                     </p>
                     <button
@@ -158,37 +158,37 @@ export function OrganizationManager({ adminKey }: OrganizationManagerProps) {
             )}
 
             {!loading && organizations.length > 0 && (
-                <div className="bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-2xl overflow-hidden">
+                <div className="bg-muted border border-border rounded-2xl overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-black/[0.02] dark:bg-white/5 border-b border-[#E5E5EA] dark:border-white/10">
+                            <thead className="bg-foreground/[0.02] border-b border-border">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-[#86868B] dark:text-muted-foreground uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Name
                                     </th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-[#86868B] dark:text-muted-foreground uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         API Key
                                     </th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-[#86868B] dark:text-muted-foreground uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Models
                                     </th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-[#86868B] dark:text-muted-foreground uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Created
                                     </th>
-                                    <th className="px-6 py-4 text-right text-xs font-semibold text-[#86868B] dark:text-muted-foreground uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Actions
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[#E5E5EA] dark:divide-white/10">
                                 {organizations.map((org) => (
-                                    <tr key={org.id} className="hover:bg-black/[0.02] dark:hover:bg-white/5 transition-colors">
+                                    <tr key={org.id} className="hover:bg-foreground/[0.02] transition-colors">
                                         <td className="px-6 py-4">
-                                            <p className="font-semibold text-[#1D1D1F] dark:text-white">{org.name}</p>
+                                            <p className="font-semibold text-foreground">{org.name}</p>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
-                                                <code className="text-sm font-mono text-[#86868B] dark:text-muted-foreground">
+                                                <code className="text-sm font-mono text-muted-foreground">
                                                     {maskApiKey(org.api_key)}
                                                 </code>
                                                 <button
@@ -197,7 +197,7 @@ export function OrganizationManager({ adminKey }: OrganizationManagerProps) {
                                                         "p-1.5 rounded-lg transition-all",
                                                         copiedKey === org.id
                                                             ? "bg-[#00FF85]/20 text-[#00FF85]"
-                                                            : "hover:bg-black/[0.04] dark:hover:bg-white/10 text-[#86868B] dark:text-muted-foreground"
+                                                            : "hover:bg-foreground/[0.04] text-muted-foreground"
                                                     )}
                                                     title="Copy API key"
                                                 >
@@ -210,12 +210,12 @@ export function OrganizationManager({ adminKey }: OrganizationManagerProps) {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className="text-sm font-medium text-[#1D1D1F] dark:text-white">
+                                            <span className="text-sm font-medium text-foreground">
                                                 {org.model_count}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className="text-sm text-[#86868B] dark:text-muted-foreground">
+                                            <span className="text-sm text-muted-foreground">
                                                 {new Date(org.created_at).toLocaleDateString()}
                                             </span>
                                         </td>
@@ -223,14 +223,14 @@ export function OrganizationManager({ adminKey }: OrganizationManagerProps) {
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => handleViewDashboard(org.api_key)}
-                                                    className="p-2 rounded-lg hover:bg-black/[0.04] dark:hover:bg-white/10 text-[#007AFF] transition-all"
+                                                    className="p-2 rounded-lg hover:bg-foreground/[0.04] text-[#007AFF] transition-all"
                                                     title="View dashboard"
                                                 >
                                                     <ExternalLink className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => setEditingOrg(org)}
-                                                    className="p-2 rounded-lg hover:bg-black/[0.04] dark:hover:bg-white/10 text-[#86868B] dark:text-muted-foreground transition-all"
+                                                    className="p-2 rounded-lg hover:bg-foreground/[0.04] text-muted-foreground transition-all"
                                                     title="Edit organization"
                                                 >
                                                     <Pencil className="w-4 h-4" />

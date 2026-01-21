@@ -29,9 +29,10 @@ interface ModelBasicInfoProps {
   isNew: boolean;
   onSaved: (model: any) => void;
   onDeleted: (modelId: string) => void;
+  organizationId?: string | null;
 }
 
-export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted }: ModelBasicInfoProps) {
+export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, organizationId }: ModelBasicInfoProps) {
   const [formData, setFormData] = useState({
     name: model?.name || '',
     slug: model?.slug || '',
@@ -43,7 +44,7 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted }: M
     is_verified: model?.is_verified || false,
     is_new: model?.is_new !== undefined ? model.is_new : true,
     is_pinned: model?.is_pinned || false,
-    organization_id: model?.organization_id || null,
+    organization_id: model?.organization_id || organizationId || null,
   });
 
   const [newTag, setNewTag] = useState('');

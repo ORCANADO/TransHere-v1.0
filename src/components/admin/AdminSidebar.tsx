@@ -54,13 +54,13 @@ export function AdminSidebar({
                 "h-screen transition-all duration-300 flex flex-col overflow-hidden z-50",
                 "fixed lg:relative",
                 // iOS 26 Liquid Glass - Titanium white for light mode, dark translucent for dark
-                "bg-background dark:bg-[#0A1221]/80",
-                "backdrop-blur-3xl dark:backdrop-blur-2xl",
-                "border-r border-border dark:border-white/10",
+                "bg-background",
+                "backdrop-blur-3xl",
+                "border-r border-border",
                 "shadow-[1px_0_0_rgba(0,0,0,0.02)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)]",
                 isCollapsed ? "-translate-x-full lg:translate-x-0 lg:w-0" : "translate-x-0 w-[280px]"
             )}>
-                <header className="flex items-center justify-between p-4 border-b border-border dark:border-white/10">
+                <header className="flex items-center justify-between p-4 border-b border-border">
                     <div className="flex items-center gap-2">
                         <div className={cn(
                             "w-8 h-8 rounded-xl",

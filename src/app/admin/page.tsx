@@ -123,11 +123,11 @@ function AdminContent() {
   if (!adminKey) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="bg-card border border-white/10 rounded-xl p-8 max-w-md text-center">
+        <div className="bg-card border border-border rounded-xl p-8 max-w-md text-center">
           <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-          <h1 className="text-xl font-bold text-white mb-2">Access Denied</h1>
+          <h1 className="text-xl font-bold text-foreground mb-2">Access Denied</h1>
           <p className="text-muted-foreground">
-            Admin key required. Add <code className="bg-white/10 px-2 py-1 rounded">?key=YOUR_KEY</code> to the URL.
+            Admin key required. Add <code className="bg-foreground/10 px-2 py-1 rounded">?key=YOUR_KEY</code> to the URL.
           </p>
         </div>
       </div>

@@ -10,6 +10,7 @@ export interface ModelFormData {
   is_verified: boolean;
   is_new: boolean;
   is_pinned: boolean;
+  organization_id?: string | null;
 }
 
 // Model with related counts for list view

@@ -19,7 +19,7 @@ interface SidebarSettingsProps {
 const SETTINGS_COLLAPSE_KEY = 'transhere-admin-settings-collapsed';
 
 export function SidebarSettings({ onAddModel }: SidebarSettingsProps) {
-    const { isLightMode, toggleTheme, isHydrated } = useAdminTheme();
+    const { isLightMode, setTheme } = useAdminTheme();
     const [isOpen, setIsOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
 
@@ -40,12 +40,12 @@ export function SidebarSettings({ onAddModel }: SidebarSettingsProps) {
     if (!mounted) return null;
 
     return (
-        <div className="border-t border-border dark:border-white/10 bg-black/[0.01] dark:bg-transparent transition-colors">
+        <div className="border-t border-border bg-black/[0.01] transition-colors">
             <Collapsible open={isOpen} onOpenChange={handleToggle}>
                 <CollapsibleTrigger asChild>
                     <button className={cn(
                         "flex items-center justify-between w-full p-4 transition-all group",
-                        "hover:bg-black/[0.04] dark:hover:bg-white/5",
+                        "hover:bg-black/[0.04]",
                         "active:scale-[0.99]"
                     )}>
                         <div className="flex items-center gap-2">
@@ -71,8 +71,8 @@ export function SidebarSettings({ onAddModel }: SidebarSettingsProps) {
                         variant="outline"
                         size="sm"
                         className={cn(
-                            "w-full justify-start gap-2 transition-all rounded-xl border-border dark:border-white/10",
-                            "bg-black/[0.04] dark:bg-white/5 font-bold text-xs",
+                            "w-full justify-start gap-2 transition-all rounded-xl border-border",
+                            "bg-black/[0.04] font-bold text-xs",
                             "hover:bg-[#007AFF]/10 hover:text-[#007AFF] dark:hover:bg-[#7A27FF]/10 dark:hover:text-[#7A27FF]",
                             "text-foreground",
                             "active:scale-[0.98]"

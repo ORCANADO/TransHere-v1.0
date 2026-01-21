@@ -23,9 +23,10 @@ interface ModelEditorProps {
   onBack: () => void;
   onSaved: () => void;
   onModelDeleted?: (modelId: string) => void;
+  organizationId?: string | null;
 }
 
-export function ModelEditor({ adminKey, modelId, onBack, onSaved, onModelDeleted }: ModelEditorProps) {
+export function ModelEditor({ adminKey, modelId, onBack, onSaved, onModelDeleted, organizationId }: ModelEditorProps) {
   const [activeTab, setActiveTab] = useState<Tab>('basic');
   const [model, setModel] = useState<any>(null);
   const [loading, setLoading] = useState(!!modelId);
@@ -141,6 +142,7 @@ export function ModelEditor({ adminKey, modelId, onBack, onSaved, onModelDeleted
               }
               onBack(); // Go back to list immediately
             }}
+            organizationId={organizationId}
           />
         )}
 
