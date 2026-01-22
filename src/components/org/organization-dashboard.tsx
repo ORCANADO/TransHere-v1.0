@@ -3,13 +3,14 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Eye, MousePointer, Percent, Users, TrendingUp, RefreshCw } from 'lucide-react';
-import { OrganizationHeader } from './organization-header';
 import { OrganizationModelCard } from './organization-model-card';
 import { ModelDetailPanel } from './model-detail-panel';
 import { StatCard } from '@/components/admin/stat-card';
 import { ComparisonChart } from '@/components/admin/comparison-chart';
 import { ModelComparisonChart } from '@/components/admin/model-comparison-chart';
-import { DashboardFiltersBar } from '@/components/admin/dashboard-filters';
+import { DashboardContainer } from '@/components/admin/dashboard-container';
+import { DashboardFiltersBar } from '@/components/admin/dashboard-filters-bar';
+import { SidebarModelList } from '@/components/admin/sidebar-model-list';
 import { ThemeToggle } from '@/components/admin/theme-toggle';
 import { useAdminTheme } from '@/hooks/use-admin-theme';
 import { cn } from '@/lib/utils';
@@ -51,9 +52,9 @@ interface OrganizationDashboardProps {
 
 const DEFAULT_FILTERS: DashboardFilters = {
     period: '7days',
-    startDate: null,
-    endDate: null,
-    country: null,
+    startDate: undefined,
+    endDate: undefined,
+    countries: [],
     sources: [],
     modelSlugs: [],
 };
@@ -82,14 +83,45 @@ export function OrganizationDashboard({
     const [filters, setFilters] = useState<DashboardFilters>({
         ...DEFAULT_FILTERS,
         period: (searchParams.get('period') as TimePeriod) || '7days',
-        startDate: searchParams.get('startDate') || null,
-        endDate: searchParams.get('endDate') || null,
-        country: searchParams.get('country') || null,
+        startDate: searchParams.get('startDate') || undefined,
+        endDate: searchParams.get('endDate') || undefined,
+        countries: searchParams.get('countries') ? JSON.parse(searchParams.get('countries')!) : [],
+        sources: searchParams.get('sources') ? JSON.parse(searchParams.get('sources')!) : [],
     });
 
     // State for detail panel
     const [selectedModel, setSelectedModel] = useState<Model | null>(null);
     const [isPanelOpen, setIsPanelOpen] = useState(false);
+
+    // Helper function to handle partial filter updates
+    const handleFiltersChange = useCallback((partialFilters: Partial<DashboardFilters>) => {
+        setFilters(current => ({ ...current, ...partialFilters }));
+    }, []);
+
+    // Filter models by organization for security and sidebar display
+    const orgModelsForSidebar = useMemo(() => {
+        return initialModels.map(model => {
+            const metrics = data?.stats.modelMetrics?.find(m => m.model_slug === model.slug);
+            return {
+                id: model.id,
+                slug: model.slug,
+                name: model.name,
+                imageUrl: model.image_url,
+                isVerified: model.is_verified || false,
+                totalViews: metrics?.total_views || 0,
+                totalClicks: metrics?.total_clicks || 0,
+            };
+        });
+    }, [initialModels, data?.stats.modelMetrics]);
+
+    // Map available sources to match expected format
+    const mappedAvailableSources = useMemo(() => {
+        return (data?.availableSources || []).map(source => ({
+            name: source.name,
+            value: source.slug || source.name.toLowerCase(),
+            icon: source.icon || 'Link2',
+        }));
+    }, [data?.availableSources]);
 
     // Fetch dashboard data
     const fetchData = useCallback(async () => {
@@ -100,9 +132,9 @@ export function OrganizationDashboard({
             const params = new URLSearchParams({
                 key: apiKey,
                 period: filters.period,
-                ...(filters.country && { country: filters.country }),
+                ...(filters.modelSlugs.length > 0 && { modelSlugs: JSON.stringify(filters.modelSlugs) }),
+                ...(filters.countries.length > 0 && { countries: JSON.stringify(filters.countries) }),
                 ...(filters.sources.length > 0 && { sources: JSON.stringify(filters.sources) }),
-                ...(filters.modelSlugs.length > 0 && { models: filters.modelSlugs.join(',') }),
                 ...(filters.period === 'custom' && filters.startDate && { startDate: filters.startDate }),
                 ...(filters.period === 'custom' && filters.endDate && { endDate: filters.endDate }),
             });
@@ -213,237 +245,226 @@ export function OrganizationDashboard({
     }
 
     return (
-        <div className="min-h-screen bg-background">
-            {/* Theme Toggle & Header context Wrapper */}
-            <div className="max-w-7xl mx-auto p-4 lg:p-8 space-y-6">
-
-                {/* Header with Filters and Theme Switcher */}
-                <div className="sticky top-0 z-30 -mx-4 lg:-mx-8 px-4 lg:px-8 py-4 bg-background/80 backdrop-blur-xl border-b border-white/10 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                        <DashboardFiltersBar
-                            filters={filters}
-                            onFiltersChange={setFilters}
-                            availableCountries={data?.availableCountries || []}
-                            availableSources={data?.availableSources || []}
-                            isLoading={loading}
-                        />
-                        {lastUpdated && !loading && (
-                            <p className="text-muted-foreground text-[10px] font-mono uppercase tracking-widest mt-1 sm:mt-0">
-                                Updated {lastUpdated.toLocaleTimeString()}
-                            </p>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <ThemeToggle showLabels className="hidden md:flex" />
-                        <ThemeToggle className="md:hidden" />
-                    </div>
-                </div>
-
-                {/* Organization Branded Header */}
-                <OrganizationHeader
-                    organizationName={organization.name}
-                    apiKey={apiKey}
-                    dateRange={{
-                        start: filters.startDate || initialStartDate,
-                        end: filters.endDate || initialEndDate,
-                    }}
+        <DashboardContainer
+            sidebar={
+                <SidebarModelList
+                    models={orgModelsForSidebar}
+                    selectedSlugs={filters.modelSlugs}
+                    onSelectionChange={(slugs) => handleFiltersChange({ modelSlugs: slugs })}
+                    loading={loading}
                 />
-
-                {/* Loading Skeleton or Content */}
-                {isInitialLoading ? (
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
-                        {[...Array(4)].map((_, i) => (
-                            <div key={i} className="h-32 bg-white/5 rounded-2xl" />
-                        ))}
-                    </div>
-                ) : data && (
-                    <div className="space-y-6 relative">
-                        {/* Refresh Overlay Spinner */}
-                        {loading && (
-                            <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/20 backdrop-blur-[1px] rounded-2xl">
-                                <RefreshCw className="w-8 h-8 text-[#7A27FF] animate-spin" />
-                            </div>
-                        )}
-
-                        {/* Overview Stats */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <StatCard
-                                title="Total Views"
-                                value={data.stats.totalViews}
-                                icon={<Eye className="w-5 h-5 text-[#007AFF]" />}
-                                change={data.stats.visitsChange}
-                                valueClassName="text-[#007AFF]"
-                            />
-                            <StatCard
-                                title="Total Clicks"
-                                value={data.stats.totalClicks}
-                                icon={<MousePointer className="w-5 h-5 text-[#AF52DE]" />}
-                                change={data.stats.clicksChange}
-                                valueClassName="text-[#AF52DE]"
-                            />
-                            <StatCard
-                                title="Conversion Rate"
-                                value={`${data.stats.ctr.toFixed(2)}%`}
-                                icon={<Percent className="w-5 h-5 text-[#D4AF37]" />}
-                                valueClassName="text-[#D4AF37]"
-                            />
+            }
+            filters={
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <DashboardFiltersBar
+                        filters={filters}
+                        onFiltersChange={handleFiltersChange}
+                        availableCountries={data?.availableCountries || []}
+                        availableSources={mappedAvailableSources}
+                        loading={loading}
+                    />
+                    {lastUpdated && !loading && (
+                        <p className="text-muted-foreground text-[10px] font-mono uppercase tracking-widest mt-1 sm:mt-0">
+                            Updated {lastUpdated.toLocaleTimeString()}
+                        </p>
+                    )}
+                </div>
+            }
+        >
+            {/* Loading Skeleton or Content */}
+            {isInitialLoading ? (
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
+                    {[...Array(4)].map((_, i) => (
+                        <div key={i} className="h-32 bg-white/5 rounded-2xl" />
+                    ))}
+                </div>
+            ) : data && (
+                <div className="space-y-6 relative">
+                    {/* Refresh Overlay Spinner */}
+                    {loading && (
+                        <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/20 backdrop-blur-[1px] rounded-2xl">
+                            <RefreshCw className="w-8 h-8 text-[#7A27FF] animate-spin" />
                         </div>
+                    )}
 
-                        {/* Chart Section */}
-                        <div className="glass-panel rounded-2xl p-6 border border-white/10">
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-white">
-                                    {showModelComparison ? `Comparing ${filters.modelSlugs.length} Models` : 'Traffic Over Time'}
-                                </h2>
-                                <div className="flex bg-white/5 p-1 rounded-lg border border-white/10">
-                                    <button
-                                        onClick={() => setComparisonMetric('views')}
-                                        className={cn(
-                                            "px-4 py-1.5 rounded-md text-xs font-bold transition-all",
-                                            comparisonMetric === 'views'
-                                                ? "bg-[#007AFF] text-white shadow-lg"
-                                                : "text-muted-foreground hover:text-white"
-                                        )}
-                                    >
-                                        Views
-                                    </button>
-                                    <button
-                                        onClick={() => setComparisonMetric('clicks')}
-                                        className={cn(
-                                            "px-4 py-1.5 rounded-md text-xs font-bold transition-all",
-                                            comparisonMetric === 'clicks'
-                                                ? "bg-[#AF52DE] text-white shadow-lg"
-                                                : "text-muted-foreground hover:text-white"
-                                        )}
-                                    >
-                                        Clicks
-                                    </button>
-                                </div>
-                            </div>
-
-                            {showModelComparison ? (
-                                <ModelComparisonChart
-                                    data={modelChartData!.data}
-                                    models={modelChartData!.models}
-                                    metric={comparisonMetric}
-                                    onMetricChange={setComparisonMetric}
-                                    height={350}
-                                    className="p-0 border-none"
-                                />
-                            ) : (
-                                <ComparisonChart
-                                    data={chartData}
-                                    metric={comparisonMetric}
-                                    height={300}
-                                    className="p-0 border-none"
-                                />
-                            )}
-                        </div>
-
-                        {/* Models List */}
-                        <div className="glass-panel rounded-2xl p-6 border border-white/10">
-                            <div className="flex items-center justify-between mb-6">
-                                <div>
-                                    <h2 className="text-xl font-bold text-white">Your Models</h2>
-                                    <p className="text-sm text-muted-foreground mt-1">
-                                        Performance for selected period
-                                    </p>
-                                </div>
-                                <div className="text-xs font-mono text-muted-foreground bg-white/5 px-2 py-1 rounded">
-                                    {data.stats.modelMetrics?.length || 0} Models
-                                </div>
-                            </div>
-
-                            {initialModels.length === 0 ? (
-                                <div className="text-center py-12">
-                                    <Users className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-                                    <p className="text-muted-foreground">No models found</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {initialModels.map((model) => {
-                                        const modelMetric = data.stats.modelMetrics?.find(m => m.model_slug === model.slug);
-                                        return (
-                                            <OrganizationModelCard
-                                                key={model.id}
-                                                model={model}
-                                                stats={{
-                                                    views: modelMetric?.total_views || 0,
-                                                    clicks: modelMetric?.total_clicks || 0,
-                                                    ctr: modelMetric?.ctr_percentage || 0,
-                                                }}
-                                                onClick={() => {
-                                                    setSelectedModel(model);
-                                                    setIsPanelOpen(true);
-                                                }}
-                                            />
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Model Detail Slide Panel */}
-                        <ModelDetailPanel
-                            isOpen={isPanelOpen}
-                            onClose={() => setIsPanelOpen(false)}
-                            model={selectedModel}
-                            stats={selectedModelStats}
+                    {/* Overview Stats */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <StatCard
+                            title="Total Views"
+                            value={data.stats.totalViews}
+                            icon={<Eye className="w-5 h-5 text-[#007AFF]" />}
+                            change={data.stats.visitsChange}
+                            valueClassName="text-[#007AFF]"
                         />
+                        <StatCard
+                            title="Total Clicks"
+                            value={data.stats.totalClicks}
+                            icon={<MousePointer className="w-5 h-5 text-[#AF52DE]" />}
+                            change={data.stats.clicksChange}
+                            valueClassName="text-[#AF52DE]"
+                        />
+                        <StatCard
+                            title="Conversion Rate"
+                            value={`${data.stats.ctr.toFixed(2)}%`}
+                            icon={<Percent className="w-5 h-5 text-[#D4AF37]" />}
+                            valueClassName="text-[#D4AF37]"
+                        />
+                    </div>
 
-                        {/* Country Breakdown */}
-                        {data.stats.topCountries.length > 0 && (
-                            <div className="glass-panel rounded-2xl p-6 border border-white/10">
-                                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                                    <TrendingUp className="w-5 h-5 text-[#00FF85]" />
-                                    Top Countries
-                                </h2>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                                    {data.stats.topCountries.slice(0, 10).map(({ country, total_views, total_clicks }) => (
-                                        <div
-                                            key={country}
-                                            className="p-4 rounded-xl bg-white/5 border border-white/10 group hover:bg-white/10 transition-all"
-                                        >
-                                            <p className="font-semibold text-white mb-2">{country}</p>
-                                            <div className="space-y-1">
-                                                <div className="flex justify-between text-xs">
-                                                    <span className="text-muted-foreground">Views</span>
-                                                    <span className="text-[#007AFF] font-bold">{total_views.toLocaleString()}</span>
-                                                </div>
-                                                <div className="flex justify-between text-xs">
-                                                    <span className="text-muted-foreground">Clicks</span>
-                                                    <span className="text-[#AF52DE] font-bold">{total_clicks.toLocaleString()}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                    {/* Chart Section */}
+                    <div className="glass-panel rounded-2xl p-6 border border-white/10">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-xl font-bold text-white">
+                                {showModelComparison ? `Comparing ${filters.modelSlugs.length} Models` : 'Traffic Over Time'}
+                            </h2>
+                            <div className="flex bg-white/5 p-1 rounded-lg border border-white/10">
+                                <button
+                                    onClick={() => setComparisonMetric('views')}
+                                    className={cn(
+                                        "px-4 py-1.5 rounded-md text-xs font-bold transition-all",
+                                        comparisonMetric === 'views'
+                                            ? "bg-[#007AFF] text-white shadow-lg"
+                                            : "text-muted-foreground hover:text-white"
+                                    )}
+                                >
+                                    Views
+                                </button>
+                                <button
+                                    onClick={() => setComparisonMetric('clicks')}
+                                    className={cn(
+                                        "px-4 py-1.5 rounded-md text-xs font-bold transition-all",
+                                        comparisonMetric === 'clicks'
+                                            ? "bg-[#AF52DE] text-white shadow-lg"
+                                            : "text-muted-foreground hover:text-white"
+                                    )}
+                                >
+                                    Clicks
+                                </button>
                             </div>
-                        )}
+                        </div>
 
-                        {/* Traffic Sources */}
-                        {data.stats.topSources.length > 0 && (
-                            <div className="glass-panel rounded-2xl p-6 border border-white/10">
-                                <h2 className="text-xl font-bold text-white mb-6">Traffic Sources</h2>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                                    {data.stats.topSources.slice(0, 8).map((source) => (
-                                        <div
-                                            key={source.source_name}
-                                            className="p-4 rounded-xl bg-white/5 border border-white/10"
-                                        >
-                                            <p className="font-semibold text-white truncate mb-2">{source.source_name}</p>
-                                            <div className="flex justify-between text-xs font-medium">
-                                                <span className="text-[#007AFF]">{source.total_views.toLocaleString()} views</span>
-                                                <span className="text-[#AF52DE]">{source.total_clicks.toLocaleString()} clicks</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                        {showModelComparison ? (
+                            <ModelComparisonChart
+                                data={modelChartData!.data}
+                                models={modelChartData!.models}
+                                metric={comparisonMetric}
+                                onMetricChange={setComparisonMetric}
+                                height={350}
+                                className="p-0 border-none"
+                            />
+                        ) : (
+                            <ComparisonChart
+                                data={chartData}
+                                metric={comparisonMetric}
+                                height={300}
+                                className="p-0 border-none"
+                            />
+                        )}
+                    </div>
+
+                    {/* Models List */}
+                    <div className="glass-panel rounded-2xl p-6 border border-white/10">
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 className="text-xl font-bold text-white">Your Models</h2>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    Performance for selected period
+                                </p>
+                            </div>
+                            <div className="text-xs font-mono text-muted-foreground bg-white/5 px-2 py-1 rounded">
+                                {data.stats.modelMetrics?.length || 0} Models
+                            </div>
+                        </div>
+
+                        {initialModels.length === 0 ? (
+                            <div className="text-center py-12">
+                                <Users className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                                <p className="text-muted-foreground">No models found</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {initialModels.map((model) => {
+                                    const modelMetric = data.stats.modelMetrics?.find(m => m.model_slug === model.slug);
+                                    return (
+                                        <OrganizationModelCard
+                                            key={model.id}
+                                            model={model}
+                                            stats={{
+                                                views: modelMetric?.total_views || 0,
+                                                clicks: modelMetric?.total_clicks || 0,
+                                                ctr: modelMetric?.ctr_percentage || 0,
+                                            }}
+                                            onClick={() => {
+                                                setSelectedModel(model);
+                                                setIsPanelOpen(true);
+                                            }}
+                                        />
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
-                )}
-            </div>
-        </div>
+
+                    {/* Model Detail Slide Panel */}
+                    <ModelDetailPanel
+                        isOpen={isPanelOpen}
+                        onClose={() => setIsPanelOpen(false)}
+                        model={selectedModel}
+                        stats={selectedModelStats}
+                    />
+
+                    {/* Country Breakdown */}
+                    {data.stats.topCountries.length > 0 && (
+                        <div className="glass-panel rounded-2xl p-6 border border-white/10">
+                            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                                <TrendingUp className="w-5 h-5 text-[#00FF85]" />
+                                Top Countries
+                            </h2>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                                {data.stats.topCountries.slice(0, 10).map(({ country, total_views, total_clicks }) => (
+                                    <div
+                                        key={country}
+                                        className="p-4 rounded-xl bg-white/5 border border-white/10 group hover:bg-white/10 transition-all"
+                                    >
+                                        <p className="font-semibold text-white mb-2">{country}</p>
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between text-xs">
+                                                <span className="text-muted-foreground">Views</span>
+                                                <span className="text-[#007AFF] font-bold">{total_views.toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between text-xs">
+                                                <span className="text-muted-foreground">Clicks</span>
+                                                <span className="text-[#AF52DE] font-bold">{total_clicks.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Traffic Sources */}
+                    {data.stats.topSources.length > 0 && (
+                        <div className="glass-panel rounded-2xl p-6 border border-white/10">
+                            <h2 className="text-xl font-bold text-white mb-6">Traffic Sources</h2>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                {data.stats.topSources.slice(0, 8).map((source) => (
+                                    <div
+                                        key={source.source_name}
+                                        className="p-4 rounded-xl bg-white/5 border border-white/10"
+                                    >
+                                        <p className="font-semibold text-white truncate mb-2">{source.source_name}</p>
+                                        <div className="flex justify-between text-xs font-medium">
+                                            <span className="text-[#007AFF]">{source.total_views.toLocaleString()} views</span>
+                                            <span className="text-[#AF52DE]">{source.total_clicks.toLocaleString()} clicks</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+        </DashboardContainer>
     );
 }

@@ -15,6 +15,15 @@ export interface AnalyticsEvent {
 // Time period filter options
 export type TimePeriod = 'hour' | 'today' | '7days' | '30days' | '90days' | 'all' | 'custom';
 
+/**
+ * Source option for filter dropdowns
+ */
+export interface SourceOption {
+  name: string;
+  value: string;
+  icon?: string;  // Lucide icon name
+}
+
 // Aggregated stats
 export interface OverviewStats {
   totalVisits: number;
@@ -53,4 +62,18 @@ export interface DashboardData {
   modelAnalytics: ModelAnalytics[];
   countryBreakdown: { country: string; visits: number; clicks: number }[];
   availableCountries: string[];
+  availableSources: SourceOption[];
+}
+
+/**
+ * Model data for sidebar selector
+ */
+export interface SidebarModel {
+  id: string;
+  slug: string;
+  name: string;
+  imageUrl: string | null;
+  isVerified: boolean;
+  totalViews: number;
+  totalClicks: number;
 }

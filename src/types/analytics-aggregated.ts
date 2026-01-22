@@ -141,9 +141,10 @@ export interface AggregatedDashboardFilters {
     countries: string[];
 }
 
-export interface AggregatedTrafficSourceOption {
+import type { SourceOption } from './analytics';
+
+export interface AggregatedTrafficSourceOption extends SourceOption {
     id: string;
-    name: string;
     slug: string;
     subtags?: {
         id: string;

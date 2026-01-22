@@ -6,31 +6,39 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Eye, MousePointer, Percent, RefreshCw, TrendingUp } from 'lucide-react';
+import { Eye, MousePointer, Percent, RefreshCw, TrendingUp, Users, Instagram, Twitter, Heart, Cloud, Link2 } from 'lucide-react';
 import { StatCard } from './stat-card';
 import { ComparisonChart } from './comparison-chart';
 import { ModelComparisonChart } from './model-comparison-chart';
-import { DashboardFiltersBar } from './dashboard-filters';
+import { DashboardContainer } from './dashboard-container';
+import { DashboardFiltersBar } from './dashboard-filters-bar';
+import { SidebarModelList } from './sidebar-model-list';
+
+// Import the default sources from the filters component
+const DEFAULT_SOURCES = [
+  { name: 'direct', icon: Users },
+  { name: 'instagram', icon: Instagram },
+  { name: 'twitter', icon: Twitter },
+  { name: 'onlyfans', icon: Heart },
+  { name: 'fansly', icon: Cloud },
+];
 import { ThemeToggle } from './theme-toggle';
 import { RefreshButton } from '@/app/admin/components/RefreshButton';
 import { cn } from '@/lib/utils';
 import type {
   DashboardFilters,
-  TimePeriod,
   TrafficSourceOption,
   ModelFilterOption,
   ComparisonDataPoint,
   ModelComparisonDataPoint,
   ChartModelInfo,
 } from '@/types/charts';
+import type { SidebarModel } from '@/types/analytics';
 import { getModelColor } from '@/types/charts';
 
 interface AnalyticsDashboardProps {
   adminKey: string;
-  selectedModelIds: string[];
-  onModelSelectionChange: (ids: string[]) => void;
   onDataLoaded?: (data: DashboardData) => void;
-  isSidebarCollapsed?: boolean;
   endpoint?: string;
 }
 
@@ -76,19 +84,16 @@ interface DashboardData {
  */
 const DEFAULT_FILTERS: DashboardFilters = {
   period: '7days',
-  startDate: null,
-  endDate: null,
-  country: null,
+  startDate: undefined,
+  endDate: undefined,
+  countries: [],
   sources: [],
   modelSlugs: [],
 };
 
 export function AnalyticsDashboard({
   adminKey,
-  selectedModelIds,
-  onModelSelectionChange,
   onDataLoaded,
-  isSidebarCollapsed = false,
   endpoint,
 }: AnalyticsDashboardProps) {
   // State
@@ -96,26 +101,19 @@ export function AnalyticsDashboard({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Internal filters (excluding models which come from props)
-  const [filters, setFilters] = useState<Omit<DashboardFilters, 'modelSlugs'>>({
-    period: DEFAULT_FILTERS.period,
-    startDate: DEFAULT_FILTERS.startDate,
-    endDate: DEFAULT_FILTERS.endDate,
-    country: DEFAULT_FILTERS.country,
-    sources: DEFAULT_FILTERS.sources,
+  // Unified filter state
+  const [filters, setFilters] = useState<DashboardFilters>({
+    period: '7days',
+    modelSlugs: [],
+    countries: [],
+    sources: [],
   });
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [comparisonMetric, setComparisonMetric] = useState<'views' | 'clicks'>('views');
   const [queryTime, setQueryTime] = useState<number | null>(null);
   const [lastRefresh, setLastRefresh] = useState<string | null>(null);
 
-  // Keep a ref of available models mapping to avoid infinite loops in fetchData
-  const availableModelsRef = useRef<ModelFilterOption[]>([]);
-  useEffect(() => {
-    if (data?.availableModels) {
-      availableModelsRef.current = data.availableModels;
-    }
-  }, [data?.availableModels]);
+
 
   // Fetch dashboard data
   const fetchData = useCallback(async () => {
@@ -123,18 +121,12 @@ export function AnalyticsDashboard({
     setError(null);
 
     try {
-      // Derive model slugs from IDs using ref to avoid reactive dependency loop
-      const modelSlugs = selectedModelIds.map(id => {
-        const model = availableModelsRef.current.find(m => m.slug === id || m.id === id);
-        return model?.slug || id;
-      });
-
       const params = new URLSearchParams({
         key: adminKey,
         period: filters.period,
-        ...(filters.country && { country: filters.country }),
-        ...(filters.sources.length > 0 && { sources: JSON.stringify(filters.sources) }),
-        ...(selectedModelIds.length > 0 && { models: modelSlugs.join(',') }),
+        ...(filters.modelSlugs.length && { modelSlugs: JSON.stringify(filters.modelSlugs) }),
+        ...(filters.countries.length && { countries: JSON.stringify(filters.countries) }),
+        ...(filters.sources.length && { sources: JSON.stringify(filters.sources) }),
         ...(filters.period === 'custom' && filters.startDate && { startDate: filters.startDate }),
         ...(filters.period === 'custom' && filters.endDate && { endDate: filters.endDate }),
       });
@@ -206,7 +198,7 @@ export function AnalyticsDashboard({
     } finally {
       setLoading(false);
     }
-  }, [adminKey, filters, selectedModelIds, onDataLoaded, endpoint]);
+  }, [adminKey, filters, onDataLoaded, endpoint]);
 
   // Fetch on mount and filter changes
   useEffect(() => {
@@ -219,14 +211,21 @@ export function AnalyticsDashboard({
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  // Determine model slugs for charts and filters
-  const currentModelSlugs = useMemo(() => {
-    if (!data?.availableModels) return [];
-    return selectedModelIds.map(id => {
-      const model = data.availableModels.find(m => (m as any).id === id || m.slug === id);
-      return model?.slug || id;
-    });
-  }, [selectedModelIds, data?.availableModels]);
+  // Model slugs for charts and filters
+  const currentModelSlugs = filters.modelSlugs;
+
+  // Extract sidebar data from modelAnalytics
+  const sidebarModels: SidebarModel[] = useMemo(() =>
+    data?.modelAnalytics.map(m => ({
+      id: m.modelSlug,
+      slug: m.modelSlug,
+      name: m.modelName,
+      imageUrl: m.imageUrl || null,
+      isVerified: false, // Add to API response if needed
+      totalViews: m.visits,
+      totalClicks: m.clicks,
+    })) || [],
+  [data]);
 
   // Prepare model comparison data
   const modelChartData = useMemo((): { data: ModelComparisonDataPoint[]; models: ChartModelInfo[] } | null => {
@@ -252,6 +251,15 @@ export function AnalyticsDashboard({
   // Determine which chart to show
   const showModelComparison = currentModelSlugs.length >= 2 && modelChartData;
 
+  // Map available sources to SourceOption format
+  const availableSourcesMapped = useMemo(() =>
+    data?.availableSources?.map(s => ({
+      name: s.name,
+      value: s.slug || s.id,
+      icon: 'Link2', // Default icon name for sources
+    })) || [],
+  [data?.availableSources]);
+
   // Error state
   if (error) {
     return (
@@ -268,24 +276,28 @@ export function AnalyticsDashboard({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Sticky Filters Bar & Header Info */}
-      <div className={cn(
-        "sticky top-0 z-30 -mx-4 lg:-mx-6 px-4 lg:px-6 py-4 bg-background/80 backdrop-blur-xl border-b border-[#E5E5EA] dark:border-white/10 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-300",
-        isSidebarCollapsed && "pl-16 lg:pl-20"
-      )}>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <DashboardFiltersBar
-            filters={{ ...filters, modelSlugs: currentModelSlugs }}
-            onFiltersChange={(newFilters) => {
-              const { modelSlugs: _, ...otherFilters } = newFilters;
-              setFilters(otherFilters);
-            }}
-            availableCountries={data?.availableCountries || []}
-            availableSources={data?.availableSources || []}
-            isLoading={loading}
-          />
-
+    <DashboardContainer
+      sidebar={
+        <SidebarModelList
+          models={sidebarModels}
+          selectedSlugs={filters.modelSlugs}
+          onSelectionChange={(slugs) => setFilters(f => ({ ...f, modelSlugs: slugs }))}
+          loading={loading && !data}
+        />
+      }
+      filters={
+        <DashboardFiltersBar
+          filters={filters}
+          onFiltersChange={(partial) => setFilters(f => ({ ...f, ...partial }))}
+          availableCountries={data?.availableCountries || []}
+          availableSources={availableSourcesMapped}
+          loading={loading}
+        />
+      }
+    >
+      {/* Header Info */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
           {lastUpdated && !loading && (
             <p className="text-[#86868B] dark:text-gray-400 text-xs font-medium">
               Updated {lastUpdated.toLocaleTimeString()}
@@ -416,80 +428,11 @@ export function AnalyticsDashboard({
                 />
               )}
 
-              {/* Source Breakdown */}
-              {data.sourceBreakdown && data.sourceBreakdown.length > 0 && (
-                <div className="bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-4 lg:p-6 shadow-sm">
-                  <div className="flex items-center gap-2 mb-4">
-                    <TrendingUp className="w-5 h-5 text-[#007AFF]" />
-                    <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-white">Traffic Sources</h3>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {data.sourceBreakdown.map((source) => (
-                      <button
-                        key={source.sourceId}
-                        onClick={() => setFilters(prev => {
-                          const isSelected = prev.sources.some(s => s.source === source.sourceName);
-                          return {
-                            ...prev,
-                            sources: isSelected
-                              ? prev.sources.filter(s => s.source !== source.sourceName)
-                              : [...prev.sources, { source: source.sourceName, subtags: [] }]
-                          };
-                        })}
-                        className={cn(
-                          "p-4 rounded-xl text-left transition-all border",
-                          filters.sources.some(s => s.source === source.sourceName)
-                            ? 'bg-[#007AFF]/10 dark:bg-[#AF52DE]/20 border-[#007AFF]/30 dark:border-[#AF52DE]/40 ring-1 ring-[#007AFF]/20'
-                            : 'bg-black/[0.03] dark:bg-white/5 border-transparent hover:bg-black/[0.06] dark:hover:bg-white/10'
-                        )}
-                      >
-                        <p className="font-semibold text-[#1D1D1F] dark:text-white">{source.sourceName}</p>
-                        <div className="flex justify-between mt-1 text-sm">
-                          <span className="text-[#007AFF] font-medium">{source.totalViews.toLocaleString()} views</span>
-                          <span className="text-[#AF52DE] font-medium">{source.totalClicks.toLocaleString()} clicks</span>
-                        </div>
-                        <p className="text-xs text-[#86868B] dark:text-muted-foreground mt-1 font-medium">
-                          {source.conversionRate.toFixed(1)}% CTR
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
 
-              {/* Country Breakdown */}
-              {data.countryBreakdown.length > 0 && (
-                <div className="bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-4 lg:p-6 shadow-sm">
-                  <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-white mb-4">Top Countries</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                    {data.countryBreakdown.slice(0, 10).map(({ country, visits, clicks }) => (
-                      <button
-                        key={country}
-                        onClick={() => setFilters(prev => ({
-                          ...prev,
-                          country: prev.country === country ? null : country,
-                        }))}
-                        className={cn(
-                          "p-4 rounded-xl text-left transition-all border",
-                          filters.country === country
-                            ? 'bg-[#007AFF]/10 dark:bg-[#007AFF]/20 border-[#007AFF]/30 dark:border-[#007AFF]/40 ring-1 ring-[#007AFF]/20'
-                            : 'bg-black/[0.03] dark:bg-white/5 border-transparent hover:bg-black/[0.06] dark:hover:bg-white/10'
-                        )}
-                      >
-                        <p className="font-semibold text-[#1D1D1F] dark:text-white">{country}</p>
-                        <div className="flex justify-between mt-1 text-sm">
-                          <span className="text-[#007AFF] font-medium">{visits} views</span>
-                          <span className="text-[#AF52DE] font-medium">{clicks} clicks</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
       )}
-    </div>
+    </DashboardContainer>
   );
 }

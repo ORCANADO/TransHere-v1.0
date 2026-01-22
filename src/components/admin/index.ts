@@ -9,7 +9,8 @@ export { AnalyticsChart } from './analytics-chart';
 
 // Dashboard
 export { AnalyticsDashboard } from './analytics-dashboard';
-export { DashboardFiltersBar } from './dashboard-filters';
+export { DashboardFiltersBar } from './dashboard-filters-bar';
+export { DashboardContainer } from './dashboard-container';
 export { StatCard } from './stat-card';
 
 // Theme

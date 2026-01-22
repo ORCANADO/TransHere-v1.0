@@ -83,10 +83,19 @@ export async function GET(
             countries
         } = queryParams;
 
-        // Ensure we only query models belonging to this organization
-        const activeModelSlugs = modelFilterSlugs.length > 0
-            ? modelFilterSlugs.filter(s => orgModelSlugs.includes(s))
-            : orgModelSlugs;
+        // SECURITY: Verify organization ownership of requested models
+        const requestedModelSlugs = modelFilterSlugs.length > 0 ? modelFilterSlugs : orgModelSlugs;
+        const validModelSlugs = requestedModelSlugs.filter((slug: string) => orgModelSlugs.includes(slug));
+
+        // If any requested models don't belong to this organization, reject the request
+        if (requestedModelSlugs.length > 0 && validModelSlugs.length !== requestedModelSlugs.length) {
+            return NextResponse.json({
+                success: false,
+                error: 'Access denied: Some requested models do not belong to your organization'
+            }, { status: 403 });
+        }
+
+        const activeModelSlugs = validModelSlugs.length > 0 ? validModelSlugs : orgModelSlugs;
 
         if (activeModelSlugs.length === 0) {
             return NextResponse.json({ success: true, data: emptyDashboardResponse() });
@@ -165,7 +174,9 @@ export async function GET(
         const availableSources: AggregatedTrafficSourceOption[] = (allSourcesData || []).map(source => ({
             id: source.id,
             name: source.name,
+            value: source.slug || source.name.toLowerCase().replace(/\s+/g, '-'),
             slug: source.slug || source.name.toLowerCase().replace(/\s+/g, '-'),
+            icon: 'Link2', // Default icon
             subtags: [], // Could be expanded if needed
         }));
 
@@ -258,22 +269,48 @@ function parseQueryParams(request: NextRequest, orgModelSlugs: string[]) {
             prevEndDate = toDateStr(new Date(now.getTime() - 31 * 24 * 60 * 60 * 1000));
     }
 
-    const models = url.searchParams.get('models')?.split(',').filter(Boolean) || [];
-    let sources: string[] = [];
-    const rawSources = url.searchParams.get('sources');
-    if (rawSources) {
+    // Parse modelSlugs - prefer JSON array, fallback to comma-separated
+    let models: string[] = [];
+    const modelSlugsParam = url.searchParams.get('modelSlugs');
+    if (modelSlugsParam) {
         try {
-            const parsed = JSON.parse(rawSources);
+            models = JSON.parse(modelSlugsParam);
+        } catch {
+            models = modelSlugsParam.split(',').filter(Boolean);
+        }
+    } else {
+        // Backward compatibility: fallback to 'models' parameter
+        models = url.searchParams.get('models')?.split(',').filter(Boolean) || [];
+    }
+
+    // Parse sources - prefer JSON array, fallback to comma-separated
+    let sources: string[] = [];
+    const sourcesParam = url.searchParams.get('sources');
+    if (sourcesParam) {
+        try {
+            const parsed = JSON.parse(sourcesParam);
             sources = parsed.map((s: any) => typeof s === 'string' ? s : s.source);
         } catch {
-            sources = rawSources.split(',').filter(Boolean);
+            sources = sourcesParam.split(',').filter(Boolean);
         }
     }
 
-    const countries = [
-        ...(url.searchParams.get('countries')?.split(',') || []),
-        ...(url.searchParams.get('country')?.split(',') || [])
-    ].filter(Boolean);
+    // Parse countries - prefer JSON array, fallback to comma-separated
+    let countries: string[] = [];
+    const countriesParam = url.searchParams.get('countries');
+    if (countriesParam) {
+        try {
+            countries = JSON.parse(countriesParam);
+        } catch {
+            countries = countriesParam.split(',').filter(Boolean);
+        }
+    } else {
+        // Backward compatibility: fallback to 'country' parameter
+        countries = [
+            ...(url.searchParams.get('countries')?.split(',') || []),
+            ...(url.searchParams.get('country')?.split(',') || [])
+        ].filter(Boolean);
+    }
 
     return { startDate, endDate, prevStartDate, prevEndDate, models, sources, countries };
 }

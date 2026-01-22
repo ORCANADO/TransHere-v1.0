@@ -69,11 +69,11 @@ export interface SourceFilter {
  */
 export interface DashboardFilters {
     period: TimePeriod;
-    startDate: string | null;
-    endDate: string | null;
-    country: string | null;
-    sources: SourceFilter[];
-    modelSlugs: string[];
+    modelSlugs: string[];      // Multi-select support
+    countries: string[];       // Multi-select support
+    sources: string[];         // e.g., ['instagram', 'twitter', 'direct']
+    startDate?: string;        // For custom range
+    endDate?: string;
 }
 
 import type { TimePeriod } from './analytics';

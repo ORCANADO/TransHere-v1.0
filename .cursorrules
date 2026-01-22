@@ -293,6 +293,22 @@ Do not use `useRouter().push` for external links.
   - HomeStoriesBar uses `hasUnseenStories` for sorting logic
   - Real-time sync ensures all components update instantly
 
+### 2.21 Organization Dashboard Architecture (Nebula Integration)
+- **Shared Primitives:** Organization dashboards MUST use the same "Nebula" layout components as Admin dashboards.
+- **Layout Structure:** Always use `DashboardContainer` with `sidebar`, `filters`, and content slots:
+  ```tsx
+  <DashboardContainer
+    sidebar={<SidebarModelList models={orgModels} selectedSlugs={filters.modelSlugs} onSelectionChange={handleChange} />}
+    filters={<DashboardFiltersBar filters={filters} onFiltersChange={handleChange} availableCountries={countries} availableSources={sources} />}
+  >
+    {/* Dashboard content */}
+  </DashboardContainer>
+  ```
+- **Security First:** Filter models by `organization_id` before passing to `SidebarModelList` - never expose models from other organizations.
+- **Filter State:** Use Admin-compatible filter structure with arrays: `modelSlugs[]`, `countries[]`, `sources[]`.
+- **API Parameters:** Send filters as JSON arrays: `modelSlugs=["slug1"]&countries=["US"]&sources=["instagram"]`.
+- **Organization Ownership:** API routes must validate that all requested `modelSlugs` belong to the authenticated organization, returning 403 Forbidden if not.
+
 ### 2.20 Real-Time Synchronization (localStorage Hooks)
 - **Pattern:** All localStorage-based hooks (`useFavorites`, `useViewedStories`, `useViewedModels`) support real-time sync
 - **Mechanism:**

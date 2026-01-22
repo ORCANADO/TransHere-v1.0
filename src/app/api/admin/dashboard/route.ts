@@ -14,6 +14,7 @@ import type {
   AggregatedTrafficSourceOption,
   AggregatedModelFilterOption,
 } from '@/types/analytics-aggregated';
+import type { SourceOption } from '@/types/analytics';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,6 +22,15 @@ const supabase = createClient(
 );
 
 const ADMIN_KEY = process.env.ADMIN_KEY;
+
+// Static available sources for filter dropdown
+const AVAILABLE_SOURCES: SourceOption[] = [
+  { name: 'Direct', value: 'direct', icon: 'Globe' },
+  { name: 'Instagram', value: 'instagram', icon: 'Instagram' },
+  { name: 'Twitter/X', value: 'twitter', icon: 'Twitter' },
+  { name: 'OnlyFans', value: 'onlyfans', icon: 'ExternalLink' },
+  { name: 'Fansly', value: 'fansly', icon: 'ExternalLink' },
+];
 
 function verifyAdmin(request: NextRequest): boolean {
   const url = new URL(request.url);
@@ -625,7 +635,6 @@ export async function GET(
     // 7. Fetch Available Lists for Filters
     const [
       { data: allCountriesData },
-      { data: sourcesData },
       { data: modelsData }
     ] = await Promise.all([
       supabase
@@ -635,25 +644,13 @@ export async function GET(
         .order('created_at', { ascending: false })
         .limit(5000),
       supabase
-        .from('traffic_sources')
-        .select('*, subtags:tracking_subtags(*)'),
-      supabase
         .from('models')
         .select('id, name, slug, image_url')
     ]);
 
     const availableCountries = [...new Set(allCountriesData?.map((e: any) => e.country).filter(Boolean))].sort() as string[];
 
-    const availableSources: AggregatedTrafficSourceOption[] = (sourcesData || []).map(source => ({
-      id: source.id,
-      name: source.name,
-      slug: source.slug,
-      subtags: source.subtags?.map((st: any) => ({
-        id: st.id,
-        name: st.name,
-        slug: st.slug,
-      })) || [],
-    }));
+    const availableSources = AVAILABLE_SOURCES as any;
 
     const availableModels: AggregatedModelFilterOption[] = (modelsData || []).map(model => ({
       id: model.id,
