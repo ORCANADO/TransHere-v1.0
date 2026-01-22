@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Eye, MousePointer, Percent, Users, TrendingUp, RefreshCw } from 'lucide-react';
+import { Eye, MousePointer, Percent, Users, TrendingUp, RefreshCw, BarChart3 } from 'lucide-react';
 import { OrganizationModelCard } from './organization-model-card';
 import { ModelDetailPanel } from './model-detail-panel';
 import { StatCard } from '@/components/admin/stat-card';
@@ -273,9 +273,12 @@ export function OrganizationDashboard({
         >
             {/* Loading Skeleton or Content */}
             {isInitialLoading ? (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     {[...Array(4)].map((_, i) => (
-                        <div key={i} className="h-32 bg-white/5 rounded-2xl" />
+                        <div key={i} className="bg-card border border-white/10 rounded-xl p-6 animate-pulse">
+                            <div className="h-4 bg-white/10 rounded w-20 mb-2" />
+                            <div className="h-8 bg-white/10 rounded w-24" />
+                        </div>
                     ))}
                 </div>
             ) : data && (
@@ -287,21 +290,37 @@ export function OrganizationDashboard({
                         </div>
                     )}
 
+                    {/* Empty State: No analytics data */}
+                    {data.stats.totalViews === 0 && (
+                        <div className="col-span-full p-8 text-center bg-card border border-white/10 rounded-xl">
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#7A27FF]/10 flex items-center justify-center">
+                                <BarChart3 className="w-8 h-8 text-[#7A27FF]" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-white mb-2">No Analytics Data</h3>
+                            <p className="text-muted-foreground max-w-md mx-auto">
+                                No events found for the selected filters. Try expanding the date range or clearing filters.
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Show content when data exists and has values */}
+                    {data.stats.totalViews > 0 && (
+                        <>
                     {/* Overview Stats */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <StatCard
                             title="Total Views"
                             value={data.stats.totalViews}
-                            icon={<Eye className="w-5 h-5 text-[#007AFF]" />}
+                            icon={<Eye className="w-5 h-5 text-[#00FF85]" />}
                             change={data.stats.visitsChange}
-                            valueClassName="text-[#007AFF]"
+                            valueClassName="text-[#00FF85]"
                         />
                         <StatCard
                             title="Total Clicks"
                             value={data.stats.totalClicks}
-                            icon={<MousePointer className="w-5 h-5 text-[#AF52DE]" />}
+                            icon={<MousePointer className="w-5 h-5 text-[#7A27FF]" />}
                             change={data.stats.clicksChange}
-                            valueClassName="text-[#AF52DE]"
+                            valueClassName="text-[#7A27FF]"
                         />
                         <StatCard
                             title="Conversion Rate"
@@ -323,7 +342,7 @@ export function OrganizationDashboard({
                                     className={cn(
                                         "px-4 py-1.5 rounded-md text-xs font-bold transition-all",
                                         comparisonMetric === 'views'
-                                            ? "bg-[#007AFF] text-white shadow-lg"
+                                            ? "bg-[#00FF85] text-black shadow-lg"
                                             : "text-muted-foreground hover:text-white"
                                     )}
                                 >
@@ -334,7 +353,7 @@ export function OrganizationDashboard({
                                     className={cn(
                                         "px-4 py-1.5 rounded-md text-xs font-bold transition-all",
                                         comparisonMetric === 'clicks'
-                                            ? "bg-[#AF52DE] text-white shadow-lg"
+                                            ? "bg-[#7A27FF] text-white shadow-lg"
                                             : "text-muted-foreground hover:text-white"
                                     )}
                                 >
@@ -430,11 +449,11 @@ export function OrganizationDashboard({
                                         <div className="space-y-1">
                                             <div className="flex justify-between text-xs">
                                                 <span className="text-muted-foreground">Views</span>
-                                                <span className="text-[#007AFF] font-bold">{total_views.toLocaleString()}</span>
+                                                <span className="text-[#00FF85] font-bold">{total_views.toLocaleString()}</span>
                                             </div>
                                             <div className="flex justify-between text-xs">
                                                 <span className="text-muted-foreground">Clicks</span>
-                                                <span className="text-[#AF52DE] font-bold">{total_clicks.toLocaleString()}</span>
+                                                <span className="text-[#7A27FF] font-bold">{total_clicks.toLocaleString()}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -455,13 +474,15 @@ export function OrganizationDashboard({
                                     >
                                         <p className="font-semibold text-white truncate mb-2">{source.source_name}</p>
                                         <div className="flex justify-between text-xs font-medium">
-                                            <span className="text-[#007AFF]">{source.total_views.toLocaleString()} views</span>
-                                            <span className="text-[#AF52DE]">{source.total_clicks.toLocaleString()} clicks</span>
+                                            <span className="text-[#00FF85]">{source.total_views.toLocaleString()} views</span>
+                                            <span className="text-[#7A27FF]">{source.total_clicks.toLocaleString()} clicks</span>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         </div>
+                    )}
+                        </>
                     )}
                 </div>
             )}

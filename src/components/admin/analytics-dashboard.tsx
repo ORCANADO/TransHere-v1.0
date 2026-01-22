@@ -6,7 +6,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Eye, MousePointer, Percent, RefreshCw, TrendingUp, Users, Instagram, Twitter, Heart, Cloud, Link2 } from 'lucide-react';
+import { Eye, MousePointer, Percent, RefreshCw, TrendingUp, Users, Instagram, Twitter, Heart, Cloud, Link2, BarChart3 } from 'lucide-react';
 import { StatCard } from './stat-card';
 import { ComparisonChart } from './comparison-chart';
 import { ModelComparisonChart } from './model-comparison-chart';
@@ -299,7 +299,7 @@ export function AnalyticsDashboard({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           {lastUpdated && !loading && (
-            <p className="text-[#86868B] dark:text-gray-400 text-xs font-medium">
+            <p className="text-muted-foreground text-xs font-medium">
               Updated {lastUpdated.toLocaleTimeString()}
             </p>
           )}
@@ -331,7 +331,7 @@ export function AnalyticsDashboard({
       {loading && !data && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="liquid-glass rounded-xl p-6 animate-pulse">
+            <div key={i} className="bg-card border border-white/10 rounded-xl p-6 animate-pulse">
               <div className="h-4 bg-white/10 rounded w-20 mb-2" />
               <div className="h-8 bg-white/10 rounded w-24" />
             </div>
@@ -362,46 +362,43 @@ export function AnalyticsDashboard({
           )}
 
           {/* Empty State: No data for filters */}
-          {data.chartData.length === 0 && data.overview.totalVisits === 0 ? (
-            <div className="bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-12 text-center flex flex-col items-center justify-center shadow-sm">
-              <div className="w-16 h-16 rounded-full bg-black/[0.04] dark:bg-white/5 flex items-center justify-center mb-4">
-                <TrendingUp className="w-8 h-8 text-[#86868B] dark:text-muted-foreground/30" />
+          {data.overview.totalVisits === 0 && (
+            <div className="col-span-full p-8 text-center bg-card border border-white/10 rounded-xl">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#7A27FF]/10 flex items-center justify-center">
+                <BarChart3 className="w-8 h-8 text-[#7A27FF]" />
               </div>
-              <h3 className="text-xl font-semibold text-[#1D1D1F] dark:text-white">No data found</h3>
-              <p className="text-[#86868B] dark:text-muted-foreground mt-2 max-w-sm">
-                No activity recorded for the selected period or filters. Try adjusting your filters or date range.
+              <h3 className="text-lg font-semibold text-white mb-2">No Analytics Data</h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                No events found for the selected filters. Try expanding the date range or clearing filters.
               </p>
-              <button
-                onClick={() => fetchData()}
-                className="mt-6 px-6 py-2.5 bg-[#007AFF] text-white rounded-xl font-bold hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-[#007AFF]/20"
-              >
-                Refresh Data
-              </button>
             </div>
-          ) : (
+          )}
+
+          {/* Show content when data exists and has values */}
+          {data.overview.totalVisits > 0 && (
             <div className="space-y-6">
               {/* Overview Stats */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatCard
                   title="Total Page Views"
                   value={data.overview.totalVisits}
-                  icon={<Eye className="w-5 h-5 text-[#007AFF]" />}
+                  icon={<Eye className="w-5 h-5 text-[#00FF85]" />}
                   change={data.overview.visitsChange}
-                  valueClassName="text-[#007AFF] dark:text-[#007AFF]"
+                  valueClassName="text-[#00FF85] dark:text-[#00FF85]"
                   subtitle={`${data.overview.mainLayoutVisits.toLocaleString()} organic • ${data.overview.trackingLinkVisits.toLocaleString()} from links`}
                 />
                 <StatCard
                   title="Total Clicks"
                   value={data.overview.totalClicks}
                   subtitle="OnlyFans/Fansly redirects"
-                  icon={<MousePointer className="w-5 h-5 text-[#AF52DE]" />}
-                  valueClassName="text-[#AF52DE] dark:text-[#AF52DE]"
+                  icon={<MousePointer className="w-5 h-5 text-[#7A27FF]" />}
+                  valueClassName="text-[#7A27FF] dark:text-[#7A27FF]"
                   change={data.overview.clicksChange}
                 />
                 <StatCard
                   title="Conversion Rate"
                   value={`${data.overview.conversionRate.toFixed(2)}%`}
-                  subtitle={<span className="flex items-center gap-1.5"><span className="text-[#AF52DE]">Clicks</span> / <span className="text-[#007AFF]">Views</span></span>}
+                  subtitle={<span className="flex items-center gap-1.5"><span className="text-[#7A27FF]">Clicks</span> / <span className="text-[#00FF85]">Views</span></span>}
                   icon={<Percent className="w-5 h-5 text-[#D4AF37]" />}
                 />
               </div>
@@ -416,7 +413,7 @@ export function AnalyticsDashboard({
                   onMetricChange={setComparisonMetric}
                   title={`Comparing ${currentModelSlugs.length} Models`}
                   height={350}
-                  className="bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-4 lg:p-6 shadow-sm"
+                  className="glass-panel rounded-2xl p-4 lg:p-6 border border-white/10"
                 />
               ) : (
                 /* Standard Comparison Chart - Current vs Previous */
@@ -424,7 +421,7 @@ export function AnalyticsDashboard({
                   data={data.chartData}
                   title="Traffic Over Time (Current vs Previous Period)"
                   height={300}
-                  className="bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-4 lg:p-6 shadow-sm"
+                  className="glass-panel rounded-2xl p-4 lg:p-6 border border-white/10"
                 />
               )}
 
