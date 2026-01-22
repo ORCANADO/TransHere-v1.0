@@ -165,6 +165,7 @@ Phase 6.6   → Materialized Views & High-Volume Analytics
 Phase 6.8   → Ghost Link System (URL Obfuscation)
 Phase 6.10  → Bridge Page Implementation
 Phase 6.11  → Performance Optimization (PreconnectHints)
+Phase 6.12  → Nebula Dashboard Refactor (Unified Layout Engine)
 ```
 
 ### Active Constraints
