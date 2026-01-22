@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 
+export const runtime = 'edge';
+
 export default async function OrgModelsPage({
     params,
 }: {
@@ -41,7 +43,7 @@ export default async function OrgModelsPage({
                         Manage your organization's models
                     </p>
                 </div>
-                <Button asChild>
+                <Button>
                     <Link href={`/org/${orgId}/models/new`}>
                         <Plus className="w-4 h-4 mr-2" />
                         Add Model

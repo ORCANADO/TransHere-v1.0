@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
     X, Eye, MousePointer, TrendingUp, Globe,
-    Calendar, Shield, ArrowUpRight, ChevronRight
+    Calendar, Shield, ArrowUpRight, ChevronRight, Link2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getImageUrl } from '@/lib/utils';
@@ -29,6 +29,7 @@ interface ModelDetailPanelProps {
         chartData: Array<{ date: string; label?: string; views: number; clicks: number; visitsPrev?: number; clicksPrev?: number }>;
     } | null;
     loading?: boolean;
+    onManageTrackingLinks?: () => void;
 }
 
 /**
@@ -47,6 +48,7 @@ export function ModelDetailPanel({
     model,
     stats,
     loading = false,
+    onManageTrackingLinks,
 }: ModelDetailPanelProps) {
     const [activeMetric, setActiveMetric] = useState<'views' | 'clicks'>('views');
 
@@ -257,15 +259,24 @@ export function ModelDetailPanel({
                             </div>
 
                             {/* Action Footer */}
-                            <div className="pt-6 border-t border-white/10">
+                            <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row gap-3">
                                 <a
                                     href={`/model/${model?.slug}`}
                                     target="_blank"
-                                    className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-white text-black font-black uppercase tracking-widest hover:bg-[#00FF85] transition-colors"
+                                    className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-white text-black font-black uppercase tracking-widest hover:bg-[#00FF85] transition-colors"
                                 >
                                     View Public Profile
                                     <ArrowUpRight className="w-4 h-4" />
                                 </a>
+                                {onManageTrackingLinks && (
+                                    <button
+                                        onClick={onManageTrackingLinks}
+                                        className="sm:w-20 flex items-center justify-center py-4 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-[#7A27FF]/20 hover:border-[#7A27FF]/30 transition-all"
+                                        title="Manage Tracking Links"
+                                    >
+                                        <Link2 className="w-5 h-5" />
+                                    </button>
+                                )}
                             </div>
                         </>
                     ) : (

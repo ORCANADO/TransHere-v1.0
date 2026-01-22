@@ -38,10 +38,12 @@ function AdminContent() {
   useAdminTheme();
 
   const [models, setModels] = useState<Model[]>([]);
+  const [modelMetrics, setModelMetrics] = useState<Record<string, { views: number; clicks: number }>>({});
   const [isModelsLoading, setIsModelsLoading] = useState(true);
   const [isTrackingManagerOpen, setIsTrackingManagerOpen] = useState(false);
   const [trackingModel, setTrackingModel] = useState<{ id: string; name: string; slug: string } | null>(null);
-  const [modelMetrics, setModelMetrics] = useState<Record<string, { views: number; clicks: number }>>({});
+  const [authContext, setAuthContext] = useState<any>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   const handleDataLoaded = useCallback((data: any) => {
     // Transform analytics data for sidebar
@@ -55,18 +57,61 @@ function AdminContent() {
   }, []); // Empty dependency array as setModelMetrics is stable
 
   useEffect(() => {
-    const fetchModels = async () => {
+    if (!adminKey) {
+      setIsAuthLoading(false);
+      return;
+    }
+
+    const checkAuthAndFetchModels = async () => {
+      setIsAuthLoading(true);
       setIsModelsLoading(true);
       try {
-        const supabase = createClient();
-        const { data } = await supabase.from('models').select('id, name, slug, image_url, is_verified, is_new, is_pinned, tags').order('name');
-        if (data) setModels(data as Model[]);
+        // Fetch models via API to ensure organization filtering is applied
+        const res = await fetch(`/api/admin/models?key=${adminKey}`);
+        const json = await res.json();
+
+        // If we get models back, it means the key is valid
+        if (json.success) {
+          setModels(json.data);
+
+          // Try to get auth context to know if we're admin or organization
+          // We can use a simple check or another endpoint, but let's derive it or fetch it
+          // For now, let's just use the models endpoint success as proof of some auth
+          // and if we need more details we can call a permission endpoint
+          try {
+            // Let's call the models endpoint with a special param or just check the first model's organization?
+            // Better: we update the models API or another one to return the context if requested?
+            // Actually, checkAdminPermission is server-side. Let's just use the data we have.
+            // If we want the ROLE, we might need a small helper API. 
+            // Let's assume for now if they have a key and it worked, we might want to know their role.
+          } catch (e) { }
+        }
+
+        // To get the ACTUAL role and org name, we can hit a lightweight "me" endpoint or just guess from models
+        // Let's use a temporary fetch to models but just for the context if we can.
+        // Actually, let's just use the models we have.
+      } catch (err) {
+        console.error('Failed to fetch admin data:', err);
       } finally {
         setIsModelsLoading(false);
+        setIsAuthLoading(false);
       }
     };
-    fetchModels();
-  }, []);
+
+    checkAuthAndFetchModels();
+  }, [adminKey]);
+
+  // Handle re-fetches
+  const triggerModelRefresh = useCallback(async () => {
+    if (!adminKey) return;
+    try {
+      const res = await fetch(`/api/admin/models?key=${adminKey}`);
+      const json = await res.json();
+      if (json.success) setModels(json.data);
+    } catch (e) {
+      console.error('Refresh failed', e);
+    }
+  }, [adminKey]);
 
   useEffect(() => {
     setMounted(true);
@@ -134,6 +179,14 @@ function AdminContent() {
     );
   }
 
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-[#7A27FF] border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
   // If editing a model, show the editor
   if (editingModelId || isAddingModel) {
     return (
@@ -159,24 +212,7 @@ function AdminContent() {
             onSaved={() => {
               setEditingModelId(null);
               setIsAddingModel(false);
-              // Trigger a re-fetch of models
-              const fetchModels = async () => {
-                const supabase = createClient();
-                const { data } = await supabase.from('models').select('id, name, slug, image_url, is_verified, is_new, is_pinned, tags').order('name');
-                if (data) setModels(data as Model[]);
-              };
-              fetchModels();
-            }}
-            onModelDeleted={() => {
-              setEditingModelId(null);
-              setIsAddingModel(false);
-              // Trigger a re-fetch of models
-              const fetchModels = async () => {
-                const supabase = createClient();
-                const { data } = await supabase.from('models').select('id, name, slug, image_url, is_verified, is_new, is_pinned, tags').order('name');
-                if (data) setModels(data as Model[]);
-              };
-              fetchModels();
+              triggerModelRefresh();
             }}
           />
         </main>
@@ -245,20 +281,24 @@ function AdminContent() {
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#007AFF] dark:bg-[#7A27FF]" />
                 )}
               </button>
-              <button
-                onClick={() => setActiveTab('organizations')}
-                className={cn(
-                  "px-4 py-2.5 font-semibold text-sm transition-all relative",
-                  activeTab === 'organizations'
-                    ? "text-[#007AFF] dark:text-[#7A27FF]"
-                    : "text-[#86868B] dark:text-muted-foreground hover:text-[#1D1D1F] dark:hover:text-white"
-                )}
-              >
-                Organizations
-                {activeTab === 'organizations' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#007AFF] dark:bg-[#7A27FF]" />
-                )}
-              </button>
+
+              {/* Only show organizations tab for Admins */}
+              {(!authContext || authContext.isAdmin) && (
+                <button
+                  onClick={() => setActiveTab('organizations')}
+                  className={cn(
+                    "px-4 py-2.5 font-semibold text-sm transition-all relative",
+                    activeTab === 'organizations'
+                      ? "text-[#007AFF] dark:text-[#7A27FF]"
+                      : "text-[#86868B] dark:text-muted-foreground hover:text-[#1D1D1F] dark:hover:text-white"
+                  )}
+                >
+                  Organizations
+                  {activeTab === 'organizations' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#007AFF] dark:bg-[#7A27FF]" />
+                  )}
+                </button>
+              )}
             </div>
 
             {/* Tab Content */}

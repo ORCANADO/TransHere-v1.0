@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { checkAdminPermission, createErrorResponse } from '@/lib/api-permissions';
 
 export const runtime = 'edge';
 
@@ -8,21 +9,10 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const ADMIN_KEY = process.env.ADMIN_KEY;
-
-// Verify admin key helper
-const verifyAdmin = (req: NextRequest) => {
-    const url = new URL(req.url);
-    const key = url.searchParams.get('key');
-    return key === ADMIN_KEY;
-};
-
 export async function POST(req: NextRequest) {
-    if (!verifyAdmin(req)) {
-        return NextResponse.json(
-            { success: false, error: 'Unauthorized' },
-            { status: 401 }
-        );
+    const permCheck = await checkAdminPermission(req);
+    if (!permCheck.authorized) {
+        return createErrorResponse(permCheck.error || 'Unauthorized', 403);
     }
 
     try {
@@ -31,7 +21,7 @@ export async function POST(req: NextRequest) {
 
         if (!name || !sourceId) {
             return NextResponse.json(
-                { success: false, error: 'Name and Source ID are required' },
+                { success: false, error: 'Name and Source ID are required' } as any,
                 { status: 400 }
             );
         }
@@ -62,7 +52,7 @@ export async function POST(req: NextRequest) {
     } catch (error) {
         console.error('Error creating subtag:', error);
         return NextResponse.json(
-            { success: false, error: 'Failed to create subtag' },
+            { success: false, error: 'Failed to create subtag' } as any,
             { status: 500 }
         );
     }

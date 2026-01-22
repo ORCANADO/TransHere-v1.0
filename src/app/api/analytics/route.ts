@@ -7,17 +7,41 @@ export const runtime = 'edge';
 // Admin key for authentication (matches frontend)
 const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
 
+// Max retries for database insertions
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 100;
+
+async function recordEventWithRetry(
+  supabase: any,
+  eventData: any,
+  retries = 0
+): Promise<boolean> {
+  try {
+    const { error } = await supabase.from('analytics_events').insert(eventData);
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    if (retries < MAX_RETRIES) {
+      // Exponential backoff or simple delay
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (retries + 1)));
+      return recordEventWithRetry(supabase, eventData, retries + 1);
+    }
+    console.error(`[Analytics] Failed to record event after ${MAX_RETRIES} retries:`, error);
+    return false;
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { 
-      modelId, 
-      eventType, 
-      modelSlug, 
-      pagePath 
+    const {
+      modelId,
+      eventType,
+      modelSlug,
+      pagePath
     } = body;
 
-    // Validate required fields (modelId and eventType are required)
+    // Validate required fields (eventType is required)
     if (!eventType) {
       return NextResponse.json(
         { success: false, error: 'Missing required field: eventType' },
@@ -26,13 +50,13 @@ export async function POST(request: Request) {
     }
 
     // Extract geolocation from headers (prefer middleware headers, fallback to Cloudflare/Vercel)
-    const cityHeader = request.headers.get('x-user-city') 
-      || request.headers.get('cf-ipcity') 
+    const cityHeader = request.headers.get('x-user-city')
+      || request.headers.get('cf-ipcity')
       || request.headers.get('x-vercel-ip-city');
     const countryHeader = request.headers.get('x-user-country')
-      || request.headers.get('cf-ipcountry') 
+      || request.headers.get('cf-ipcountry')
       || request.headers.get('x-vercel-ip-country');
-    
+
     // Decode city to handle special characters (e.g., São Paulo)
     let city: string | null = null;
     if (cityHeader) {
@@ -45,17 +69,16 @@ export async function POST(request: Request) {
     }
 
     // Validate country: must be exactly 2 characters (e.g., 'US', 'CO')
-    // Set to null if invalid to avoid breaking database constraint
     const country = (countryHeader && countryHeader.length === 2) ? countryHeader.toUpperCase() : null;
 
     // Extract additional headers
     const referrer = request.headers.get('referer') || request.headers.get('referrer') || null;
     const userAgent = request.headers.get('user-agent') || null;
-    
+
     // Get page path from request or body
     const currentPagePath = pagePath || new URL(request.url).pathname;
 
-    // Use direct Supabase client for Edge compatibility (no cookies needed for anon access)
+    // Use direct Supabase client for Edge compatibility
     const supabase = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -67,7 +90,7 @@ export async function POST(request: Request) {
       }
     );
 
-    const { error: insertError } = await supabase.from('analytics_events').insert({
+    const eventData = {
       model_id: modelId || null,
       event_type: eventType,
       model_slug: modelSlug || null,
@@ -76,12 +99,14 @@ export async function POST(request: Request) {
       country: country,
       referrer: referrer,
       user_agent: userAgent,
-    });
+    };
 
-    if (insertError) {
-      console.error('Supabase insert error:', insertError);
+    // Use retry logic for reliability
+    const success = await recordEventWithRetry(supabase, eventData);
+
+    if (!success) {
       return NextResponse.json(
-        { success: false, error: 'Database error' },
+        { success: false, error: 'Database insertion failed after retries' },
         { status: 500 }
       );
     }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { checkAdminPermission, checkModelAccess, createErrorResponse } from '@/lib/api-permissions';
 import type {
     TrackingLinkWithDetails,
     TrackingSource,
@@ -17,13 +18,6 @@ const supabase = createClient(
 );
 
 const ADMIN_KEY = process.env.ADMIN_KEY;
-
-// Verify admin authentication
-function verifyAdmin(request: NextRequest): boolean {
-    const url = new URL(request.url);
-    const key = url.searchParams.get('key');
-    return key === ADMIN_KEY;
-}
 
 // Generate next available slug (c1, c2, c3...)
 async function generateNextSlug(modelId: string): Promise<string> {
@@ -51,15 +45,28 @@ async function generateNextSlug(modelId: string): Promise<string> {
 
 // GET: Fetch all tracking links for a model
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<TrackingLinksResponse>>> {
-    if (!verifyAdmin(request)) {
-        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
     const url = new URL(request.url);
     const modelId = url.searchParams.get('modelId');
 
     if (!modelId) {
-        return NextResponse.json({ success: false, error: 'modelId is required' }, { status: 400 });
+        return NextResponse.json({ success: false, error: 'modelId is required' } as any, { status: 400 });
+    }
+
+    // Fetch model to check organization_id
+    const { data: model, error: modelError } = await supabase
+        .from('models')
+        .select('organization_id')
+        .eq('id', modelId)
+        .single();
+
+    if (modelError || !model) {
+        return createErrorResponse('Model not found', 404);
+    }
+
+    // Check model access
+    const permCheck = await checkModelAccess(request, model.organization_id);
+    if (!permCheck.authorized) {
+        return createErrorResponse(permCheck.error || 'Unauthorized', 403);
     }
 
     try {
@@ -121,10 +128,6 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
 
 // POST: Create new tracking link
 export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse<TrackingLinkWithDetails>>> {
-    if (!verifyAdmin(request)) {
-        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
     try {
         const body: CreateTrackingLinkPayload = await request.json();
         const { modelId, sourceId, subtagId, previewUrl } = body;
@@ -133,7 +136,24 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
             return NextResponse.json({
                 success: false,
                 error: 'modelId and sourceId are required'
-            }, { status: 400 });
+            } as any, { status: 400 });
+        }
+
+        // Fetch model to check organization_id
+        const { data: model, error: modelError } = await supabase
+            .from('models')
+            .select('organization_id')
+            .eq('id', modelId)
+            .single();
+
+        if (modelError || !model) {
+            return createErrorResponse('Model not found', 404);
+        }
+
+        // Check model access
+        const permCheck = await checkModelAccess(request, model.organization_id);
+        if (!permCheck.authorized) {
+            return createErrorResponse(permCheck.error || 'Unauthorized', 403);
         }
 
         // Generate next slug

@@ -11,9 +11,10 @@ interface StatCardProps {
   icon?: React.ReactNode;
   className?: string;
   valueClassName?: string;
+  loading?: boolean;
 }
 
-export function StatCard({ title, value, icon, change, subtitle, className, valueClassName }: StatCardProps) {
+export function StatCard({ title, value, icon, change, subtitle, className, valueClassName, loading }: StatCardProps) {
   const formatValue = (val: string | number) => {
     if (typeof val === 'number') {
       return val.toLocaleString();
@@ -33,10 +34,11 @@ export function StatCard({ title, value, icon, change, subtitle, className, valu
           <p className="text-[#86868B] dark:text-gray-400 text-sm font-medium">{title}</p>
           <p className={cn(
             "text-2xl lg:text-3xl font-bold mt-1",
+            loading ? "opacity-20 animate-pulse" : "opacity-100",
             !valueClassName && "text-[#1D1D1F] dark:text-white",
             valueClassName
           )}>
-            {formatValue(value)}
+            {loading ? '0,000' : formatValue(value)}
           </p>
           {subtitle && (
             <p className="text-[#86868B]/80 dark:text-muted-foreground/60 text-xs mt-1">{subtitle}</p>

@@ -7,6 +7,18 @@
 - **Goal:** Maximize CTR by eliminating login walls and loading delays.
 - **Constraint:** "Zero Cost" stack (Free Tier focus).
 
+### 0.1 Context Gateway Protocol (MANDATORY)
+> **CRITICAL:** At the START of every session, you MUST read `PROJECT_STRUCTURE.md` before making any code changes.
+
+- **Why:** `PROJECT_STRUCTURE.md` is the single source of truth for:
+  - Current project architecture and directory structure
+  - High-dependency file summaries and cross-references
+  - Active development phases and context breadcrumbs
+  - Archived log locations and historical context
+- **How:** Use `view_file` on `PROJECT_STRUCTURE.md` as your first action when starting work.
+- **Sync Rule:** After significant changes, update `PROJECT_STRUCTURE.md` to reflect new state.
+
+
 ## 1. Technical Stack (Immutable)
 - **Framework:** Next.js 15 (App Router) - *Downgraded from 16 for stability.*
 - **Language:** TypeScript (Strict mode).
@@ -367,5 +379,48 @@ Do not use `useRouter().push` for external links.
 - `/src/lib/supabase`: Supabase client configuration.
 - `/src/hooks`: Custom hooks (`useFavorites`, `useViewedModels`, `useViewedStories`, `useShare`, `useAnalytics`).
 - `/src/app/admin`: Internal Dashboard (Authentication via `?key=` param).
+
+## 6. Auto-Archive Protocol (Context Gateway)
+
+### 6.1 Log File Management
+- **Primary Log:** `Project_Log.md` in project root
+- **Archive Location:** `/logs/archive/` directory
+- **Source of Truth:** `PROJECT_STRUCTURE.md` (the "Map") always reflects current state
+
+### 6.2 Archive Trigger Rules
+- **Size Threshold:** When `Project_Log.md` exceeds **10KB**, archive oldest entries
+- **Archive Naming:** `archive_YYYY-MM_phases.md` (e.g., `archive_2025-12_phases-1-5.md`)
+- **Retention:** Archived files are read-only historical records
+
+### 6.3 Archive Procedure
+1. **Check Size:** Before adding new log entries, verify file size
+2. **If > 10KB:**
+   - Identify oldest phase blocks (Phase 1, Phase 2, etc.)
+   - Move completed phases to `/logs/archive/archive_[date]_[phases].md`
+   - Update `PROJECT_STRUCTURE.md` Context Breadcrumbs with archive reference
+   - Keep only active/recent phases in `Project_Log.md`
+3. **Map Update:** `PROJECT_STRUCTURE.md` must always list:
+   - Current active log file location
+   - Archive files with date ranges
+
+### 6.4 Log Entry Format
+- **Timestamp:** `[YYYY-MM-DD]` ISO format
+- **Phase Marker:** `## Phase X.X: [Title]`
+- **Status Badge:** `**Status:** Complete | In Progress | Blocked`
+- **Sections:** Implementation, Decisions, Bug Fixes, Testing
+
+### 6.5 Archive File Structure
+```
+/logs/archive/
+├── archive_2025-12_phases-1-4.md    # Phase 1-4 (Scaffolding → Gallery)
+├── archive_2026-01_phases-5.md      # Phase 5 (Dark Mode Rebranding)
+└── README.md                        # Archive index with date ranges
+```
+
+### 6.6 Context Gateway Sync
+- When archiving, update `PROJECT_STRUCTURE.md`:
+  - Add entry to "Archived Logs" section
+  - Update "Recent Development Focus" breadcrumbs
+  - Ensure high-level summaries remain in active log
 
 

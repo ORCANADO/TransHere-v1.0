@@ -136,3 +136,5 @@ export function BridgeProtector({
         </button>
     );
 }
+
+export default BridgeProtector;

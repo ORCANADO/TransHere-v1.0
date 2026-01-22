@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { TrackingLinksManager } from '@/components/org/tracking-links-manager';
 import { Suspense } from 'react';
 
+export const runtime = 'edge';
+
 export default async function OrgTrackingPage({
     params,
 }: {
@@ -55,7 +57,7 @@ export default async function OrgTrackingPage({
                 <TrackingLinksManager
                     initialLinks={trackingLinks || []}
                     models={models || []}
-                    sources={sources || []}
+                    sources={(sources as any) || []}
                     orgId={orgId}
                 />
             </Suspense>

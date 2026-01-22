@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { OrganizationDashboard } from '@/components/org/organization-dashboard';
+
+export const runtime = 'edge';
 import {
     validateOrganizationKey,
     getOrganizationModels,

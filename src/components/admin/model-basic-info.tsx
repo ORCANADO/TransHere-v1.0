@@ -22,17 +22,19 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import type { UserRole } from '@/types/auth';
 
 interface ModelBasicInfoProps {
   adminKey: string;
   model: any | null;
   isNew: boolean;
   onSaved: (model: any) => void;
-  onDeleted: (modelId: string) => void;
-  organizationId?: string | null;
+  onDeleted?: (modelId: string) => void;
+  userRole?: UserRole; // NEW: Role-based access control
+  organizationId?: string | null; // NEW: For auto-assignment
 }
 
-export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, organizationId }: ModelBasicInfoProps) {
+export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, userRole = 'admin', organizationId }: ModelBasicInfoProps) {
   const [formData, setFormData] = useState({
     name: model?.name || '',
     slug: model?.slug || '',
@@ -89,7 +91,7 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, org
         organization_id: model.organization_id || null,
       });
     }
-  }, [model]);
+  }, [model, organizationId]);
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => {
@@ -131,10 +133,18 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, org
         ? `/api/admin/models?key=${adminKey}`
         : `/api/admin/models/${model.id}?key=${adminKey}`;
 
+      // Ensure organization_id is set for organization users
+      const submitData = {
+        ...formData,
+        organization_id: userRole === 'organization' && organizationId
+          ? organizationId
+          : formData.organization_id,
+      };
+
       const res = await fetch(url, {
         method: isNew ? 'POST' : 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       const json = await res.json();
@@ -166,7 +176,7 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, org
       const json = await res.json();
 
       if (json.success) {
-        onDeleted(model.id);
+        onDeleted?.(model.id);
       } else {
         setError(json.error || 'Failed to delete model');
       }
@@ -184,6 +194,16 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, org
       {error && (
         <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400">
           {error}
+        </div>
+      )}
+
+      {/* Role indicator for organization users */}
+      {userRole === 'organization' && (
+        <div className="p-4 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-lg text-[#D4AF37] text-sm">
+          <p className="font-medium">Organization Access</p>
+          <p className="text-[#D4AF37]/80 text-xs mt-1">
+            You can edit basic model information. Content management (gallery, stories) is managed by administrators.
+          </p>
         </div>
       )}
 
@@ -286,28 +306,30 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, org
         </p>
       </div>
 
-      {/* Organization */}
-      <div>
-        <label className="block text-sm font-bold text-muted-foreground mb-1 px-1">
-          Organization <span className="text-xs font-medium opacity-70">(Optional)</span>
-        </label>
-        <select
-          value={formData.organization_id || ''}
-          onChange={(e) => handleChange('organization_id', e.target.value || null)}
-          disabled={loadingOrgs}
-          className="w-full px-4 py-2.5 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <option value="">No Organization (Unassigned)</option>
-          {organizations.map((org) => (
-            <option key={org.id} value={org.id}>
-              {org.name}
-            </option>
-          ))}
-        </select>
-        <p className="text-xs text-muted-foreground mt-1">
-          Assign this model to an organization for dashboard access
-        </p>
-      </div>
+      {/* Organization - Only editable by admins */}
+      {userRole === 'admin' && (
+        <div>
+          <label className="block text-sm font-bold text-muted-foreground mb-1 px-1">
+            Organization <span className="text-xs font-medium opacity-70">(Optional)</span>
+          </label>
+          <select
+            value={formData.organization_id || ''}
+            onChange={(e) => handleChange('organization_id', e.target.value || null)}
+            disabled={loadingOrgs}
+            className="w-full px-4 py-2.5 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <option value="">No Organization (Unassigned)</option>
+            {organizations.map((org) => (
+              <option key={org.id} value={org.id}>
+                {org.name}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground mt-1">
+            Assign this model to an organization for dashboard access
+          </p>
+        </div>
+      )}
 
       {/* Tags */}
       <div>

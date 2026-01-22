@@ -2,6 +2,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { RefreshStatus, RefreshViewsResponse } from '@/types/analytics-aggregated';
+import { checkAdminPermission, createErrorResponse } from '@/lib/api-permissions';
 
 // Use service role for refresh operations
 const supabase = createClient(
@@ -9,24 +10,13 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const ADMIN_KEY = process.env.ADMIN_KEY;
-
-// Verify admin authentication
-function verifyAdmin(request: NextRequest): boolean {
-    const url = new URL(request.url);
-    const key = url.searchParams.get('key');
-    return key === ADMIN_KEY;
-}
-
 // GET: Check refresh status and last refresh time
 export async function GET(
     request: NextRequest
 ): Promise<NextResponse<RefreshViewsResponse>> {
-    if (!verifyAdmin(request)) {
-        return NextResponse.json(
-            { success: false, error: 'Unauthorized' },
-            { status: 401 }
-        );
+    const permCheck = await checkAdminPermission(request);
+    if (!permCheck.authorized) {
+        return createErrorResponse(permCheck.error || 'Unauthorized', 403) as any;
     }
 
     try {
@@ -72,11 +62,9 @@ export async function GET(
 export async function POST(
     request: NextRequest
 ): Promise<NextResponse<RefreshViewsResponse>> {
-    if (!verifyAdmin(request)) {
-        return NextResponse.json(
-            { success: false, error: 'Unauthorized' },
-            { status: 401 }
-        );
+    const permCheck = await checkAdminPermission(request);
+    if (!permCheck.authorized) {
+        return createErrorResponse(permCheck.error || 'Unauthorized', 403) as any;
     }
 
     try {

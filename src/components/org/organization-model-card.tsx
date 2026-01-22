@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Eye, MousePointer, TrendingUp, ExternalLink } from 'lucide-react';
+import { Eye, MousePointer, TrendingUp, ExternalLink, Link2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getImageUrl } from '@/lib/utils';
 
@@ -21,6 +21,7 @@ interface OrganizationModelCardProps {
         ctr: number;
     };
     onClick?: () => void;
+    onManageTrackingLinks?: (e: React.MouseEvent) => void;
     className?: string;
 }
 
@@ -34,6 +35,7 @@ export function OrganizationModelCard({
     model,
     stats,
     onClick,
+    onManageTrackingLinks,
     className,
 }: OrganizationModelCardProps) {
     const imageUrl = getImageUrl(model.image_url);
@@ -65,34 +67,50 @@ export function OrganizationModelCard({
 
                 {/* Model Info */}
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-white truncate">
-                            {model.name}
-                        </h3>
-                        {model.is_verified && (
-                            <div className="flex-shrink-0 w-4 h-4">
-                                <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
-                                    <path
-                                        d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
-                                        fill="url(#verifiedGradient)"
-                                    />
-                                    <path
-                                        d="M9 12L11 14L15 10"
-                                        stroke="white"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                    <defs>
-                                        <linearGradient id="verifiedGradient" x1="2" y1="2" x2="22" y2="21.02">
-                                            <stop offset="0%" stopColor="#007AFF" />
-                                            <stop offset="100%" stopColor="#AF52DE" />
-                                        </linearGradient>
-                                    </defs>
-                                </svg>
-                            </div>
+                    <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <h3 className="font-semibold text-white truncate">
+                                {model.name}
+                            </h3>
+                            {model.is_verified && (
+                                <div className="flex-shrink-0 w-4 h-4">
+                                    <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
+                                        <path
+                                            d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+                                            fill="url(#verifiedGradient)"
+                                        />
+                                        <path
+                                            d="M9 12L11 14L15 10"
+                                            stroke="white"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
+                                        <defs>
+                                            <linearGradient id="verifiedGradient" x1="2" y1="2" x2="22" y2="21.02">
+                                                <stop offset="0%" stopColor="#007AFF" />
+                                                <stop offset="100%" stopColor="#AF52DE" />
+                                            </linearGradient>
+                                        </defs>
+                                    </svg>
+                                </div>
+                            )}
+                            <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+
+                        {/* Tracking Link Button */}
+                        {onManageTrackingLinks && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onManageTrackingLinks(e);
+                                }}
+                                className="p-1.5 rounded-lg bg-white/5 hover:bg-[#7A27FF]/20 text-muted-foreground hover:text-[#7A27FF] border border-white/5 hover:border-[#7A27FF]/30 transition-all flex-shrink-0"
+                                title="Manage Tracking Links"
+                            >
+                                <Link2 className="w-3.5 h-3.5" />
+                            </button>
                         )}
-                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
 
                     {/* Tags */}

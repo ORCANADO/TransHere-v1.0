@@ -7,6 +7,8 @@ import BridgeProtector from '@/components/features/bridge-protector'
 import PreconnectHints from '@/components/features/preconnect-hints'
 import { captureTelemetry, logBridgeView } from '@/lib/stealth-logger'
 
+export const runtime = 'edge';
+
 interface PageProps {
     params: Promise<{ slug: string }>
 }
@@ -80,8 +82,11 @@ export default async function BridgePage({ params }: PageProps) {
             <PreconnectHints priority={true} />
             <BridgeProtector
                 encodedDestination={encodedDestination}
-                profileName={profile.name}
-                avatarUrl={profile.image_url}
+                isCrawler={telemetry.isCrawler}
+                modelId={profile.id}
+                modelSlug={profile.slug}
+                modelName={profile.name}
+                isVerified={profile.is_verified}
             />
         </main>
     )

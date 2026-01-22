@@ -7,13 +7,16 @@ import {
   Image as ImageIcon,
   Film,
   Pin,
-  Loader2
+  Loader2,
+  Lock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ModelBasicInfo } from './model-basic-info';
 import { GalleryManager } from './gallery-manager';
 import { StoryManager } from './story-manager';
 import { PinnedBlocksManager } from './pinned-blocks-manager';
+import type { UserRole, DashboardPermissions } from '@/types/auth';
+import { getPermissions } from '@/types/auth';
 
 type Tab = 'basic' | 'gallery' | 'stories' | 'pinned';
 
@@ -22,33 +25,43 @@ interface ModelEditorProps {
   modelId: string | null; // null for new model
   onBack: () => void;
   onSaved: () => void;
-  onModelDeleted?: (modelId: string) => void;
-  organizationId?: string | null;
+  onModelDeleted?: () => void;
+  userRole?: UserRole; // NEW: Role-based access control
+  organizationId?: string | null; // NEW: For filtering
 }
 
-export function ModelEditor({ adminKey, modelId, onBack, onSaved, onModelDeleted, organizationId }: ModelEditorProps) {
+export function ModelEditor({
+  adminKey,
+  modelId,
+  onBack,
+  onSaved,
+  userRole = 'admin', // Default to admin for backward compatibility
+  organizationId = null
+}: ModelEditorProps) {
   const [activeTab, setActiveTab] = useState<Tab>('basic');
   const [model, setModel] = useState<any>(null);
   const [loading, setLoading] = useState(!!modelId);
-  const [saving, setSaving] = useState(false);
+
+  // Get permissions based on user role
+  const permissions: DashboardPermissions = getPermissions(userRole);
 
   const fetchModel = useCallback(async () => {
     if (!modelId) return;
 
     setLoading(true);
     try {
-      const url = `/api/admin/models/${modelId}?key=${adminKey}`;
-      console.log('[ModelEditor] Fetching model:', url);
-      const res = await fetch(url);
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`API Error ${res.status}: ${text.substring(0, 100)}`);
-      }
-
+      const res = await fetch(`/api/admin/models/${modelId}?key=${adminKey}`);
       const json = await res.json();
 
       if (json.success) {
+        // Verify organization access for non-admin users
+        if (userRole === 'organization' && organizationId) {
+          if (json.data.organization_id !== organizationId) {
+            console.error('Unauthorized access to model');
+            onBack();
+            return;
+          }
+        }
         setModel(json.data);
       } else {
         console.error('Failed to fetch model:', json.error);
@@ -58,21 +71,31 @@ export function ModelEditor({ adminKey, modelId, onBack, onSaved, onModelDeleted
     } finally {
       setLoading(false);
     }
-  }, [adminKey, modelId]);
+  }, [adminKey, modelId, userRole, organizationId, onBack]);
 
   useEffect(() => {
     fetchModel();
   }, [fetchModel]);
 
-  const tabs: { id: Tab; label: string; icon: typeof User }[] = [
-    { id: 'basic', label: 'Basic Info', icon: User },
-    { id: 'gallery', label: 'Gallery', icon: ImageIcon },
-    { id: 'stories', label: 'Stories', icon: Film },
-    { id: 'pinned', label: 'Pinned Blocks', icon: Pin },
+  // Define all possible tabs
+  const allTabs: { id: Tab; label: string; icon: typeof User; requiresPermission: keyof DashboardPermissions }[] = [
+    { id: 'basic', label: 'Basic Info', icon: User, requiresPermission: 'canEditBasicInfo' },
+    { id: 'gallery', label: 'Gallery', icon: ImageIcon, requiresPermission: 'showGalleryTab' },
+    { id: 'stories', label: 'Stories', icon: Film, requiresPermission: 'showStoriesTab' },
+    { id: 'pinned', label: 'Pinned Blocks', icon: Pin, requiresPermission: 'showPinnedTab' },
   ];
 
-  // Only show content tabs if editing existing model
-  const availableTabs = modelId ? tabs : [tabs[0]];
+  // Filter tabs based on permissions and model existence
+  const availableTabs = modelId
+    ? allTabs.filter(tab => permissions[tab.requiresPermission])
+    : [allTabs[0]]; // Only basic info for new models
+
+  // Reset to basic tab if current tab is no longer available
+  useEffect(() => {
+    if (!availableTabs.find(tab => tab.id === activeTab)) {
+      setActiveTab('basic');
+    }
+  }, [availableTabs, activeTab]);
 
   if (loading) {
     return (
@@ -100,6 +123,13 @@ export function ModelEditor({ adminKey, modelId, onBack, onSaved, onModelDeleted
           {model?.slug && (
             <p className="text-sm text-muted-foreground">@{model.slug}</p>
           )}
+          {/* Role indicator for organization users */}
+          {userRole === 'organization' && (
+            <p className="text-xs text-[#D4AF37] mt-1 flex items-center gap-1">
+              <Lock className="w-3 h-3" />
+              Organization Access - Basic Info Only
+            </p>
+          )}
         </div>
       </div>
 
@@ -120,6 +150,14 @@ export function ModelEditor({ adminKey, modelId, onBack, onSaved, onModelDeleted
             {tab.label}
           </button>
         ))}
+
+        {/* Show locked tabs indicator for organization users */}
+        {userRole === 'organization' && modelId && (
+          <div className="flex items-center gap-2 px-4 py-2 text-muted-foreground/50">
+            <Lock className="w-4 h-4" />
+            <span className="text-xs">Content management restricted</span>
+          </div>
+        )}
       </div>
 
       {/* Tab Content */}
@@ -136,53 +174,41 @@ export function ModelEditor({ adminKey, modelId, onBack, onSaved, onModelDeleted
                 onSaved();
               }
             }}
-            onDeleted={(deletedId) => {
-              if (onModelDeleted) {
-                onModelDeleted(deletedId);
-              }
-              onBack(); // Go back to list immediately
-            }}
+            userRole={userRole}
             organizationId={organizationId}
           />
         )}
 
+        {activeTab === 'gallery' && model && permissions.showGalleryTab && (
+          <GalleryManager
+            adminKey={adminKey}
+            modelId={model.id}
+            modelSlug={model.slug}
+            initialItems={model.gallery_items || []}
+            onUpdate={fetchModel}
+          />
+        )}
 
-        {
-          activeTab === 'gallery' && model && (
-            <GalleryManager
-              adminKey={adminKey}
-              modelId={model.id}
-              modelSlug={model.slug}
-              initialItems={model.gallery_items || []}
-              onUpdate={fetchModel}
-            />
-          )
-        }
+        {activeTab === 'stories' && model && permissions.showStoriesTab && (
+          <StoryManager
+            adminKey={adminKey}
+            modelId={model.id}
+            modelSlug={model.slug}
+            storyGroups={model.story_groups || []}
+            onUpdate={fetchModel}
+          />
+        )}
 
-        {
-          activeTab === 'stories' && model && (
-            <StoryManager
-              adminKey={adminKey}
-              modelId={model.id}
-              modelSlug={model.slug}
-              storyGroups={model.story_groups || []}
-              onUpdate={fetchModel}
-            />
-          )
-        }
-
-        {
-          activeTab === 'pinned' && model && (
-            <PinnedBlocksManager
-              adminKey={adminKey}
-              modelId={model.id}
-              modelSlug={model.slug}
-              storyGroups={(model.story_groups || []).filter((g: any) => g.is_pinned)}
-              onUpdate={fetchModel}
-            />
-          )
-        }
-      </div >
-    </div >
+        {activeTab === 'pinned' && model && permissions.showPinnedTab && (
+          <PinnedBlocksManager
+            adminKey={adminKey}
+            modelId={model.id}
+            modelSlug={model.slug}
+            storyGroups={(model.story_groups || []).filter((g: any) => g.is_pinned)}
+            onUpdate={fetchModel}
+          />
+        )}
+      </div>
+    </div>
   );
 }

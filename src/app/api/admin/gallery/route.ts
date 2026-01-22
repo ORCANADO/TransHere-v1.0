@@ -1,22 +1,37 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { checkContentManagementPermission, createErrorResponse } from '@/lib/api-permissions';
 
 export const runtime = "edge";
 
 const ADMIN_KEY = process.env.ADMIN_KEY || "admin123";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    // Security check
-    const { searchParams } = new URL(request.url);
-    const key = searchParams.get("key");
-
-    if (!key || key !== ADMIN_KEY) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Check content management permission
+    const permCheck = await checkContentManagementPermission(request);
+    if (!permCheck.authorized || !permCheck.authContext) {
+      return createErrorResponse(permCheck.error || 'Unauthorized', 403);
     }
 
     const body = await request.json();
     const { model_id, media_url, media_type, poster_url, width, height } = body;
+
+    // Organization security check: ensure model belongs to user's organization
+    if (permCheck.authContext.userRole === 'organization' && permCheck.authContext.organizationId) {
+      const { data: model } = await createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
+        .from('models')
+        .select('organization_id')
+        .eq('id', model_id)
+        .single();
+
+      if (!model || model.organization_id !== permCheck.authContext.organizationId) {
+        return createErrorResponse('Forbidden: Model does not belong to your organization', 403);
+      }
+    }
 
     if (!model_id || !media_url || !media_type) {
       return NextResponse.json(
@@ -79,8 +94,8 @@ export async function POST(request: Request) {
       .order("sort_order", { ascending: false })
       .limit(1);
 
-    const nextSortOrder = existingItems && existingItems.length > 0 
-      ? existingItems[0].sort_order + 1 
+    const nextSortOrder = existingItems && existingItems.length > 0
+      ? existingItems[0].sort_order + 1
       : 0;
 
     // Insert the gallery item

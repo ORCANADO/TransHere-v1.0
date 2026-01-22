@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { checkAdminPermission, checkModelAccess, createErrorResponse } from '@/lib/api-permissions';
 import type {
     TrackingLinkWithDetails,
     UpdateTrackingLinkPayload,
@@ -13,15 +14,6 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const ADMIN_KEY = process.env.ADMIN_KEY;
-
-// Verify admin authentication
-function verifyAdmin(request: NextRequest): boolean {
-    const url = new URL(request.url);
-    const key = url.searchParams.get('key');
-    return key === ADMIN_KEY;
-}
-
 interface RouteParams {
     params: Promise<{ linkId: string }>;
 }
@@ -31,12 +23,31 @@ export async function PUT(
     request: NextRequest,
     { params }: RouteParams
 ): Promise<NextResponse<ApiResponse<TrackingLinkWithDetails>>> {
-    if (!verifyAdmin(request)) {
-        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
     try {
         const { linkId } = await params;
+
+        // Fetch link to check model and organization
+        const { data: link, error: linkError } = await supabase
+            .from('tracking_links')
+            .select(`
+                id,
+                model_id,
+                models:models(organization_id)
+            `)
+            .eq('id', linkId)
+            .single();
+
+        if (linkError || !link) {
+            return createErrorResponse('Tracking link not found', 404);
+        }
+
+        // Check model access
+        const modelOrgId = (link.models as any)?.organization_id;
+        const permCheck = await checkModelAccess(request, modelOrgId);
+        if (!permCheck.authorized) {
+            return createErrorResponse(permCheck.error || 'Unauthorized', 403);
+        }
+
         const body: UpdateTrackingLinkPayload = await request.json();
         const { sourceId, subtagId, previewUrl } = body;
 
@@ -50,7 +61,7 @@ export async function PUT(
             return NextResponse.json({
                 success: false,
                 error: 'No fields to update'
-            }, { status: 400 });
+            } as any, { status: 400 });
         }
 
         const { data: updatedLink, error: updateError } = await supabase
@@ -67,10 +78,7 @@ export async function PUT(
         if (updateError) throw updateError;
 
         if (!updatedLink) {
-            return NextResponse.json({
-                success: false,
-                error: 'Tracking link not found'
-            }, { status: 404 });
+            return createErrorResponse('Tracking link not found', 404);
         }
 
         const transformedLink: TrackingLinkWithDetails = {
@@ -86,7 +94,7 @@ export async function PUT(
         return NextResponse.json({
             success: false,
             error: error instanceof Error ? error.message : 'Failed to update tracking link'
-        }, { status: 500 });
+        } as any, { status: 500 });
     }
 }
 
@@ -95,12 +103,30 @@ export async function DELETE(
     request: NextRequest,
     { params }: RouteParams
 ): Promise<NextResponse<ApiResponse<{ archived: boolean }>>> {
-    if (!verifyAdmin(request)) {
-        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
     try {
         const { linkId } = await params;
+
+        // Fetch link to check model and organization
+        const { data: link, error: linkError } = await supabase
+            .from('tracking_links')
+            .select(`
+                id,
+                model_id,
+                models:models(organization_id)
+            `)
+            .eq('id', linkId)
+            .single();
+
+        if (linkError || !link) {
+            return createErrorResponse('Tracking link not found', 404);
+        }
+
+        // Check model access
+        const modelOrgId = (link.models as any)?.organization_id;
+        const permCheck = await checkModelAccess(request, modelOrgId);
+        if (!permCheck.authorized) {
+            return createErrorResponse(permCheck.error || 'Unauthorized', 403);
+        }
 
         // Soft delete: set is_archived = true
         const { error: archiveError } = await supabase
@@ -120,6 +146,6 @@ export async function DELETE(
         return NextResponse.json({
             success: false,
             error: error instanceof Error ? error.message : 'Failed to archive tracking link'
-        }, { status: 500 });
+        } as any, { status: 500 });
     }
 }

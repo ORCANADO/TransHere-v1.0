@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { checkAdminPermission, createErrorResponse } from '@/lib/api-permissions';
 import type { TrackingSource, CreateCustomSourcePayload, ApiResponse } from '@/types/tracking';
 
 export const runtime = 'edge';
@@ -9,18 +10,11 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const ADMIN_KEY = process.env.ADMIN_KEY;
-
-function verifyAdmin(request: NextRequest): boolean {
-    const url = new URL(request.url);
-    const key = url.searchParams.get('key');
-    return key === ADMIN_KEY;
-}
-
 // GET: Fetch all traffic sources
 export async function GET(request: NextRequest): Promise<NextResponse<ApiResponse<TrackingSource[]>>> {
-    if (!verifyAdmin(request)) {
-        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    const permCheck = await checkAdminPermission(request);
+    if (!permCheck.authorized) {
+        return createErrorResponse(permCheck.error || 'Unauthorized', 403);
     }
 
     try {
@@ -39,14 +33,15 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiRespons
         return NextResponse.json({
             success: false,
             error: error instanceof Error ? error.message : 'Failed to fetch sources'
-        }, { status: 500 });
+        } as any, { status: 500 });
     }
 }
 
 // POST: Create custom traffic source
 export async function POST(request: NextRequest): Promise<NextResponse<ApiResponse<TrackingSource>>> {
-    if (!verifyAdmin(request)) {
-        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    const permCheck = await checkAdminPermission(request);
+    if (!permCheck.authorized) {
+        return createErrorResponse(permCheck.error || 'Unauthorized', 403);
     }
 
     try {
@@ -57,7 +52,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
             return NextResponse.json({
                 success: false,
                 error: 'Source name is required'
-            }, { status: 400 });
+            } as any, { status: 400 });
         }
 
         // Check if source already exists
@@ -71,7 +66,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
             return NextResponse.json({
                 success: false,
                 error: 'A source with this name already exists'
-            }, { status: 409 });
+            } as any, { status: 409 });
         }
 
         // Generate slug from name
@@ -96,6 +91,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         return NextResponse.json({
             success: false,
             error: error instanceof Error ? error.message : 'Failed to create source'
-        }, { status: 500 });
+        } as any, { status: 500 });
     }
 }

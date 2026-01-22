@@ -1,5 +1,7 @@
 import { Lock, Home } from 'lucide-react';
 import Link from 'next/link';
+
+export const runtime = 'edge';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {

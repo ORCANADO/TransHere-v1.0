@@ -19,12 +19,16 @@ export interface ModelWithCounts {
   name: string;
   slug: string;
   image_url: string;
+  bio: string | null;
+  bio_es: string | null;
   is_verified: boolean;
   is_new: boolean;
   is_pinned: boolean;
   social_link: string;
   tags: string[];
+  organization_id: string | null;
   created_at: string;
+  updated_at: string;
   gallery_count: number;
   story_count: number;
 }
