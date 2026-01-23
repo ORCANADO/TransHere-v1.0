@@ -160,10 +160,15 @@ export async function GET(
 
         const chartData: ChartDataPoint[] = aggregateChartData(dailyStats, prevDailyStats);
 
-        let modelComparison: AggregatedModelComparisonDataPoint[] | undefined;
+        // Generate model comparison data if multiple models selected
+        let modelComparisonViews: AggregatedModelComparisonDataPoint[] | undefined;
+        let modelComparisonClicks: AggregatedModelComparisonDataPoint[] | undefined;
         if (activeModelSlugs.length > 1) {
-            const comparisonData = aggregateModelComparison(dailyStats, 'views');
-            modelComparison = formatModelComparisonForChart(comparisonData, activeModelSlugs) as unknown as AggregatedModelComparisonDataPoint[];
+            const viewsData = aggregateModelComparison(dailyStats, 'views');
+            modelComparisonViews = formatModelComparisonForChart(viewsData, activeModelSlugs) as unknown as AggregatedModelComparisonDataPoint[];
+
+            const clicksData = aggregateModelComparison(dailyStats, 'clicks');
+            modelComparisonClicks = formatModelComparisonForChart(clicksData, activeModelSlugs) as unknown as AggregatedModelComparisonDataPoint[];
         }
 
         const queryTime = Date.now() - startTime;
@@ -217,7 +222,8 @@ export async function GET(
         const response: DashboardResponse = {
             stats,
             chartData,
-            modelComparison,
+            modelComparisonViews,
+            modelComparisonClicks,
             lastRefresh: { timestamp: new Date().toISOString(), duration_ms: 0, status: 'success' },
             queryTime,
             availableCountries,

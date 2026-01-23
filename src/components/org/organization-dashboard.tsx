@@ -172,14 +172,18 @@ export function OrganizationDashboard({
         return data.chartData.map(d => ({
             date: d.date,
             label: d.label || new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            current: comparisonMetric === 'views' ? d.views : d.clicks,
+            current: comparisonMetric === 'views' ? d.views : (d.clicks || 0),
             previous: comparisonMetric === 'views' ? (d.visitsPrev || 0) : (d.clicksPrev || 0),
         }));
     }, [data, comparisonMetric]);
 
     // Prepare model comparison data
     const modelChartData = useMemo((): { data: ModelComparisonDataPoint[]; models: ChartModelInfo[] } | null => {
-        if (!data?.modelComparison || filters.modelSlugs.length < 2) {
+        const comparisonData = comparisonMetric === 'views'
+            ? data?.modelComparisonViews
+            : data?.modelComparisonClicks;
+
+        if (!comparisonData || filters.modelSlugs.length < 2 || !data) {
             return null;
         }
 
@@ -192,10 +196,10 @@ export function OrganizationDashboard({
         }));
 
         return {
-            data: data.modelComparison as unknown as ModelComparisonDataPoint[],
+            data: comparisonData as unknown as ModelComparisonDataPoint[],
             models: modelsInfo,
         };
-    }, [data, filters.modelSlugs]);
+    }, [data, filters.modelSlugs, comparisonMetric]);
 
     const showModelComparison = filters.modelSlugs.length >= 2 && modelChartData;
 

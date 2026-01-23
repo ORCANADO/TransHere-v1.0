@@ -99,7 +99,20 @@ function parseQueryParams(request: NextRequest) {
       prevEndDate = toDateStr(new Date(now.getTime() - 31 * 24 * 60 * 60 * 1000));
   }
 
-  const models = url.searchParams.get('models')?.split(',').filter(Boolean) || [];
+  // Handle model selection - both JSON string and comma-separated
+  let models: string[] = [];
+  const modelSlugsParam = url.searchParams.get('modelSlugs') || url.searchParams.get('models');
+  if (modelSlugsParam) {
+    if (modelSlugsParam.startsWith('[') && modelSlugsParam.endsWith(']')) {
+      try {
+        models = JSON.parse(modelSlugsParam);
+      } catch (e) {
+        models = modelSlugsParam.split(',').filter(Boolean);
+      }
+    } else {
+      models = modelSlugsParam.split(',').filter(Boolean);
+    }
+  }
 
   // Handle both JSON string and comma-separated sources
   let sources: string[] = [];
@@ -117,10 +130,20 @@ function parseQueryParams(request: NextRequest) {
     }
   }
 
-  const countries = [
-    ...(url.searchParams.get('countries')?.split(',') || []),
-    ...(url.searchParams.get('country')?.split(',') || [])
-  ].filter(Boolean);
+  // Handle countries - both JSON string and comma-separated
+  let countries: string[] = [];
+  const countriesParam = url.searchParams.get('countries') || url.searchParams.get('country');
+  if (countriesParam) {
+    if (countriesParam.startsWith('[') && countriesParam.endsWith(']')) {
+      try {
+        countries = JSON.parse(countriesParam);
+      } catch (e) {
+        countries = countriesParam.split(',').filter(Boolean);
+      }
+    } else {
+      countries = countriesParam.split(',').filter(Boolean);
+    }
+  }
 
   return {
     startDate,
