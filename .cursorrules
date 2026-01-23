@@ -143,6 +143,10 @@ Do not use `useRouter().push` for external links.
         - **Analytics Mapping:** When filtering by source name, the API must map human-readable names (e.g., "Instagram") to their underlying tracking link UUIDs using a `sourceMap`.
         - **Parameter Robustness:** API routes must support both singular and plural parameter names for filters (e.g., `country` and `countries`) to accommodate different frontend calling patterns.
         - Use `page_view` and `link_click` as consistent event types.
+        - **Materialized View Refresh:** 
+            - Always use `scripts/refresh-analytics-views.ts` to manually refresh analytics after bulk data modifications.
+            - The script verifies data integrity by comparing raw count vs. view total (`total_events` column sum).
+            - Verification MUST handle Supabase's 1000-row limit using recursive pagination.
 - **Tracking Link Management:**
     - Per-model tracking links are managed via the `TrackingLinkManager` component.
     - **Database Schema:**

@@ -4,7 +4,22 @@
 
 ---
 
-## [22/01/26] - The "Nebula" Dashboard Refactor (System Architecture V2)
+## [2026-01-23] - Phase 6.17: Materialized View Refresh & Data Verification
+**Status:** Complete
+
+### Materialized View Synchronization:
+- [x] **`refresh_analytics_views` RPC**: Successfully triggered refresh for all analytics views.
+- [x] **Refresh Pipeline**: Created `scripts/refresh-analytics-views.ts` for manual and automated refreshes.
+- [x] **System Config**: Implemented refresh timestamp persistence in `system_config` table.
+
+### Data Integrity Verification:
+- [x] **Raw vs aggregated match**: Verified that 61,261 raw events exactly match the `total_events` sum in `analytics_daily_stats`.
+- [x] **Pagination Robustness**: Implemented recursive fetching in verification script to bypass Supabase's 1000-row limit.
+- [x] **Time Range**: Confirmed 23 days of analytics data (Exceeding 21-day requirement).
+
+---
+
+## [2026-01-22] - The "Nebula" Dashboard Refactor (System Architecture V2)
 **Status:** Complete
 
 ### Unified Layout Engine:
