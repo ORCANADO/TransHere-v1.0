@@ -176,27 +176,23 @@ export function ModelDetailPanel({
                         <>
                             {/* Performance Overview */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div className="p-5 rounded-2xl bg-white/5 border border-white/10 group hover:border-[#007AFF]/30 transition-all">
-                                    <div className="flex items-center gap-2 text-[#007AFF] mb-2 opacity-70 group-hover:opacity-100 transition-opacity">
-                                        <Eye className="w-4 h-4" />
-                                        <span className="text-xs font-bold uppercase tracking-wider">Total Views</span>
-                                    </div>
-                                    <p className="text-3xl font-black text-white">{stats.totalViews.toLocaleString()}</p>
-                                </div>
-                                <div className="p-5 rounded-2xl bg-white/5 border border-white/10 group hover:border-[#AF52DE]/30 transition-all">
-                                    <div className="flex items-center gap-2 text-[#AF52DE] mb-2 opacity-70 group-hover:opacity-100 transition-opacity">
-                                        <MousePointer className="w-4 h-4" />
-                                        <span className="text-xs font-bold uppercase tracking-wider">Total Clicks</span>
-                                    </div>
-                                    <p className="text-3xl font-black text-white">{stats.totalClicks.toLocaleString()}</p>
-                                </div>
-                                <div className="p-5 rounded-2xl bg-white/5 border border-white/10 group hover:border-[#D4AF37]/30 transition-all">
-                                    <div className="flex items-center gap-2 text-[#D4AF37] mb-2 opacity-70 group-hover:opacity-100 transition-opacity">
-                                        <TrendingUp className="w-4 h-4" />
-                                        <span className="text-xs font-bold uppercase tracking-wider">Conv. Rate</span>
-                                    </div>
-                                    <p className="text-3xl font-black text-white">{stats.ctr.toFixed(2)}%</p>
-                                </div>
+                                <StatCard
+                                    label="Total Views"
+                                    value={stats.totalViews}
+                                    icon={<Eye className="w-4 h-4" />}
+                                    accentColor="emerald"
+                                />
+                                <StatCard
+                                    label="Total Clicks"
+                                    value={stats.totalClicks}
+                                    icon={<MousePointer className="w-4 h-4" />}
+                                    accentColor="violet"
+                                />
+                                <StatCard
+                                    label="Conv. Rate"
+                                    value={`${stats.ctr.toFixed(2)}%`}
+                                    icon={<TrendingUp className="w-4 h-4 text-[#D4AF37]" />}
+                                />
                             </div>
 
                             {/* Detailed Chart */}
