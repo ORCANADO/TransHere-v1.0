@@ -21,6 +21,7 @@ interface AdminSidebarProps {
     onSettingsClick?: () => void;
     isLoading?: boolean;
     metrics?: Record<string, { views: number; clicks: number }>;
+    onManageTrackingLinks?: (model: Model) => void;
 }
 
 export function AdminSidebar({
@@ -34,6 +35,7 @@ export function AdminSidebar({
     onSettingsClick,
     isLoading = false,
     metrics,
+    onManageTrackingLinks,
 }: AdminSidebarProps) {
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -99,7 +101,11 @@ export function AdminSidebar({
                             (window as any).dispatchEvent(new CustomEvent('edit-model', { detail: model }));
                         }}
                         onManageTrackingLinks={(model: Model) => {
-                            (window as any).dispatchEvent(new CustomEvent('manage-tracking', { detail: model }));
+                            if (onManageTrackingLinks) {
+                                onManageTrackingLinks(model);
+                            } else {
+                                (window as any).dispatchEvent(new CustomEvent('manage-tracking', { detail: model }));
+                            }
                         }}
                         isLoading={isLoading}
                         metrics={metrics}

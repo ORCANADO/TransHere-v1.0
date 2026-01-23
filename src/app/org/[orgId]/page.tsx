@@ -17,6 +17,7 @@ import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
 import { ModelEditor } from '@/components/admin/model-editor';
 import { TrackingLinkManager } from './components/TrackingLinkManager';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { ThemeToggle } from '@/components/admin/theme-toggle';
 import { createClient } from '@/lib/supabase/client';
 import type { Model } from '@/types';
 
@@ -208,6 +209,10 @@ function OrgDashboardContent() {
                     onAddModel={() => setIsAddingModel(true)}
                     isLoading={isModelsLoading}
                     metrics={modelMetrics}
+                    onManageTrackingLinks={(model) => {
+                        setTrackingModel(model);
+                        setIsTrackingManagerOpen(true);
+                    }}
                 />
 
                 <main className="h-screen overflow-y-auto relative">
@@ -228,7 +233,19 @@ function OrgDashboardContent() {
                         </button>
                     )}
 
-                    <div className="p-4 lg:p-6">
+                    <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-4 mb-6">
+                        <div className="max-w-7xl mx-auto flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Shield className="w-6 h-6 text-[#00FF85]" />
+                                <span className="font-bold text-foreground">Organization Manager</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <ThemeToggle showLabels />
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="px-4 lg:px-6">
                         <div className="flex items-center gap-2 mb-6 border-b border-border">
                             <div className="px-4 py-2.5 font-semibold text-sm text-[#007AFF] dark:text-[#7A27FF] relative cursor-default">
                                 Analytics
