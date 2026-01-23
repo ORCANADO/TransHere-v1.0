@@ -345,9 +345,6 @@ export function AnalyticsDashboard({
           />
 
           <div className="h-8 w-[1px] bg-[#E5E5EA] dark:bg-white/10 hidden md:block mx-1" />
-
-          <ThemeToggle showLabels className="hidden md:flex" />
-          <ThemeToggle className="md:hidden" />
         </div>
       </div>
 

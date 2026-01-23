@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Check } from 'lucide-react';
+import { Check, Link2 } from 'lucide-react';
 import { cn, getImageUrl } from '@/lib/utils';
 import { VerifiedBadge } from '@/components/ui/verified-badge';
 import type { SidebarModel } from '@/types/analytics';
@@ -10,6 +10,7 @@ interface SidebarModelListProps {
   models: SidebarModel[];
   selectedSlugs: string[];
   onSelectionChange: (slugs: string[]) => void;
+  onManageTrackingLinks?: (model: SidebarModel) => void;
   loading?: boolean;
   className?: string;
 }
@@ -18,6 +19,7 @@ export function SidebarModelList({
   models,
   selectedSlugs,
   onSelectionChange,
+  onManageTrackingLinks,
   loading = false,
   className
 }: SidebarModelListProps) {
@@ -133,6 +135,19 @@ export function SidebarModelList({
                         {model.name}
                       </h3>
                       {model.isVerified && <VerifiedBadge />}
+
+                      {onManageTrackingLinks && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onManageTrackingLinks(model);
+                          }}
+                          className="p-1 rounded hover:bg-white/10 text-muted-foreground hover:text-[#00FF85] transition-colors"
+                          title="Manage tracking links"
+                        >
+                          <Link2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {model.totalViews.toLocaleString()} views

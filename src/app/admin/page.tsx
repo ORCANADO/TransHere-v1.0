@@ -191,13 +191,16 @@ function AdminContent() {
   if (editingModelId || isAddingModel) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-white/10">
-          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-3">
-            <Shield className="w-6 h-6 text-[#00FF85]" />
-            <span className="font-bold text-white">TransHere Admin</span>
-            <span className="px-2 py-1 bg-[#7A27FF]/20 text-[#7A27FF] text-xs rounded-full">
-              Model Editor
-            </span>
+        <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Shield className="w-6 h-6 text-[#00FF85]" />
+              <span className="font-bold text-foreground">TransHere Admin</span>
+              <span className="px-2 py-1 bg-[#7A27FF]/20 text-[#7A27FF] text-xs rounded-full">
+                Model Editor
+              </span>
+            </div>
+            <ThemeToggle showLabels />
           </div>
         </header>
 
@@ -244,6 +247,16 @@ function AdminContent() {
 
         {/* Main Content Area */}
         <main className="h-screen overflow-y-auto relative">
+          <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-4 mb-6">
+            <div className="max-w-7xl mx-auto flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Shield className="w-6 h-6 text-[#00FF85]" />
+                <span className="font-bold text-foreground">TransHere Admin</span>
+              </div>
+              <ThemeToggle showLabels />
+            </div>
+          </header>
+
           {/* Sidebar Toggle Button (Visible when collapsed) */}
           {isSidebarCollapsed && (
             <button
@@ -305,10 +318,7 @@ function AdminContent() {
             {activeTab === 'analytics' && (
               <AnalyticsDashboard
                 adminKey={adminKey}
-                selectedModelIds={selectedIds}
-                onModelSelectionChange={selectMultiple}
                 onDataLoaded={handleDataLoaded}
-                isSidebarCollapsed={isSidebarCollapsed}
               />
             )}
             {activeTab === 'organizations' && (
