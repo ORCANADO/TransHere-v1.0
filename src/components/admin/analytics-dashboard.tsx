@@ -11,7 +11,8 @@ import { StatCard } from './stat-card';
 import { ComparisonChart } from './comparison-chart';
 import { ModelComparisonChart } from './model-comparison-chart';
 import { DashboardContainer } from './dashboard-container';
-import { DashboardFiltersBar } from './dashboard-filters-bar';
+import { DashboardFiltersBar as OrgFiltersBar } from './dashboard-filters';
+import { DashboardFiltersBar as AdminFiltersBar } from './dashboard-filters-bar';
 import { SidebarModelList } from './sidebar-model-list';
 
 // Import the default sources from the filters component
@@ -40,6 +41,7 @@ interface AnalyticsDashboardProps {
   adminKey: string;
   onDataLoaded?: (data: DashboardData) => void;
   endpoint?: string;
+  mode?: 'admin' | 'org';
 }
 
 interface DashboardData {
@@ -85,9 +87,9 @@ interface DashboardData {
  */
 const DEFAULT_FILTERS: DashboardFilters = {
   period: '7days',
-  startDate: undefined,
-  endDate: undefined,
-  countries: [],
+  startDate: null,
+  endDate: null,
+  country: null,
   sources: [],
   modelSlugs: [],
 };
@@ -96,6 +98,7 @@ export function AnalyticsDashboard({
   adminKey,
   onDataLoaded,
   endpoint,
+  mode = 'admin',
 }: AnalyticsDashboardProps) {
   // State
   const [data, setData] = useState<DashboardData | null>(null);
@@ -106,8 +109,11 @@ export function AnalyticsDashboard({
   const [filters, setFilters] = useState<DashboardFilters>({
     period: '7days',
     modelSlugs: [],
+    country: null,
     countries: [],
     sources: [],
+    startDate: null,
+    endDate: null,
   });
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [comparisonMetric, setComparisonMetric] = useState<'views' | 'clicks'>('views');
@@ -126,7 +132,8 @@ export function AnalyticsDashboard({
         key: adminKey,
         period: filters.period,
         ...(filters.modelSlugs.length && { modelSlugs: JSON.stringify(filters.modelSlugs) }),
-        ...(filters.countries.length && { countries: JSON.stringify(filters.countries) }),
+        ...(mode === 'org' && filters.country && { countries: filters.country }),
+        ...(mode === 'admin' && filters.countries && filters.countries.length && { countries: JSON.stringify(filters.countries) }),
         ...(filters.sources.length && { sources: JSON.stringify(filters.sources) }),
         ...(filters.period === 'custom' && filters.startDate && { startDate: filters.startDate }),
         ...(filters.period === 'custom' && filters.endDate && { endDate: filters.endDate }),
@@ -253,12 +260,14 @@ export function AnalyticsDashboard({
   // Determine which chart to show
   const showModelComparison = currentModelSlugs.length >= 2 && modelChartData;
 
-  // Map available sources to SourceOption format
+  // Map available sources to TrafficSourceOption format
   const availableSourcesMapped = useMemo(() =>
     data?.availableSources?.map(s => ({
+      id: s.id,
       name: s.name,
-      value: s.slug || s.id,
-      icon: 'Link2', // Default icon name for sources
+      slug: s.slug || s.id,
+      icon: 'Link2', // Default icon name for sources, will be matched case-insensitively in component
+      subtags: s.subtags || [],
     })) || [],
     [data?.availableSources]);
 
@@ -288,13 +297,26 @@ export function AnalyticsDashboard({
         />
       }
       filters={
-        <DashboardFiltersBar
-          filters={filters}
-          onFiltersChange={(partial) => setFilters(f => ({ ...f, ...partial }))}
-          availableCountries={data?.availableCountries || []}
-          availableSources={availableSourcesMapped}
-          loading={loading}
-        />
+        mode === 'org' ? (
+          <OrgFiltersBar
+            filters={filters}
+            onFiltersChange={(newFilters) => setFilters(newFilters)}
+            availableCountries={data?.availableCountries || []}
+            availableSources={availableSourcesMapped}
+            isLoading={loading}
+          />
+        ) : (
+          <AdminFiltersBar
+            filters={filters}
+            onFiltersChange={(partial) => setFilters(f => ({ ...f, ...partial }))}
+            availableCountries={data?.availableCountries || []}
+            availableSources={data?.availableSources?.map(s => ({
+              name: s.name,
+              icon: 'Link2'
+            })) || []}
+            loading={loading}
+          />
+        )
       }
     >
       {/* Header Info */}

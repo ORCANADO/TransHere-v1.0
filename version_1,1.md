@@ -498,6 +498,7 @@ This roadmap is adapted for an AI-assisted **20-hour sprint**:
 **Next Steps:**
 - [x] Final production deployment of v1.1.
 - [x] Admin Dashboard Overhaul (Loading, Empty States, Responsive, Deletion Safety).
+- [x] **Filter Isolation (v1.1.9):** Implemented dual-mode filters to restore admin dashboard parity while supporting subtag-aware organization analytics.
 - [x] Monitor tracking link performance and attribution accuracy.
 
 ---

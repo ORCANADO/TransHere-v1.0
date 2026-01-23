@@ -79,3 +79,15 @@
   - Updated `AnalyticsDashboard` to propagate raw metrics.
   - Enhanced `src/app/org/[orgId]/page.tsx` with robust mapping for raw and mapped field names.
 - **Type Safety:** Removed invalid props from `AnalyticsDashboard` usage.
+
+## [2026-01-22] - Dashboard Filter Restoration & Isolation
+**Status:** Complete
+
+### Improvements:
+- **Filter Isolation Engine:** Implemented a `mode` prop in `AnalyticsDashboard` to toggle between independent filter sets.
+  - **Admin Mode:** Restored original multi-select behavior and UI (`dashboard-filters-bar.tsx`).
+  - **Org Mode:** Enabled enhanced subtag-aware filters (`dashboard-filters.tsx`).
+- **Data Robustness:**
+  - Modified Org API to ensure a base set of sources ("Organic", "Direct") is always returned, fixing empty filter scenarios.
+  - Updated `DashboardFilters` types for backward compatibility between string-based and object-based filter states.
+  - Fixed `DatePicker` property mismatches and value types for strict TypeScript compliance.

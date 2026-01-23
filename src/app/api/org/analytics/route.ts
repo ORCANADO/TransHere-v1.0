@@ -102,9 +102,10 @@ export async function GET(
         }
 
         // 4. Resolve source filter names to IDs
-        const [{ data: linksData }, { data: allSourcesData }] = await Promise.all([
-            supabase.from('tracking_links').select('id, source_id').in('model_id', orgModelIds),
-            supabase.from('traffic_sources').select('id, name, slug')
+        const [{ data: linksData }, { data: allSourcesData }, { data: allSubtagsData }] = await Promise.all([
+            supabase.from('tracking_links').select('id, source_id, subtag_id').in('model_id', orgModelIds),
+            supabase.from('traffic_sources').select('id, name, slug'),
+            supabase.from('tracking_subtags').select('id, name, source_id')
         ]);
 
         const sourceIdToName = new Map<string, string>();
@@ -170,14 +171,41 @@ export async function GET(
         // 7. Data lists for filters
         const availableCountries = [...new Set(dailyStats.map((e: any) => e.country).filter(Boolean))].sort() as string[];
 
-        const availableSources: AggregatedTrafficSourceOption[] = (allSourcesData || []).map(source => ({
-            id: source.id,
-            name: source.name,
-            value: source.slug || source.name.toLowerCase().replace(/\s+/g, '-'),
-            slug: source.slug || source.name.toLowerCase().replace(/\s+/g, '-'),
-            icon: 'Link2', // Default icon
-            subtags: [], // Could be expanded if needed
-        }));
+        const availableSources: any[] = (allSourcesData || []).map(source => {
+            // Find subtags for this source that are actually used by this organization
+            const usedSubtagIds = new Set(
+                (linksData || [])
+                    .filter(l => l.source_id === source.id && l.subtag_id)
+                    .map(l => l.subtag_id)
+            );
+
+            const subtags = (allSubtagsData || [])
+                .filter(st => st.source_id === source.id && usedSubtagIds.has(st.id))
+                .map(st => ({
+                    id: st.id,
+                    name: st.name,
+                    slug: st.name.toLowerCase().replace(/\s+/g, '-'), // Or use a slug field if it existed
+                }));
+
+            return {
+                id: source.id,
+                name: source.name,
+                value: source.slug || source.name.toLowerCase().replace(/\s+/g, '-'),
+                slug: source.slug || source.name.toLowerCase().replace(/\s+/g, '-'),
+                icon: 'Link2',
+                subtags,
+            };
+        }).filter(source => {
+            // Only show sources that have links for this organization
+            return (linksData || []).some(l => l.source_id === source.id);
+        });
+
+        // Add default sources to the list
+        const finalAvailableSources = [
+            { id: 'organic', name: 'Organic', slug: 'organic', value: 'organic', icon: 'Globe', subtags: [] },
+            { id: 'direct', name: 'Direct', slug: 'direct', value: 'direct', icon: 'Users', subtags: [] },
+            ...availableSources.filter(s => s.name !== 'Organic' && s.name !== 'Direct')
+        ];
 
         const availableModels: AggregatedModelFilterOption[] = (orgModels as unknown as any[]).map(model => ({
             id: model.id,
@@ -193,7 +221,7 @@ export async function GET(
             lastRefresh: { timestamp: new Date().toISOString(), duration_ms: 0, status: 'success' },
             queryTime,
             availableCountries,
-            availableSources,
+            availableSources: finalAvailableSources,
             availableModels,
         };
 

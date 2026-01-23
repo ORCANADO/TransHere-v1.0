@@ -5,7 +5,8 @@
 
 'use client';
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import * as React from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
     Calendar,
     Globe,
@@ -67,13 +68,12 @@ function FilterDropdown({
     onToggle,
     children,
     className,
-}: {
+}: React.PropsWithChildren<{
     trigger: React.ReactNode;
     isOpen: boolean;
     onToggle: () => void;
-    children: React.ReactNode;
     className?: string;
-}) {
+}>) {
     return (
         <div className="relative">
             <button
@@ -391,51 +391,58 @@ export function DashboardFiltersBar({
                     </button>
 
                     {/* Source List with Subtags */}
-                    {TRAFFIC_SOURCES_WITH_ICONS.map((source) => (
-                        <div key={source.name} className="mb-1">
-                            <div
-                                onClick={() => handleSourceToggle(source.name)}
-                                className={cn(
-                                    "flex items-center gap-2 px-3 py-2.5 cursor-pointer rounded-xl transition-all font-medium",
-                                    isSourceSelected(source.name)
-                                        ? "bg-[#007AFF]/10 dark:bg-[#007AFF]/20 text-[#007AFF] dark:text-[#007AFF]"
-                                        : "text-[#1D1D1F] dark:text-white/80 hover:bg-black/[0.05] dark:hover:bg-white/10"
-                                )}
-                            >
-                                <source.icon className="w-4 h-4" />
-                                <span className="text-sm">{source.name}</span>
-                                {isSourceSelected(source.name) && (
-                                    <Check className="w-4 h-4 ml-auto" />
+                    {availableSources.map((source) => {
+                        // Find matching icon case-insensitively
+                        const IconComponent = TRAFFIC_SOURCES_WITH_ICONS.find(
+                            i => i.name.toLowerCase() === source.name.toLowerCase()
+                        )?.icon || Link2;
+
+                        return (
+                            <div key={source.name} className="mb-1">
+                                <div
+                                    onClick={() => handleSourceToggle(source.name)}
+                                    className={cn(
+                                        "flex items-center gap-2 px-3 py-2.5 cursor-pointer rounded-xl transition-all font-medium",
+                                        isSourceSelected(source.name)
+                                            ? "bg-[#007AFF]/10 dark:bg-[#007AFF]/20 text-[#007AFF] dark:text-[#007AFF]"
+                                            : "text-[#1D1D1F] dark:text-white/80 hover:bg-black/[0.05] dark:hover:bg-white/10"
+                                    )}
+                                >
+                                    <IconComponent className="w-4 h-4" />
+                                    <span className="text-sm">{source.name}</span>
+                                    {isSourceSelected(source.name) && (
+                                        <Check className="w-4 h-4 ml-auto" />
+                                    )}
+                                </div>
+
+                                {/* Subtags nested under source */}
+                                {isSourceSelected(source.name) && availableSubtags[source.name]?.length > 0 && (
+                                    <div className="ml-6 mt-1 space-y-1">
+                                        {availableSubtags[source.name].map(subtag => (
+                                            <div
+                                                key={subtag}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleSubtagToggle(source.name, subtag);
+                                                }}
+                                                className={cn(
+                                                    "px-3 py-2 text-xs cursor-pointer rounded-lg transition-all flex items-center justify-between font-medium",
+                                                    isSubtagSelected(source.name, subtag)
+                                                        ? "bg-[#007AFF]/5 dark:bg-[#7A27FF]/10 text-[#007AFF] dark:text-[#7A27FF]"
+                                                        : "text-[#86868B] dark:text-white/60 hover:text-[#1D1D1F] dark:hover:text-white"
+                                                )}
+                                            >
+                                                <span>{subtag}</span>
+                                                {isSubtagSelected(source.name, subtag) && (
+                                                    <Check className="w-3 h-3" />
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
                                 )}
                             </div>
-
-                            {/* Subtags nested under source */}
-                            {isSourceSelected(source.name) && availableSubtags[source.name]?.length > 0 && (
-                                <div className="ml-6 mt-1 space-y-1">
-                                    {availableSubtags[source.name].map(subtag => (
-                                        <div
-                                            key={subtag}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleSubtagToggle(source.name, subtag);
-                                            }}
-                                            className={cn(
-                                                "px-3 py-2 text-xs cursor-pointer rounded-lg transition-all flex items-center justify-between font-medium",
-                                                isSubtagSelected(source.name, subtag)
-                                                    ? "bg-[#007AFF]/5 dark:bg-[#7A27FF]/10 text-[#007AFF] dark:text-[#7A27FF]"
-                                                    : "text-[#86868B] dark:text-white/60 hover:text-[#1D1D1F] dark:hover:text-white"
-                                            )}
-                                        >
-                                            <span>{subtag}</span>
-                                            {isSubtagSelected(source.name, subtag) && (
-                                                <Check className="w-3 h-3" />
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </FilterDropdown>
 

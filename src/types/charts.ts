@@ -70,10 +70,11 @@ export interface SourceFilter {
 export interface DashboardFilters {
     period: TimePeriod;
     modelSlugs: string[];      // Multi-select support
-    countries: string[];       // Multi-select support
-    sources: string[];         // e.g., ['instagram', 'twitter', 'direct']
-    startDate?: string;        // For custom range
-    endDate?: string;
+    country: string | null;    // Single select for now
+    countries?: string[];      // Array for backward compatibility
+    sources: any[];            // Flexible to support string[] or SourceFilter[]
+    startDate?: string | null; // For custom range
+    endDate?: string | null;
 }
 
 import type { TimePeriod } from './analytics';
@@ -86,11 +87,8 @@ export interface TrafficSourceOption {
     id: string;
     name: string;
     slug: string;
-    subtags?: {
-        id: string;
-        name: string;
-        slug: string;
-    }[];
+    icon: any;        // Icon component or name
+    subtags?: any[];  // Optional subtags
 }
 
 /**

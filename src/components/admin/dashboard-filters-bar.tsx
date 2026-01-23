@@ -5,7 +5,8 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import * as React from 'react';
+import { useState } from 'react';
 import {
     Calendar,
     Globe,
@@ -236,7 +237,7 @@ export function DashboardFiltersBar({
                                     onFiltersChange({ startDate: date || undefined });
                                 }}
                                 placeholder="Start date"
-                                max={filters.endDate}
+                                max={filters.endDate || ''}
                             />
                             <DatePicker
                                 value={filters.endDate || ''}
@@ -244,7 +245,7 @@ export function DashboardFiltersBar({
                                     onFiltersChange({ endDate: date || undefined });
                                 }}
                                 placeholder="End date"
-                                min={filters.startDate}
+                                min={filters.startDate || ''}
                             />
                         </div>
                     )}

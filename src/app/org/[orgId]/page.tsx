@@ -252,6 +252,7 @@ function OrgDashboardContent() {
                             adminKey={apiKey}
                             onDataLoaded={handleDataLoaded}
                             endpoint="/api/org/analytics"
+                            mode="org"
                         />
                     </div>
                 </main>
