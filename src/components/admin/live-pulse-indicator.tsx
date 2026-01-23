@@ -45,25 +45,22 @@ export function LivePulseIndicator({ adminKey, className }: LivePulseIndicatorPr
 
     return (
         <div className={cn('flex items-center gap-2', className)}>
-            {/* Pulsing Dot */}
-            <div className="relative">
-                <div
-                    className={cn(
-                        'h-2.5 w-2.5 rounded-full transition-colors duration-300',
-                        isLive ? 'bg-emerald-500' : 'bg-gray-400'
-                    )}
-                />
+            {/* Live Indicator Dot */}
+            <span className="relative flex h-2.5 w-2.5">
                 {isLive && (
-                    <div className="absolute inset-0 h-2.5 w-2.5 animate-ping rounded-full bg-emerald-500 opacity-75" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00FF85] opacity-75"></span>
                 )}
-            </div>
+                <span className={cn(
+                    "relative inline-flex rounded-full h-2.5 w-2.5 transition-colors duration-300",
+                    isLive ? "bg-[#00FF85]" : "bg-[#9E9E9E]/40"
+                )}></span>
+            </span>
 
-            {/* Label */}
             <span className={cn(
-                'text-xs font-medium transition-colors',
-                isLive ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'
+                "text-sm font-medium",
+                isLive ? "text-[#00FF85]" : "text-[#9E9E9E]"
             )}>
-                {isLoading ? 'Checking...' : isLive ? `${recentCount} live` : 'Quiet'}
+                {isLoading ? '...' : isLive ? `${recentCount} live` : 'Quiet'}
             </span>
         </div>
     );

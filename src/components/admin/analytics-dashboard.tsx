@@ -419,26 +419,23 @@ export function AnalyticsDashboard({
                 {/* Overview Stats */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <StatCard
-                    title="Total Page Views"
+                    label="Total Page Views"
                     value={data.overview.totalVisits}
-                    icon={<Eye className="w-5 h-5 text-accent-emerald" />}
-                    change={data.overview.visitsChange}
-                    valueClassName="text-accent-emerald"
-                    subtitle={`${data.overview.mainLayoutVisits.toLocaleString()} organic • ${data.overview.trackingLinkVisits.toLocaleString()} from links`}
+                    subtext={`${data.overview.mainLayoutVisits.toLocaleString()} organic • ${data.overview.trackingLinkVisits.toLocaleString()} from links`}
+                    icon={<Eye className="w-5 h-5" />}
                   />
                   <StatCard
-                    title="Total Clicks"
+                    label="Total Clicks"
                     value={data.overview.totalClicks}
-                    subtitle="OnlyFans/Fansly redirects"
-                    icon={<MousePointer className="w-5 h-5 text-accent-violet" />}
-                    valueClassName="text-accent-violet"
-                    change={data.overview.clicksChange}
+                    subtext="OnlyFans/Fansly redirects"
+                    icon={<MousePointer className="w-5 h-5" />}
                   />
                   <StatCard
-                    title="Conversion Rate"
+                    label="Conversion Rate"
                     value={`${data.overview.conversionRate.toFixed(2)}%`}
-                    subtitle={<span className="flex items-center gap-1.5 font-bold"><span className="text-accent-violet">Clicks</span> / <span className="text-accent-emerald">Views</span></span>}
-                    icon={<Percent className="w-5 h-5 text-accent-amber" />}
+                    subtext={<span className="flex items-center gap-1.5 font-bold"><span className="text-[#7A27FF]">Clicks</span> / <span className="text-[#00FF85]">Views</span></span>}
+                    icon={<Percent className="w-5 h-5" />}
+                    accentColor="emerald"
                   />
                 </div>
 
@@ -452,7 +449,6 @@ export function AnalyticsDashboard({
                     onMetricChange={mode === 'org' ? undefined : setComparisonMetric}
                     title={`Comparing ${currentModelSlugs.length} Models`}
                     height={350}
-                    className="bg-glass-surface border border-obsidian-rim rounded-2xl p-4 lg:p-6 shadow-ao-stack"
                   />
                 ) : (
                   /* Standard Comparison Chart - Current vs Previous */
@@ -462,7 +458,6 @@ export function AnalyticsDashboard({
                     onMetricChange={mode === 'org' ? undefined : setComparisonMetric}
                     title={`Traffic Over Time (${comparisonMetric === 'views' ? 'Page Views' : 'Clicks'})`}
                     height={300}
-                    className="bg-glass-surface border border-obsidian-rim rounded-2xl p-4 lg:p-6 shadow-ao-stack"
                   />
                 )}
 
@@ -599,26 +594,23 @@ export function AnalyticsDashboard({
               {/* Overview Stats */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatCard
-                  title="Total Page Views"
+                  label="Total Page Views"
                   value={data.overview.totalVisits}
-                  icon={<Eye className="w-5 h-5 text-accent-emerald" />}
-                  change={data.overview.visitsChange}
-                  valueClassName="text-accent-emerald"
-                  subtitle={`${data.overview.mainLayoutVisits.toLocaleString()} organic • ${data.overview.trackingLinkVisits.toLocaleString()} from links`}
+                  subtext={`${data.overview.mainLayoutVisits.toLocaleString()} organic • ${data.overview.trackingLinkVisits.toLocaleString()} from links`}
+                  icon={<Eye className="w-5 h-5" />}
                 />
                 <StatCard
-                  title="Total Clicks"
+                  label="Total Clicks"
                   value={data.overview.totalClicks}
-                  subtitle="OnlyFans/Fansly redirects"
-                  icon={<MousePointer className="w-5 h-5 text-accent-violet" />}
-                  valueClassName="text-accent-violet"
-                  change={data.overview.clicksChange}
+                  subtext="OnlyFans/Fansly redirects"
+                  icon={<MousePointer className="w-5 h-5" />}
                 />
                 <StatCard
-                  title="Conversion Rate"
+                  label="Conversion Rate"
                   value={`${data.overview.conversionRate.toFixed(2)}%`}
-                  subtitle={<span className="flex items-center gap-1.5 font-bold"><span className="text-accent-violet">Clicks</span> / <span className="text-accent-emerald">Views</span></span>}
-                  icon={<Percent className="w-5 h-5 text-accent-amber" />}
+                  subtext={<span className="flex items-center gap-1.5 font-bold"><span className="text-[#7A27FF]">Clicks</span> / <span className="text-[#00FF85]">Views</span></span>}
+                  icon={<Percent className="w-5 h-5" />}
+                  accentColor="emerald"
                 />
               </div>
 
@@ -632,11 +624,6 @@ export function AnalyticsDashboard({
                   onMetricChange={mode === 'org' ? undefined : setComparisonMetric}
                   title={`Comparing ${currentModelSlugs.length} Models`}
                   height={350}
-                  className={cn(
-                    "rounded-2xl p-4 lg:p-6 shadow-[var(--shadow-ao-stack)] liquid-light:shadow-[var(--shadow-ao-light)]",
-                    "bg-[var(--surface-obsidian-glass)]/60 border border-[var(--border-obsidian-rim)]/30",
-                    "liquid-light:bg-[var(--surface-irid-glass)] liquid-light:border-white/60"
-                  )}
                 />
               ) : (
                 /* Standard Comparison Chart - Current vs Previous */
@@ -646,11 +633,6 @@ export function AnalyticsDashboard({
                   onMetricChange={mode === 'org' ? undefined : setComparisonMetric}
                   title={`Traffic Over Time (${comparisonMetric === 'views' ? 'Page Views' : 'Clicks'})`}
                   height={300}
-                  className={cn(
-                    "rounded-2xl p-4 lg:p-6 shadow-[var(--shadow-ao-stack)] liquid-light:shadow-[var(--shadow-ao-light)]",
-                    "bg-[var(--surface-obsidian-glass)]/60 border border-[var(--border-obsidian-rim)]/30",
-                    "liquid-light:bg-[var(--surface-irid-glass)] liquid-light:border-white/60"
-                  )}
                 />
               )}
 

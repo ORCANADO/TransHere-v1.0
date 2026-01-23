@@ -1,92 +1,91 @@
-'use client';
-
+import { ReactNode } from 'react';
+import { useAdminTheme } from '@/hooks/use-admin-theme';
 import { cn } from '@/lib/utils';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { useMaterialFlux } from '@/hooks/use-material-flux';
 
 interface StatCardProps {
-  title: string;
+  label: string;
   value: string | number;
-  subtitle?: React.ReactNode;
-  change?: number;
-  icon?: React.ReactNode;
-  className?: string;
-  valueClassName?: string;
-  loading?: boolean;
+  subtext?: string | ReactNode;
+  icon?: ReactNode;
+  accentColor?: 'default' | 'emerald' | 'violet';
+  className?: string; // Add className for flexibility
 }
 
-export function StatCard({ title, value, icon, change, subtitle, className, valueClassName, loading }: StatCardProps) {
-  const formatValue = (val: string | number) => {
-    if (typeof val === 'number') {
-      return val.toLocaleString();
-    }
-    return val;
-  };
-
-  const fluxRef = useMaterialFlux<HTMLDivElement>();
+export function StatCard({ label, value, subtext, icon, accentColor = 'default', className }: StatCardProps) {
+  const { isLightMode } = useAdminTheme();
 
   return (
     <div
-      ref={fluxRef}
       className={cn(
-        "rounded-2xl p-6 transition-all duration-300",
-        // Medium Glass Physics
-        "backdrop-blur-[var(--blur-medium)] saturate-[140%]",
-        // Obsidian Surface
-        "bg-[var(--surface-obsidian-glass)]/60",
-        // AO Shadow Stack
-        "shadow-[var(--shadow-ao-stack)]",
-        // Super-Ellipse
-        "rounded-[var(--radius-squircle-sm)]",
-        "border border-[var(--border-obsidian-rim)]/30",
-        // SSS Internal Glow on Hover
-        "hover:shadow-[inset_0_0_20px_4px_var(--glow-obsidian-internal)]",
-        "hover:scale-[1.01] active:scale-[0.99]",
-        // Light Mode
-        "liquid-light:bg-[var(--surface-irid-glass)]",
-        "liquid-light:border-white/60",
-        "liquid-light:shadow-[var(--shadow-ao-light)]",
-        "liquid-light:hover:shadow-[inset_0_0_20px_4px_var(--glow-irid-warm)]",
-        // Material Flux
-        "flux-border",
+        // Structure
+        "relative overflow-hidden rounded-3xl p-6",
+        "transition-all duration-200",
+
+        // === GLASS EFFECT ===
+        "backdrop-blur-[24px] saturate-[140%]",
+
+        // === DARK MODE ===
+        "bg-gradient-to-br from-[#3C3F40]/85 to-[#353839]/75",
+        "border border-[#555D50]/40",
+        "shadow-[var(--admin-shadow-ao)]",
+
+        // === DARK MODE HOVER (Violet SSS) ===
+        "hover:border-[#555D50]/60",
+        "hover:shadow-[0px_1px_2px_rgba(0,0,0,0.4),0px_4px_8px_-2px_rgba(0,0,0,0.3),inset_0_0_20px_4px_rgba(91,73,101,0.3)]",
+
+        // === LIGHT MODE ===
+        "data-[theme=light]:bg-gradient-to-br data-[theme=light]:from-white/80 data-[theme=light]:to-[#F9F6EE]/70",
+        "data-[theme=light]:border-[#CED9EF]/50",
+        "data-[theme=light]:shadow-[var(--admin-shadow-light)]",
+
+        // === LIGHT MODE HOVER (Rose Warm) ===
+        "data-[theme=light]:hover:border-[#EFC8DF]/60",
+        "data-[theme=light]:hover:shadow-[0px_1px_2px_rgba(0,0,0,0.08),inset_0_0_20px_4px_rgba(239,200,223,0.3)]",
+
         className
-      )}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="min-w-0">
-          <p className={cn(
-            "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 text-sm font-bold",
-            "[font-variation-settings:'opsz'_18,'wdth'_110]"
-          )}>{title}</p>
-          <p className={cn(
-            "text-2xl lg:text-3xl font-bold mt-1 tabular-nums",
-            loading ? "opacity-20 animate-pulse" : "opacity-100",
-            !valueClassName && "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]",
-            valueClassName
-          )}>
-            {loading ? '0,000' : formatValue(value)}
-          </p>
-          {subtitle && (
-            <p className="text-[var(--text-obsidian-muted)]/60 liquid-light:text-[var(--text-irid-primary)]/50 text-xs mt-1">{subtitle}</p>
-          )}
-        </div>
+      )}
+      data-theme={isLightMode ? 'light' : 'dark'}
+    >
+      {/* Label Row */}
+      <div className="flex items-center gap-2 mb-3">
         {icon && (
-          <div className="p-3 bg-[var(--surface-obsidian-glass)]/40 liquid-light:bg-[var(--surface-irid-glass)] rounded-xl border border-[var(--border-obsidian-rim)]/20 liquid-light:border-white/40 shadow-sm">
+          <span className={cn(
+            "text-[#9E9E9E]",
+            "data-[theme=light]:text-[#6B6B7B]"
+          )} data-theme={isLightMode ? 'light' : 'dark'}>
             {icon}
-          </div>
+          </span>
         )}
+        <span className={cn(
+          "text-xs font-semibold uppercase tracking-[0.08em]",
+          "text-[#9E9E9E]",
+          "data-[theme=light]:text-[#6B6B7B]"
+        )} data-theme={isLightMode ? 'light' : 'dark'}>
+          {label}
+        </span>
       </div>
 
-      {change !== undefined && (
+      {/* Value */}
+      <div className={cn(
+        "text-4xl font-bold tracking-tight",
+        accentColor === 'emerald' && "text-[#00FF85]",
+        accentColor === 'violet' && "text-[#7A27FF]",
+        accentColor === 'default' && cn(
+          "text-[#E2DFD2]",
+          "data-[theme=light]:text-[#2E293A]"
+        )
+      )} data-theme={isLightMode ? 'light' : 'dark'}>
+        {typeof value === 'number' ? value.toLocaleString() : value}
+      </div>
+
+      {/* Subtext */}
+      {subtext && (
         <div className={cn(
-          "flex items-center gap-1 mt-3 text-sm",
-          change > 0 && "text-accent-emerald font-bold",
-          change < 0 && "text-accent-red font-bold",
-          change === 0 && "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60"
-        )}>
-          {change > 0 && <TrendingUp className="w-4 h-4" />}
-          {change < 0 && <TrendingDown className="w-4 h-4" />}
-          {change === 0 && <Minus className="w-4 h-4" />}
-          <span>{change > 0 ? '+' : ''}{change.toFixed(1)}% vs previous period</span>
+          "text-sm mt-2",
+          "text-[#9E9E9E]",
+          "data-[theme=light]:text-[#6B6B7B]"
+        )} data-theme={isLightMode ? 'light' : 'dark'}>
+          {subtext}
         </div>
       )}
     </div>

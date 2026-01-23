@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn, getImageUrl } from '@/lib/utils';
+import { useAdminTheme } from '@/hooks/use-admin-theme';
 import type { GalleryItemAdmin } from '@/types/admin';
 
 interface GalleryManagerProps {
@@ -366,25 +367,41 @@ export function GalleryManager({
       console.error('Upload error:', err);
       alert('Upload failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
       setShowVideoModal(true); // Re-open modal on error
-    } finally {
-      setUploading(false);
-      setUploadProgress('');
     }
   };
 
+  const { isLightMode } = useAdminTheme();
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <h3 className="text-lg font-bold text-glass-primary">
-          Gallery Items ({items.length})
-        </h3>
+        <div>
+          <h3 className={cn(
+            "text-lg font-bold",
+            "text-[#E2DFD2]",
+            "data-[theme=light]:text-[#2E293A]"
+          )} data-theme={isLightMode ? 'light' : 'dark'}>
+            Gallery Items ({items.length})
+          </h3>
+          <p className={cn(
+            "text-sm font-medium mt-1",
+            "text-[#9E9E9E]",
+            "data-[theme=light]:text-[#6B6B7B]"
+          )} data-theme={isLightMode ? 'light' : 'dark'}>
+            Drag items to reorder. The first is the cover.
+          </p>
+        </div>
 
         <div className="flex gap-2 flex-wrap">
           {/* Upload Buttons */}
-          <label className="flex items-center gap-2 px-4 py-2 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary cursor-pointer hover:bg-glass-surface/80 transition-all font-bold shadow-sm active:scale-95">
+          <label className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer transition-all duration-150 active:scale-95",
+            "bg-[#5B4965]/40 text-[#E2DFD2] border border-[#555D50]/50 hover:bg-[#5B4965]/60",
+            "data-[theme=light]:bg-[#CED9EF]/40 data-[theme=light]:text-[#2E293A] data-[theme=light]:border-[#CED9EF]/50"
+          )} data-theme={isLightMode ? 'light' : 'dark'}>
             <ImageIcon className="w-4 h-4" />
-            <span className="text-sm">Add Image</span>
+            <span className="text-sm font-bold">Add Image</span>
             <input
               type="file"
               accept="image/*"
@@ -397,10 +414,15 @@ export function GalleryManager({
 
           <button
             onClick={() => setShowVideoModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary hover:bg-glass-surface/80 transition-all font-bold shadow-sm active:scale-95"
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-150 active:scale-95",
+              "bg-[#353839]/60 text-[#E2DFD2] border border-[#555D50]/50 hover:bg-[#353839]/80",
+              "data-[theme=light]:bg-white/60 data-[theme=light]:text-[#2E293A] data-[theme=light]:border-[#CED9EF]/60"
+            )}
+            data-theme={isLightMode ? 'light' : 'dark'}
           >
             <Film className="w-4 h-4" />
-            <span className="text-sm">Add Video</span>
+            <span className="text-sm font-bold">Add Video</span>
           </button>
 
           {/* Save Order Button */}
@@ -408,31 +430,31 @@ export function GalleryManager({
             <button
               onClick={saveOrder}
               disabled={saving}
-              className="flex items-center gap-2 px-4 py-2 bg-accent-emerald text-black rounded-xl font-bold hover:opacity-90 transition-all disabled:opacity-50 shadow-lg shadow-accent-emerald/20 active:scale-95"
-            >
-              {saving ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4" />
+              className={cn(
+                "flex items-center gap-2 px-5 py-2 rounded-xl font-bold transition-all duration-150 active:scale-95",
+                "bg-[#00FF85] text-black shadow-lg shadow-[#00FF85]/20 hover:bg-[#00E077]"
               )}
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Save Order
             </button>
           )}
         </div>
       </div>
 
-      {/* Instructions */}
-      <p className="text-sm text-glass-muted font-bold">
-        Drag items to reorder. The first item is the profile cover. The last item becomes the locked VIP teaser.
-      </p>
-
       {/* Gallery Grid */}
       {items.length === 0 ? (
-        <div className="text-center py-12 border-2 border-dashed border-obsidian-rim rounded-2xl bg-glass-surface/30">
-          <ImageIcon className="w-12 h-12 text-glass-muted mx-auto mb-3" />
-          <p className="text-glass-muted font-bold">No gallery items yet</p>
-          <p className="text-sm text-glass-muted/60 mt-1">
-            Upload images or videos to get started
+        <div className={cn(
+          "text-center py-20 rounded-3xl border-2 border-dashed transition-all duration-500",
+          "bg-white/5 border-[#555D50]/30",
+          "data-[theme=light]:bg-black/5 data-[theme=light]:border-[#CED9EF]/50"
+        )} data-theme={isLightMode ? 'light' : 'dark'}>
+          <ImageIcon className={cn("w-16 h-16 mx-auto mb-4 opacity-20", "text-[#9E9E9E] data-[theme=light]:text-[#6B6B7B]")} data-theme={isLightMode ? 'light' : 'dark'} />
+          <p className={cn("font-bold", "text-[#E2DFD2] data-[theme=light]:text-[#2E293A]")} data-theme={isLightMode ? 'light' : 'dark'}>
+            No gallery items yet
+          </p>
+          <p className={cn("text-sm mt-1", "text-[#9E9E9E] data-[theme=light]:text-[#6B6B7B]")} data-theme={isLightMode ? 'light' : 'dark'}>
+            Upload your first content to get started
           </p>
         </div>
       ) : (
@@ -496,7 +518,7 @@ export function GalleryManager({
                     e.stopPropagation();
                     deleteItem(item.id);
                   }}
-                  className="absolute bottom-2 right-2 p-2 bg-red-500/80 rounded-lg text-white hover:bg-red-500 transition-colors"
+                  className="absolute bottom-3 right-3 p-2 bg-[#FF4B4B]/80 hover:bg-[#FF4B4B] rounded-xl text-white transition-all active:scale-95"
                   aria-label={`Delete gallery item ${index + 1}`}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -535,88 +557,57 @@ export function GalleryManager({
 
       {/* Video Upload Modal */}
       {showVideoModal && (
-        <div className="fixed inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-thick flex items-center justify-center z-50 p-4">
-          <div className="bg-glass-surface border border-obsidian-rim rounded-2xl p-6 w-full max-w-md shadow-ao-stack space-y-6">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-thick flex items-center justify-center z-[110] p-4">
+          <div className={cn(
+            "rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-6",
+            "bg-[#353839]/90 border border-[#555D50]/50 text-[#E2DFD2]",
+            "data-[theme=light]:bg-white/95 data-[theme=light]:border-[#CED9EF]/80 data-[theme=light]:text-[#2E293A]"
+          )} data-theme={isLightMode ? 'light' : 'dark'}>
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-glass-primary">Upload Video Pair</h3>
+              <h3 className="text-xl font-bold">Upload Video Pair</h3>
               <button
                 onClick={() => setShowVideoModal(false)}
-                className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all"
-                title="Close modal"
+                className="p-2 rounded-xl hover:bg-black/10 transition-all"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-4">
-              <div className="p-4 bg-yellow-400/10 dark:bg-yellow-500/10 border border-yellow-400/20 dark:border-yellow-500/20 rounded-xl text-yellow-700 dark:text-yellow-200/90 text-sm font-medium">
-                Both formats are required for optimal playback across all devices.
+              <div className="p-3.5 bg-accent-gold/10 border border-accent-gold/20 rounded-xl text-accent-gold text-xs font-bold leading-relaxed">
+                Both formats (MP4 & WebM) are required for cross-device compatibility.
               </div>
 
               {/* MP4 Input */}
               <div className="space-y-2">
-                <label htmlFor="mp4-upload" className="text-sm font-bold text-glass-primary block px-1">
-                  1. Main Video (MP4/MOV)
-                </label>
+                <p className="text-[10px] font-bold text-[#00FF85] uppercase tracking-wider px-1">1. MAIN VIDEO (MP4/MOV)</p>
                 <div className={cn(
-                  "border-2 border-dashed rounded-xl p-5 transition-all duration-300 cursor-pointer group/upload",
-                  mp4File
-                    ? "border-accent-emerald bg-accent-emerald/5"
-                    : "border-obsidian-rim hover:border-accent-violet/30 hover:bg-glass-surface/30"
+                  "border-2 border-dashed rounded-2xl p-6 transition-all duration-300",
+                  mp4File ? "border-[#00FF85] bg-[#00FF85]/5" : "border-[#555D50] hover:border-[#5B4965] hover:bg-[#5B4965]/10"
                 )}>
-                  <label className="flex items-center justify-center gap-3 cursor-pointer w-full h-full">
-                    {mp4File ? (
-                      <>
-                        <CheckCircle2 className="w-5 h-5 text-accent-emerald" />
-                        <span className="text-sm text-glass-primary font-bold truncate max-w-[200px]">{mp4File.name}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-5 h-5 text-glass-muted group-hover/upload:text-glass-primary transition-colors" />
-                        <span className="text-sm text-glass-muted group-hover/upload:text-glass-primary transition-colors">Select MP4 or MOV</span>
-                      </>
-                    )}
-                    <input
-                      id="mp4-upload"
-                      type="file"
-                      accept="video/mp4,video/quicktime,.mp4,.mov"
-                      className="hidden"
-                      onChange={(e) => setMp4File(e.target.files?.[0] || null)}
-                    />
+                  <label className="flex flex-col items-center justify-center gap-2 cursor-pointer">
+                    {mp4File ? <CheckCircle2 className="w-6 h-6 text-[#00FF85]" /> : <Upload className="w-6 h-6 text-[#9E9E9E]" />}
+                    <span className={cn("text-xs font-bold truncate max-w-[250px]", mp4File ? "text-[#00FF85]" : "text-[#9E9E9E]")}>
+                      {mp4File ? mp4File.name : "Select MP4 File"}
+                    </span>
+                    <input type="file" accept="video/mp4,video/quicktime" className="hidden" onChange={(e) => setMp4File(e.target.files?.[0] || null)} />
                   </label>
                 </div>
               </div>
 
               {/* WebM Input */}
               <div className="space-y-2">
-                <label htmlFor="webm-upload" className="text-sm font-bold text-glass-primary block px-1">
-                  2. Optimized Video (WebM)
-                </label>
+                <p className="text-[10px] font-bold text-[#00FF85] uppercase tracking-wider px-1">2. OPTIMIZED VIDEO (WEBM)</p>
                 <div className={cn(
-                  "border-2 border-dashed rounded-xl p-5 transition-all duration-300 cursor-pointer group/upload",
-                  webmFile
-                    ? "border-accent-emerald bg-accent-emerald/5"
-                    : "border-obsidian-rim hover:border-accent-violet/30 hover:bg-glass-surface/30"
+                  "border-2 border-dashed rounded-2xl p-6 transition-all duration-300",
+                  webmFile ? "border-[#00FF85] bg-[#00FF85]/5" : "border-[#555D50] hover:border-[#5B4965] hover:bg-[#5B4965]/10"
                 )}>
-                  <label className="flex items-center justify-center gap-3 cursor-pointer w-full h-full">
-                    {webmFile ? (
-                      <>
-                        <CheckCircle2 className="w-5 h-5 text-accent-emerald" />
-                        <span className="text-sm text-glass-primary font-bold truncate max-w-[200px]">{webmFile.name}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-5 h-5 text-glass-muted group-hover/upload:text-glass-primary transition-colors" />
-                        <span className="text-sm text-glass-muted group-hover/upload:text-glass-primary transition-colors">Select WebM</span>
-                      </>
-                    )}
-                    <input
-                      id="webm-upload"
-                      type="file"
-                      accept="video/webm,.webm"
-                      className="hidden"
-                      onChange={(e) => setWebmFile(e.target.files?.[0] || null)}
-                    />
+                  <label className="flex flex-col items-center justify-center gap-2 cursor-pointer">
+                    {webmFile ? <CheckCircle2 className="w-6 h-6 text-[#00FF85]" /> : <Upload className="w-6 h-6 text-[#9E9E9E]" />}
+                    <span className={cn("text-xs font-bold truncate max-w-[250px]", webmFile ? "text-[#00FF85]" : "text-[#9E9E9E]")}>
+                      {webmFile ? webmFile.name : "Select WebM File"}
+                    </span>
+                    <input type="file" accept="video/webm" className="hidden" onChange={(e) => setWebmFile(e.target.files?.[0] || null)} />
                   </label>
                 </div>
               </div>
@@ -625,10 +616,14 @@ export function GalleryManager({
                 <button
                   onClick={handleDualUpload}
                   disabled={!mp4File || !webmFile}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-accent-violet text-white rounded-xl font-bold hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-accent-violet/20 active:scale-95"
+                  className={cn(
+                    "w-full py-4 rounded-xl text-sm font-bold transition-all duration-150 flex items-center justify-center gap-2",
+                    "bg-[#00FF85] text-black shadow-lg shadow-[#00FF85]/20 hover:bg-[#00E077]",
+                    "disabled:opacity-50 disabled:grayscale disabled:shadow-none"
+                  )}
                 >
-                  <Upload className="w-4 h-4" />
-                  Upload Video Pair
+                  <Upload className="w-5 h-5" />
+                  UPLOAD VIDEO PAIR
                 </button>
               </div>
             </div>

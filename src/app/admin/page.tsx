@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   PanelLeft
 } from 'lucide-react';
+import '@/styles/admin-ios26.css';
 import '@/styles/admin-liquid.css';
 import { ThemeToggle } from '@/components/admin/theme-toggle';
 import { LivePulseIndicator } from '@/components/admin/live-pulse-indicator';
@@ -34,7 +35,7 @@ function AdminContent() {
   const { selectedIds, toggleModel, selectMultiple } = useModelSelection();
 
   // Initialize theme globally
-  useAdminTheme();
+  const { isLightMode } = useAdminTheme();
 
   const [models, setModels] = useState<Model[]>([]);
 
@@ -205,20 +206,13 @@ function AdminContent() {
   // If editing a model, show the editor
   if (editingModelId || isAddingModel) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="sticky top-0 z-50 bg-glass-surface/80 backdrop-blur-xl border-b border-obsidian-rim">
-          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="font-bold text-glass-primary uppercase tracking-tight">Admin Console</span>
-              <span className="px-2 py-1 bg-accent-violet/20 text-accent-violet text-xs rounded-full font-bold">
-                Model Editor
-              </span>
-            </div>
-            <ThemeToggle showLabels />
-          </div>
-        </header>
-
-        <main className="max-w-7xl mx-auto px-4 py-6">
+      <div className={cn(
+        "min-h-screen transition-colors duration-500",
+        "bg-[#0B0C0C]",
+        "data-[theme=light]:bg-[#F9F6EE]"
+      )} data-theme={isLightMode ? 'light' : 'dark'}>
+        {/* The Header is now inside ModelEditor to access model data */}
+        <main className="max-w-7xl mx-auto min-h-screen">
           <ModelEditor
             adminKey={adminKey}
             modelId={editingModelId}
@@ -240,7 +234,7 @@ function AdminContent() {
   if (!mounted) return null;
 
   return (
-    <div className="liquid-glass-root h-screen overflow-hidden" suppressHydrationWarning>
+    <div className="admin-theme-root h-screen overflow-hidden" data-theme="dark" suppressHydrationWarning>
       {/* CSS Grid Layout: Sidebar + Main Content */}
       <div className={cn(
         "grid h-full transition-all duration-300",
@@ -281,62 +275,83 @@ function AdminContent() {
           )}
 
           {/* Unified Sticky Header */}
-          <div className="sticky top-0 z-40 bg-glass-surface/80 backdrop-blur-xl border-b border-obsidian-rim">
-            {/* Branding Row */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-obsidian-rim/50">
+          <header className={cn(
+            "sticky top-0 z-40 px-6 py-4",
+            "backdrop-blur-[24px] saturate-[140%]",
+
+            // Dark Mode
+            "bg-[#0B0C0C]/80",
+            "border-b border-[#555D50]/50",
+
+            // Light Mode
+            "data-[theme=light]:bg-[#F9F6EE]/80",
+            "data-[theme=light]:border-[#CED9EF]/50"
+          )} data-theme={isLightMode ? 'light' : 'dark'}>
+            <div className="flex items-center justify-between">
+              {/* Left Side: Title & Live Indicator */}
               <div className="flex items-center gap-3">
-                <span className="font-bold text-glass-primary uppercase tracking-tight">Admin Panel</span>
+                <h1 className={cn(
+                  "text-xl font-semibold tracking-tight",
+                  "text-[#E2DFD2]",
+                  "data-[theme=light]:text-[#2E293A]"
+                )} data-theme={isLightMode ? 'light' : 'dark'}>
+                  ADMIN PANEL
+                </h1>
                 {adminKey && <LivePulseIndicator adminKey={adminKey} />}
-                {activeTab === 'analytics' && (
-                  <span className="px-2 py-1 bg-accent-violet/20 text-accent-violet text-xs rounded-full font-bold">
-                    Analytics
-                  </span>
-                )}
-                {activeTab === 'organizations' && (
-                  <span className="px-2 py-1 bg-accent-emerald/20 text-accent-emerald text-xs rounded-full font-bold">
-                    Organizations
-                  </span>
-                )}
               </div>
-              <ThemeToggle showLabels />
-            </div>
 
-            {/* Tab Navigation */}
-            <div className="flex items-center gap-2 px-6 border-b border-border/50">
-              <button
-                onClick={() => setActiveTab('analytics')}
-                className={cn(
-                  "px-4 py-2.5 font-bold text-sm transition-all relative",
-                  activeTab === 'analytics'
-                    ? "text-accent-violet"
-                    : "text-glass-muted hover:text-glass-primary"
-                )}
-              >
-                Analytics
-                {activeTab === 'analytics' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-violet" />
-                )}
-              </button>
+              {/* Right Side: Tab Navigation & Theme Toggle */}
+              <div className="flex items-center gap-6">
+                {/* Tab Navigation */}
+                <div className={cn(
+                  "inline-flex p-1 rounded-xl",
+                  "bg-[#353839]/50",
+                  "data-[theme=light]:bg-[#CED9EF]/30"
+                )} data-theme={isLightMode ? 'light' : 'dark'}>
+                  {['Analytics', 'Organizations'].map((tab) => {
+                    const tabId = tab.toLowerCase();
+                    const isActive = activeTab === tabId;
 
-              {/* Only show organizations tab for Admins */}
-              {(!authContext || authContext.isAdmin) && (
-                <button
-                  onClick={() => setActiveTab('organizations')}
-                  className={cn(
-                    "px-4 py-2.5 font-bold text-sm transition-all relative",
-                    activeTab === 'organizations'
-                      ? "text-accent-violet"
-                      : "text-glass-muted hover:text-glass-primary"
-                  )}
-                >
-                  Organizations
-                  {activeTab === 'organizations' && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-violet" />
-                  )}
-                </button>
-              )}
+                    // Only show organizations tab for Admins
+                    if (tabId === 'organizations' && authContext && !authContext.isAdmin) return null;
+
+                    return (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveTab(tabId as any)}
+                        className={cn(
+                          "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150",
+                          isActive
+                            ? cn(
+                              // Active - Dark
+                              "bg-[#5B4965]/50 text-[#E2DFD2]",
+                              "shadow-[inset_0_0_10px_2px_rgba(91,73,101,0.3)]",
+                              // Active - Light
+                              "data-[theme=light]:bg-white/80 data-[theme=light]:text-[#2E293A]",
+                              "data-[theme=light]:shadow-[var(--admin-shadow-light)]"
+                            )
+                            : cn(
+                              // Inactive - Dark
+                              "text-[#9E9E9E] hover:text-[#E2DFD2]",
+                              "hover:bg-[#5B4965]/20",
+                              // Inactive - Light
+                              "data-[theme=light]:text-[#6B6B7B]",
+                              "data-[theme=light]:hover:text-[#2E293A]",
+                              "data-[theme=light]:hover:bg-[#EFC8DF]/20"
+                            )
+                        )}
+                        data-theme={isLightMode ? 'light' : 'dark'}
+                      >
+                        {tab}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <ThemeToggle showLabels />
+              </div>
             </div>
-          </div>
+          </header>
 
           {/* Main Content */}
           <div className="p-4 lg:p-6">

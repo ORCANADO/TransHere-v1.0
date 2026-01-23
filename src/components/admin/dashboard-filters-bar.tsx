@@ -1,12 +1,13 @@
 // ============================================
 // TRANSHERE v1.1 - DASHBOARD FILTERS BAR COMPONENT
-// Multi-Select Country and Source Filters with Popover UI
+// iOS 26 Liquid Glass Dropdowns (Portal-Based)
 // ============================================
 
 'use client';
 
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
     Calendar,
     Globe,
@@ -23,20 +24,14 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useAdminTheme } from '@/hooks/use-admin-theme';
 import type { DashboardFilters, TimePeriod } from '@/types/charts';
 
-/**
- * Source option type for the dropdown
- */
 interface SourceOption {
     name: string;
-    icon: string; // Lucide icon name
+    icon: string;
 }
 
-/**
- * Props for DashboardFiltersBar component
- */
 interface DashboardFiltersBarProps {
     filters: DashboardFilters;
     onFiltersChange: (filters: Partial<DashboardFilters>) => void;
@@ -45,9 +40,6 @@ interface DashboardFiltersBarProps {
     loading?: boolean;
 }
 
-/**
- * Time period options with labels
- */
 const TIME_PERIODS: { value: TimePeriod; label: string }[] = [
     { value: 'hour', label: 'Last Hour' },
     { value: 'today', label: 'Today' },
@@ -58,9 +50,6 @@ const TIME_PERIODS: { value: TimePeriod; label: string }[] = [
     { value: 'custom', label: 'Custom Range' },
 ];
 
-/**
- * Icon mapping from string names to components
- */
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
     Users,
     Instagram,
@@ -72,128 +61,97 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
     Link2,
 };
 
-/**
- * Get icon component from string name
- */
-const getIconComponent = (iconName: string) => {
-    return ICON_MAP[iconName] || Link2;
-};
+const getIconComponent = (iconName: string) => ICON_MAP[iconName] || Link2;
 
-/**
- * Default source options - MUST match traffic_sources table names/slugs
- * These are the display names that will be sent to the API
- */
-const DEFAULT_SOURCES: SourceOption[] = [
-    { name: 'Organic', icon: 'Globe' },
-    { name: 'Instagram', icon: 'Instagram' },
-    { name: 'X', icon: 'Twitter' },
-    { name: 'Reddit', icon: 'Users' },
-    { name: 'Model Directory', icon: 'ExternalLink' },
-];
+const normalizeSourceName = (name: string): string => name.toLowerCase().trim();
 
-/**
- * Normalize source name for consistent matching
- */
-const normalizeSourceName = (name: string): string => {
-    return name.toLowerCase().trim();
-};
-
-/**
- * DashboardFiltersBar - Main Filter Component
- */
 export function DashboardFiltersBar({
     filters,
     onFiltersChange,
     availableCountries,
-    availableSources = DEFAULT_SOURCES,
+    availableSources,
     loading = false,
 }: DashboardFiltersBarProps) {
-    // Dropdown open states
+    const { isLightMode } = useAdminTheme();
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+    const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
 
-    // Derive actual sources to use
-    const effectiveSources = React.useMemo(() => {
-        // If API provided sources, use those (they're authoritative)
-        if (availableSources && availableSources.length > 0) {
-            return availableSources;
-        }
-        // Fallback to defaults
-        return DEFAULT_SOURCES;
-    }, [availableSources]);
-
-    // Toggle dropdown
-    const toggleDropdown = (dropdown: string) => {
-        setOpenDropdown(current => current === dropdown ? null : dropdown);
+    const triggerRefs = {
+        period: useRef<HTMLButtonElement>(null),
+        countries: useRef<HTMLButtonElement>(null),
+        sources: useRef<HTMLButtonElement>(null),
     };
 
-    // Handle time period changes
+    const updatePosition = (dropdown: keyof typeof triggerRefs) => {
+        const ref = triggerRefs[dropdown];
+        if (ref.current) {
+            const rect = ref.current.getBoundingClientRect();
+            setPosition({
+                top: rect.bottom + 8,
+                left: rect.left,
+                width: Math.max(rect.width, 240),
+            });
+        }
+    };
+
+    const toggleDropdown = (dropdown: string) => {
+        if (openDropdown === dropdown) {
+            setOpenDropdown(null);
+        } else {
+            updatePosition(dropdown as any);
+            setOpenDropdown(dropdown);
+        }
+    };
+
+    useEffect(() => {
+        const handleClose = () => setOpenDropdown(null);
+        window.addEventListener('scroll', handleClose, true);
+        window.addEventListener('resize', handleClose);
+        return () => {
+            window.removeEventListener('scroll', handleClose, true);
+            window.removeEventListener('resize', handleClose);
+        };
+    }, []);
+
+    const effectiveSources = useMemo(() => {
+        if (availableSources && availableSources.length > 0) return availableSources;
+        return [
+            { name: 'Organic', icon: 'Globe' },
+            { name: 'Instagram', icon: 'Instagram' },
+            { name: 'X', icon: 'Twitter' },
+            { name: 'Reddit', icon: 'Users' },
+            { name: 'Model Directory', icon: 'ExternalLink' },
+        ];
+    }, [availableSources]);
+
     const handlePeriodChange = (period: TimePeriod) => {
         if (period !== 'custom') {
-            onFiltersChange({
-                period,
-                startDate: undefined,
-                endDate: undefined,
-            });
+            onFiltersChange({ period, startDate: undefined, endDate: undefined });
+            setOpenDropdown(null);
         } else {
             onFiltersChange({ period });
         }
-        setOpenDropdown(null);
     };
 
-    // Handle country multi-select
     const handleCountryToggle = (country: string) => {
         const currentCountries = filters.countries || [];
-        const isSelected = currentCountries.includes(country);
-
-        if (isSelected) {
-            onFiltersChange({
-                countries: currentCountries.filter(c => c !== country)
-            });
-        } else {
-            onFiltersChange({
-                countries: [...currentCountries, country]
-            });
-        }
+        onFiltersChange({
+            countries: currentCountries.includes(country)
+                ? currentCountries.filter(c => c !== country)
+                : [...currentCountries, country]
+        });
     };
 
-    const handleSelectAllCountries = () => {
-        onFiltersChange({ countries: availableCountries });
-    };
-
-    const handleClearCountries = () => {
-        onFiltersChange({ countries: [] });
-    };
-
-    // Handle source multi-select
     const handleSourceToggle = (sourceName: string) => {
         const currentSources = filters.sources || [];
-        const normalizedName = sourceName; // Keep original case for display
-        const isSelected = currentSources.some(
-            s => normalizeSourceName(s) === normalizeSourceName(sourceName)
-        );
-
-        if (isSelected) {
-            onFiltersChange({
-                sources: currentSources.filter(
-                    s => normalizeSourceName(s) !== normalizeSourceName(sourceName)
-                )
-            });
-        } else {
-            onFiltersChange({
-                sources: [...currentSources, normalizedName]
-            });
-        }
+        const isSelected = currentSources.some(s => normalizeSourceName(s) === normalizeSourceName(sourceName));
+        onFiltersChange({
+            sources: isSelected
+                ? currentSources.filter(s => normalizeSourceName(s) !== normalizeSourceName(sourceName))
+                : [...currentSources, sourceName]
+        });
     };
 
-    const handleSelectAllSources = () => {
-        onFiltersChange({ sources: effectiveSources.map(s => s.name) });
-    };
-
-    const handleClearSources = () => {
-        onFiltersChange({ sources: [] });
-    };
-
-    // Get display text for multi-select buttons
     const getCountriesDisplay = () => {
         const count = filters.countries?.length || 0;
         return count === 0 ? "All Countries" : `${count} ${count === 1 ? 'country' : 'countries'}`;
@@ -205,258 +163,207 @@ export function DashboardFiltersBar({
     };
 
     return (
-        <div className="flex flex-wrap items-center gap-3">
+        <div className={cn(
+            "flex flex-wrap items-center gap-3 p-4 rounded-2xl",
+            "bg-[#353839]/30 border border-[#555D50]/20",
+            "data-[theme=light]:bg-white/30 data-[theme=light]:border-[#CED9EF]/30"
+        )} data-theme={isLightMode ? 'light' : 'dark'}>
+
             {/* Time Period Filter */}
-            <Popover open={openDropdown === 'period'} onOpenChange={() => toggleDropdown('period')}>
-                <PopoverTrigger asChild>
-                    <button
-                        className={cn(
-                            "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                            "bg-glass-surface border border-obsidian-rim",
-                            "hover:bg-glass-surface/80 shadow-sm active:scale-95",
-                            openDropdown === 'period' && "ring-2 ring-accent-violet/50"
-                        )}
-                    >
-                        <Calendar className={cn("w-4 h-4", openDropdown === 'period' ? "text-accent-violet" : "text-glass-muted")} />
-                        <span className="text-glass-primary">
-                            {TIME_PERIODS.find(p => p.value === filters.period)?.label || 'Select Period'}
-                        </span>
-                        <ChevronDown className={cn(
-                            "w-4 h-4 transition-transform duration-200",
-                            openDropdown === 'period' && "rotate-180"
-                        )} />
-                    </button>
-                </PopoverTrigger>
-                <PopoverContent
-                    className="min-w-[200px] bg-glass-surface backdrop-blur-thick rounded-2xl border border-obsidian-rim shadow-ao-stack"
-                    align="start"
-                    side="bottom"
-                    sideOffset={8}
-                >
-                    <div className="py-1">
-                        {TIME_PERIODS.map((period) => (
-                            <button
-                                key={period.value}
-                                onClick={() => handlePeriodChange(period.value)}
-                                className={cn(
-                                    "w-full px-4 py-2.5 text-left text-sm hover:bg-glass-surface transition-colors cursor-pointer",
-                                    filters.period === period.value
-                                        ? "text-accent-violet font-bold"
-                                        : "text-glass-primary"
-                                )}
-                            >
-                                {period.label}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Custom Date Range */}
-                    {filters.period === 'custom' && (
-                        <div className="p-3 border-t border-obsidian-rim space-y-2">
-                            <p className="text-[10px] uppercase tracking-widest text-glass-muted font-bold px-1 mb-1">Custom Range</p>
-                            <DatePicker
-                                value={filters.startDate || ''}
-                                onChange={(date) => {
-                                    onFiltersChange({ startDate: date || undefined });
-                                }}
-                                placeholder="Start date"
-                                max={filters.endDate || ''}
-                            />
-                            <DatePicker
-                                value={filters.endDate || ''}
-                                onChange={(date) => {
-                                    onFiltersChange({ endDate: date || undefined });
-                                }}
-                                placeholder="End date"
-                                min={filters.startDate || ''}
-                            />
-                        </div>
+            <div className="relative">
+                <button
+                    ref={triggerRefs.period}
+                    onClick={() => toggleDropdown('period')}
+                    className={cn(
+                        "flex items-center justify-between gap-2 px-4 py-2.5 rounded-2xl min-w-[140px] text-sm font-medium transition-all duration-150",
+                        "bg-[#3C3F40]/70 backdrop-blur-[8px] border border-[#555D50] text-[#E2DFD2]",
+                        "hover:bg-[#5B4965]/40 hover:border-[#5B4965]",
+                        "data-[theme=light]:bg-white/70 data-[theme=light]:border-[#CED9EF]/60 data-[theme=light]:text-[#2E293A]",
+                        "data-[theme=light]:hover:bg-[#EFC8DF]/30 data-[theme=light]:hover:border-[#EFC8DF]"
                     )}
-                </PopoverContent>
-            </Popover>
-
-            {/* Country Multi-Select */}
-            <Popover open={openDropdown === 'countries'} onOpenChange={() => toggleDropdown('countries')}>
-                <PopoverTrigger asChild>
-                    <button
-                        className={cn(
-                            "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                            "bg-glass-surface border border-obsidian-rim",
-                            "hover:bg-glass-surface/80 shadow-sm active:scale-95",
-                            openDropdown === 'countries' && "ring-2 ring-accent-violet/50"
-                        )}
-                    >
-                        <Globe className={cn("w-4 h-4", openDropdown === 'countries' ? "text-accent-violet" : "text-glass-muted")} />
-                        <span className="text-glass-primary">
-                            {getCountriesDisplay()}
-                        </span>
-                        <ChevronDown className={cn(
-                            "w-4 h-4 transition-transform duration-200",
-                            openDropdown === 'countries' && "rotate-180"
-                        )} />
-                    </button>
-                </PopoverTrigger>
-                <PopoverContent
-                    className="min-w-[200px] bg-glass-surface backdrop-blur-thick rounded-2xl border border-obsidian-rim shadow-ao-stack"
-                    align="start"
-                    side="bottom"
-                    sideOffset={8}
+                    data-theme={isLightMode ? 'light' : 'dark'}
                 >
-                    <div className="max-h-[300px] overflow-y-auto">
-                        {/* Select All / Clear Actions */}
-                        <div className="p-3 border-b border-obsidian-rim space-y-2">
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={handleSelectAllCountries}
-                                    className="flex-1 px-3 py-1.5 text-xs bg-accent-violet text-white rounded-lg hover:opacity-90 transition-opacity font-bold shadow-sm"
-                                >
-                                    Select All
-                                </button>
-                                <button
-                                    onClick={handleClearCountries}
-                                    className="flex-1 px-3 py-1.5 text-xs bg-glass-surface border border-obsidian-rim text-glass-primary rounded-lg hover:bg-glass-surface/80 transition-all font-bold"
-                                >
-                                    Clear
-                                </button>
-                            </div>
-                        </div>
+                    <span className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        <span>{TIME_PERIODS.find(p => p.value === filters.period)?.label || 'Select Period'}</span>
+                    </span>
+                    <ChevronDown className={cn("w-4 h-4 transition-transform", "text-[#9E9E9E] data-[theme=light]:text-[#6B6B7B]", openDropdown === 'period' && "rotate-180")} />
+                </button>
 
-                        {/* Country List */}
+                {openDropdown === 'period' && createPortal(
+                    <div
+                        style={{ position: 'fixed', top: position.top, left: position.left, width: position.width, zIndex: 9999 }}
+                        className={cn(
+                            "max-h-[400px] overflow-y-auto rounded-2xl bg-[#3C3F40]/[0.98] backdrop-blur-[24px] border border-[#555D50] shadow-2xl",
+                            "data-[theme=light]:bg-white/[0.98] data-[theme=light]:border-[#CED9EF]/60"
+                        )}
+                        data-theme={isLightMode ? 'light' : 'dark'}
+                    >
                         <div className="py-1">
-                            {availableCountries.map((country) => {
-                                const isSelected = filters.countries?.includes(country) || false;
-                                return (
-                                    <button
-                                        key={country}
-                                        onClick={() => handleCountryToggle(country)}
-                                        className={cn(
-                                            "w-full px-4 py-2.5 text-left text-sm transition-colors flex items-center gap-3 cursor-pointer",
-                                            isSelected
-                                                ? "bg-[#007AFF]/10 dark:bg-[#007AFF]/20 text-[#007AFF] dark:text-[#007AFF]"
-                                                : "text-[#1D1D1F] dark:text-white hover:bg-black/[0.05] dark:hover:bg-white/5"
-                                        )}
-                                    >
-                                        <div className={cn(
-                                            "w-4 h-4 border-2 rounded-lg flex items-center justify-center transition-all",
-                                            isSelected
-                                                ? "bg-accent-violet border-accent-violet"
-                                                : "border-obsidian-rim"
-                                        )}>
-                                            {isSelected && <Check className="w-3 h-3 text-white" />}
-                                        </div>
-                                        <span>{country}</span>
-                                    </button>
-                                );
-                            })}
+                            {TIME_PERIODS.map((period) => (
+                                <button
+                                    key={period.value}
+                                    onClick={() => handlePeriodChange(period.value)}
+                                    className={cn(
+                                        "w-full flex items-center justify-between px-4 py-3 text-sm text-left transition-colors",
+                                        "text-[#E2DFD2] data-[theme=light]:text-[#2E293A]",
+                                        filters.period === period.value
+                                            ? "bg-[#5B4965]/50 data-[theme=light]:bg-[#CED9EF]/50"
+                                            : "hover:bg-[#5B4965]/30 data-[theme=light]:hover:bg-[#EFC8DF]/30"
+                                    )}
+                                    data-theme={isLightMode ? 'light' : 'dark'}
+                                >
+                                    <span>{period.label}</span>
+                                    {filters.period === period.value && <Check className="w-4 h-4 text-[#00FF85]" />}
+                                </button>
+                            ))}
                         </div>
-                    </div>
-                </PopoverContent>
-            </Popover>
-
-            {/* Source Multi-Select */}
-            <Popover open={openDropdown === 'sources'} onOpenChange={() => toggleDropdown('sources')}>
-                <PopoverTrigger asChild>
-                    <button
-                        className={cn(
-                            "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                            "bg-glass-surface border border-obsidian-rim",
-                            "hover:bg-glass-surface/80 shadow-sm active:scale-95",
-                            openDropdown === 'sources' && "ring-2 ring-accent-violet/50"
-                        )}
-                    >
-                        <Link2 className={cn("w-4 h-4", openDropdown === 'sources' ? "text-accent-violet" : "text-glass-muted")} />
-                        <span className="text-glass-primary">
-                            {getSourcesDisplay()}
-                        </span>
-                        <ChevronDown className={cn(
-                            "w-4 h-4 transition-transform duration-200",
-                            openDropdown === 'sources' && "rotate-180"
-                        )} />
-                    </button>
-                </PopoverTrigger>
-                <PopoverContent
-                    className="min-w-[200px] bg-glass-surface backdrop-blur-thick rounded-2xl border border-obsidian-rim shadow-ao-stack"
-                    align="start"
-                    side="bottom"
-                    sideOffset={8}
-                >
-                    <div className="max-h-[300px] overflow-y-auto">
-                        {/* Select All / Clear Actions */}
-                        <div className="p-3 border-b border-obsidian-rim space-y-2">
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={handleSelectAllSources}
-                                    className="flex-1 px-3 py-1.5 text-xs bg-accent-violet text-white rounded-lg hover:opacity-90 transition-opacity font-bold shadow-sm"
-                                >
-                                    Select All
-                                </button>
-                                <button
-                                    onClick={handleClearSources}
-                                    className="flex-1 px-3 py-1.5 text-xs bg-glass-surface border border-obsidian-rim text-glass-primary rounded-lg hover:bg-glass-surface/80 transition-all font-bold"
-                                >
-                                    Clear
-                                </button>
+                        {filters.period === 'custom' && (
+                            <div className={cn("p-4 border-t space-y-3 border-[#555D50]/50 data-[theme=light]:border-[#CED9EF]/50")} data-theme={isLightMode ? 'light' : 'dark'}>
+                                <DatePicker value={filters.startDate || ''} onChange={(d) => onFiltersChange({ startDate: d || undefined })} placeholder="Start date" />
+                                <DatePicker value={filters.endDate || ''} onChange={(d) => onFiltersChange({ endDate: d || undefined })} placeholder="End date" />
                             </div>
-                        </div>
+                        )}
+                    </div>,
+                    document.body
+                )}
+            </div>
 
-                        {/* Source List */}
+            {/* Country Filter */}
+            <div className="relative">
+                <button
+                    ref={triggerRefs.countries}
+                    onClick={() => toggleDropdown('countries')}
+                    className={cn(
+                        "flex items-center justify-between gap-2 px-4 py-2.5 rounded-2xl min-w-[140px] text-sm font-medium transition-all duration-150",
+                        "bg-[#3C3F40]/70 backdrop-blur-[8px] border border-[#555D50] text-[#E2DFD2]",
+                        "hover:bg-[#5B4965]/40 hover:border-[#5B4965]",
+                        "data-[theme=light]:bg-white/70 data-[theme=light]:border-[#CED9EF]/60 data-[theme=light]:text-[#2E293A]",
+                        "data-[theme=light]:hover:bg-[#EFC8DF]/30 data-[theme=light]:hover:border-[#EFC8DF]"
+                    )}
+                    data-theme={isLightMode ? 'light' : 'dark'}
+                >
+                    <span className="flex items-center gap-2">
+                        <Globe className="w-4 h-4" />
+                        <span>{getCountriesDisplay()}</span>
+                    </span>
+                    <ChevronDown className={cn("w-4 h-4 transition-transform", "text-[#9E9E9E] data-[theme=light]:text-[#6B6B7B]", openDropdown === 'countries' && "rotate-180")} />
+                </button>
+
+                {openDropdown === 'countries' && createPortal(
+                    <div
+                        style={{ position: 'fixed', top: position.top, left: position.left, width: position.width, zIndex: 9999 }}
+                        className={cn(
+                            "max-h-[300px] overflow-y-auto rounded-2xl bg-[#3C3F40]/[0.98] backdrop-blur-[24px] border border-[#555D50] shadow-2xl",
+                            "data-[theme=light]:bg-white/[0.98] data-[theme=light]:border-[#CED9EF]/60"
+                        )}
+                        data-theme={isLightMode ? 'light' : 'dark'}
+                    >
+                        <div className={cn("flex items-center justify-between px-4 py-2 border-b border-[#555D50]/50 data-[theme=light]:border-[#CED9EF]/50")} data-theme={isLightMode ? 'light' : 'dark'}>
+                            <button onClick={() => onFiltersChange({ countries: availableCountries })} className="text-xs font-medium text-[#00FF85]">Select All</button>
+                            <button onClick={() => onFiltersChange({ countries: [] })} className="text-xs font-medium text-[#9E9E9E] hover:text-[#E2DFD2] data-[theme=light]:text-[#6B6B7B] data-[theme=light]:hover:text-[#2E293A]">Clear</button>
+                        </div>
+                        <div className="py-1">
+                            {availableCountries.map((country) => (
+                                <button
+                                    key={country}
+                                    onClick={() => handleCountryToggle(country)}
+                                    className={cn(
+                                        "w-full flex items-center justify-between px-4 py-3 text-sm text-left transition-colors",
+                                        "text-[#E2DFD2] data-[theme=light]:text-[#2E293A]",
+                                        filters.countries?.includes(country) ? "bg-[#5B4965]/50 data-[theme=light]:bg-[#CED9EF]/50" : "hover:bg-[#5B4965]/30 data-[theme=light]:hover:bg-[#EFC8DF]/30"
+                                    )}
+                                    data-theme={isLightMode ? 'light' : 'dark'}
+                                >
+                                    <span>{country}</span>
+                                    {filters.countries?.includes(country) && <Check className="w-4 h-4 text-[#00FF85]" />}
+                                </button>
+                            ))}
+                        </div>
+                    </div>,
+                    document.body
+                )}
+            </div>
+
+            {/* Source Filter */}
+            <div className="relative">
+                <button
+                    ref={triggerRefs.sources}
+                    onClick={() => toggleDropdown('sources')}
+                    className={cn(
+                        "flex items-center justify-between gap-2 px-4 py-2.5 rounded-2xl min-w-[140px] text-sm font-medium transition-all duration-150",
+                        "bg-[#3C3F40]/70 backdrop-blur-[8px] border border-[#555D50] text-[#E2DFD2]",
+                        "hover:bg-[#5B4965]/40 hover:border-[#5B4965]",
+                        "data-[theme=light]:bg-white/70 data-[theme=light]:border-[#CED9EF]/60 data-[theme=light]:text-[#2E293A]",
+                        "data-[theme=light]:hover:bg-[#EFC8DF]/30 data-[theme=light]:hover:border-[#EFC8DF]"
+                    )}
+                    data-theme={isLightMode ? 'light' : 'dark'}
+                >
+                    <span className="flex items-center gap-2">
+                        <Link2 className="w-4 h-4" />
+                        <span>{getSourcesDisplay()}</span>
+                    </span>
+                    <ChevronDown className={cn("w-4 h-4 transition-transform", "text-[#9E9E9E] data-[theme=light]:text-[#6B6B7B]", openDropdown === 'sources' && "rotate-180")} />
+                </button>
+
+                {openDropdown === 'sources' && createPortal(
+                    <div
+                        style={{ position: 'fixed', top: position.top, left: position.left, width: position.width, zIndex: 9999 }}
+                        className={cn(
+                            "max-h-[300px] overflow-y-auto rounded-2xl bg-[#3C3F40]/[0.98] backdrop-blur-[24px] border border-[#555D50] shadow-2xl",
+                            "data-[theme=light]:bg-white/[0.98] data-[theme=light]:border-[#CED9EF]/60"
+                        )}
+                        data-theme={isLightMode ? 'light' : 'dark'}
+                    >
+                        <div className={cn("flex items-center justify-between px-4 py-2 border-b border-[#555D50]/50 data-[theme=light]:border-[#CED9EF]/50")} data-theme={isLightMode ? 'light' : 'dark'}>
+                            <button onClick={() => onFiltersChange({ sources: effectiveSources.map(s => s.name) })} className="text-xs font-medium text-[#00FF85]">Select All</button>
+                            <button onClick={() => onFiltersChange({ sources: [] })} className="text-xs font-medium text-[#9E9E9E] hover:text-[#E2DFD2] data-[theme=light]:text-[#6B6B7B] data-[theme=light]:hover:text-[#2E293A]">Clear</button>
+                        </div>
                         <div className="py-1">
                             {effectiveSources.map((source) => {
-                                const isSelected = (filters.sources || []).some(
-                                    s => normalizeSourceName(s) === normalizeSourceName(source.name)
-                                );
+                                const isSelected = filters.sources?.some(s => normalizeSourceName(s) === normalizeSourceName(source.name));
                                 const IconComponent = getIconComponent(source.icon);
                                 return (
                                     <button
                                         key={source.name}
                                         onClick={() => handleSourceToggle(source.name)}
                                         className={cn(
-                                            "w-full px-4 py-2.5 text-left text-sm transition-colors flex items-center gap-3 cursor-pointer",
-                                            isSelected
-                                                ? "bg-[#007AFF]/10 dark:bg-[#007AFF]/20 text-[#007AFF] dark:text-[#007AFF]"
-                                                : "text-[#1D1D1F] dark:text-white hover:bg-black/[0.05] dark:hover:bg-white/5"
+                                            "w-full flex items-center justify-between px-4 py-3 text-sm text-left transition-colors",
+                                            "text-[#E2DFD2] data-[theme=light]:text-[#2E293A]",
+                                            isSelected ? "bg-[#5B4965]/50 data-[theme=light]:bg-[#CED9EF]/50" : "hover:bg-[#5B4965]/30 data-[theme=light]:hover:bg-[#EFC8DF]/30"
                                         )}
+                                        data-theme={isLightMode ? 'light' : 'dark'}
                                     >
-                                        <div className={cn(
-                                            "w-4 h-4 border-2 rounded-lg flex items-center justify-center transition-all",
-                                            isSelected
-                                                ? "bg-accent-violet border-accent-violet"
-                                                : "border-obsidian-rim"
-                                        )}>
-                                            {isSelected && <Check className="w-3 h-3 text-white" />}
-                                        </div>
-                                        <IconComponent className="w-4 h-4" />
-                                        <span>{source.name}</span>
+                                        <span className="flex items-center gap-3">
+                                            <IconComponent className="w-4 h-4 text-[#9E9E9E] data-[theme=light]:text-[#6B6B7B]" />
+                                            {source.name}
+                                        </span>
+                                        {isSelected && <Check className="w-4 h-4 text-[#00FF85]" />}
                                     </button>
                                 );
                             })}
                         </div>
-                    </div>
-                </PopoverContent>
-            </Popover>
+                    </div>,
+                    document.body
+                )}
+            </div>
 
-            {/* Refresh Button */}
+            {/* Refresh */}
             <button
                 onClick={() => onFiltersChange({})}
                 disabled={loading}
                 className={cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                    "bg-glass-surface border border-obsidian-rim",
-                    "hover:bg-glass-surface/80 shadow-sm active:scale-95",
-                    "disabled:opacity-50 disabled:cursor-not-allowed"
+                    "flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-medium transition-all duration-150",
+                    "bg-[#3C3F40]/70 border border-[#555D50] text-[#E2DFD2]",
+                    "hover:bg-[#5B4965]/40 hover:border-[#5B4965]",
+                    "data-[theme=light]:bg-white/70 data-[theme=light]:border-[#CED9EF]/60 data-[theme=light]:text-[#2E293A]",
+                    "disabled:opacity-50"
                 )}
+                data-theme={isLightMode ? 'light' : 'dark'}
             >
-                <RefreshCw className={cn(
-                    "w-4 h-4 text-glass-muted",
-                    loading && "animate-spin"
-                )} />
-                <span className="text-glass-primary">Refresh</span>
+                <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
+                <span>Refresh</span>
             </button>
-
-            {/* Loading Indicator */}
-            {loading && (
-                <div className="ml-2 w-5 h-5 border-2 border-accent-violet border-t-transparent rounded-full animate-spin" />
-            )}
         </div>
     );
 }

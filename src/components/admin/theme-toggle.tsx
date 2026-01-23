@@ -56,27 +56,25 @@ export function ThemeToggle({
     }
 
     return (
-        <div
-            className={cn(
-                "flex items-center gap-1 rounded-xl p-1",
-                "liquid-glass-subtle",
-                className
-            )}
-        >
+        <div className={cn(
+            "inline-flex p-1 rounded-full",
+            "bg-[#353839]/60 border border-[#555D50]",
+            "data-[theme=light]:bg-white/60 data-[theme=light]:border-[#CED9EF]/60",
+            className
+        )} data-theme={isLightMode ? 'light' : 'dark'}>
             {/* Dark Mode Button */}
             <button
                 onClick={() => setTheme('dark')}
                 className={cn(
-                    "flex items-center gap-2 rounded-lg px-3 font-medium transition-all duration-200",
-                    compact ? "py-1 text-xs" : "py-1.5 text-sm",
+                    "px-3 py-1.5 rounded-full text-sm flex items-center gap-1.5 transition-all duration-150",
                     !isLightMode
-                        ? "bg-accent-violet text-white shadow-lg shadow-accent-violet/25"
-                        : "text-glass-muted hover:text-glass-primary hover:bg-glass-surface"
+                        ? "bg-[#5B4965]/50 text-[#E2DFD2]"
+                        : "text-[#9E9E9E] hover:text-[#E2DFD2] data-[theme=light]:text-[#6B6B7B]"
                 )}
+                data-theme={isLightMode ? 'light' : 'dark'}
                 aria-pressed={!isLightMode}
-                aria-label="Switch to dark mode"
             >
-                <Moon className={cn(compact ? "w-3.5 h-3.5" : "w-4 h-4")} />
+                <Moon className="w-4 h-4" />
                 {showLabels && <span>Dark</span>}
             </button>
 
@@ -84,16 +82,15 @@ export function ThemeToggle({
             <button
                 onClick={() => setTheme('light')}
                 className={cn(
-                    "flex items-center gap-2 rounded-lg px-3 font-medium transition-all duration-200",
-                    compact ? "py-1 text-xs" : "py-1.5 text-sm",
+                    "px-3 py-1.5 rounded-full text-sm flex items-center gap-1.5 transition-all duration-150",
                     isLightMode
-                        ? "bg-white text-black shadow-lg"
-                        : "text-glass-muted hover:text-glass-primary hover:bg-glass-surface"
+                        ? "bg-[#EFC8DF]/50 text-[#2E293A]"
+                        : "text-[#9E9E9E] hover:text-[#E2DFD2] data-[theme=light]:text-[#6B6B7B]"
                 )}
+                data-theme={isLightMode ? 'light' : 'dark'}
                 aria-pressed={isLightMode}
-                aria-label="Switch to light mode"
             >
-                <Sun className={cn(compact ? "w-3.5 h-3.5" : "w-4 h-4")} />
+                <Sun className="w-4 h-4" />
                 {showLabels && <span>Light</span>}
             </button>
         </div>

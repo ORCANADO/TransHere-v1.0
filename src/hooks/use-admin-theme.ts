@@ -3,10 +3,7 @@
 import { useEffect } from 'react';
 import { useTheme } from 'next-themes';
 
-/**
- * Class applied to .liquid-glass-root when light mode is active
- */
-const LIGHT_MODE_CLASS = 'liquid-light';
+const STORAGE_KEY = 'admin-theme-preference';
 
 /**
  * Custom hook for managing admin dashboard theme.
@@ -15,16 +12,30 @@ const LIGHT_MODE_CLASS = 'liquid-light';
 export function useAdminTheme() {
     const { theme, setTheme, resolvedTheme } = useTheme();
 
+    // Sync specific localStorage key for admin
+    useEffect(() => {
+        const savedTheme = localStorage.getItem(STORAGE_KEY);
+        if (savedTheme && savedTheme !== theme) {
+            setTheme(savedTheme as string);
+        }
+    }, []);
+
     useEffect(() => {
         const isLight = resolvedTheme === 'light';
-        const rootElement = document.querySelector('.liquid-glass-root');
+        const rootElement = document.querySelector('.admin-theme-root');
 
         if (rootElement) {
+            rootElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
             if (isLight) {
-                rootElement.classList.add(LIGHT_MODE_CLASS);
+                rootElement.classList.add('admin-light');
             } else {
-                rootElement.classList.remove(LIGHT_MODE_CLASS);
+                rootElement.classList.remove('admin-light');
             }
+        }
+
+        // Persist to admin-specific key
+        if (resolvedTheme) {
+            localStorage.setItem(STORAGE_KEY, resolvedTheme);
         }
     }, [resolvedTheme]);
 

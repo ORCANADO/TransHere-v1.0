@@ -1,15 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  Save,
-  Loader2,
-  Plus,
-  X,
-  ExternalLink,
-  Trash2
-} from 'lucide-react';
+import { Save, Loader2, Plus, X, ExternalLink, Trash2, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAdminTheme } from '@/hooks/use-admin-theme';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -188,6 +182,7 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
   };
 
   const isFormValid = formData.name && formData.slug && formData.social_link;
+  const { isLightMode } = useAdminTheme();
 
   return (
     <div className="space-y-6">
@@ -208,14 +203,14 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
       )}
 
       {/* Basic Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className={cn(
-            "block text-sm font-bold mb-1 px-1",
-            "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60",
-            "[font-variation-settings:'opsz'_18,'wdth'_110]"
-          )}>
-            Name *
+            "block text-sm font-semibold mb-2",
+            "text-[#E2DFD2]",
+            "data-[theme=light]:text-[#2E293A]"
+          )} data-theme={isLightMode ? 'light' : 'dark'}>
+            Model Name *
           </label>
           <input
             type="text"
@@ -223,25 +218,25 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
             onChange={(e) => handleChange('name', e.target.value)}
             placeholder="Valentina Aguirre"
             className={cn(
-              "w-full px-4 py-2.5 rounded-xl transition-all font-bold",
+              "w-full px-4 py-3 rounded-xl text-sm transition-all duration-150 outline-none",
               "backdrop-blur-[8px]",
-              "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
-              "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
-              "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
-              // Light mode
-              "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
-              "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
+              // Dark
+              "bg-[#353839]/60 border border-[#555D50] text-[#E2DFD2] placeholder:text-[#9E9E9E]",
+              "focus:border-[#7A27FF] focus:ring-2 focus:ring-[#7A27FF]/20",
+              // Light
+              "data-[theme=light]:bg-white/70 data-[theme=light]:border-[#CED9EF]/60 data-[theme=light]:text-[#2E293A] data-[theme=light]:placeholder:text-[#6B6B7B] data-[theme=light]:focus:border-[#7A27FF]"
             )}
+            data-theme={isLightMode ? 'light' : 'dark'}
           />
         </div>
 
         <div>
           <label className={cn(
-            "block text-sm font-bold mb-1 px-1",
-            "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60",
-            "[font-variation-settings:'opsz'_18,'wdth'_110]"
-          )}>
-            Slug * <span className="text-xs font-medium opacity-70">(URL-friendly name)</span>
+            "block text-sm font-semibold mb-2",
+            "text-[#E2DFD2]",
+            "data-[theme=light]:text-[#2E293A]"
+          )} data-theme={isLightMode ? 'light' : 'dark'}>
+            Slug * <span className="text-xs font-normal opacity-60">(URL-friendly name)</span>
           </label>
           <input
             type="text"
@@ -249,15 +244,15 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
             onChange={(e) => handleChange('slug', e.target.value)}
             placeholder="valentina-aguirre"
             className={cn(
-              "w-full px-4 py-2.5 rounded-xl transition-all font-bold",
+              "w-full px-4 py-3 rounded-xl text-sm transition-all duration-150 outline-none",
               "backdrop-blur-[8px]",
-              "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
-              "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
-              "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
-              // Light mode
-              "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
-              "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
+              // Dark
+              "bg-[#353839]/60 border border-[#555D50] text-[#E2DFD2] placeholder:text-[#9E9E9E]",
+              "focus:border-[#7A27FF] focus:ring-2 focus:ring-[#7A27FF]/20",
+              // Light
+              "data-[theme=light]:bg-white/70 data-[theme=light]:border-[#CED9EF]/60 data-[theme=light]:text-[#2E293A] data-[theme=light]:placeholder:text-[#6B6B7B] data-[theme=light]:focus:border-[#7A27FF]"
             )}
+            data-theme={isLightMode ? 'light' : 'dark'}
           />
         </div>
       </div>
@@ -265,10 +260,10 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
       {/* Bio */}
       <div>
         <label className={cn(
-          "block text-sm font-bold mb-1 px-1",
-          "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60",
-          "[font-variation-settings:'opsz'_18,'wdth'_110]"
-        )}>
+          "block text-sm font-semibold mb-2",
+          "text-[#E2DFD2]",
+          "data-[theme=light]:text-[#2E293A]"
+        )} data-theme={isLightMode ? 'light' : 'dark'}>
           Bio (English)
         </label>
         <textarea
@@ -277,26 +272,25 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
           placeholder="Model description in English..."
           rows={3}
           className={cn(
-            "w-full px-4 py-2.5 rounded-xl transition-all font-bold",
+            "w-full px-4 py-3 rounded-xl text-sm transition-all duration-150 outline-none resize-none",
             "backdrop-blur-[8px]",
-            "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
-            "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
-            "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
-            "resize-none",
-            // Light mode
-            "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
-            "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
+            // Dark
+            "bg-[#353839]/60 border border-[#555D50] text-[#E2DFD2] placeholder:text-[#9E9E9E]",
+            "focus:border-[#7A27FF] focus:ring-2 focus:ring-[#7A27FF]/20",
+            // Light
+            "data-[theme=light]:bg-white/70 data-[theme=light]:border-[#CED9EF]/60 data-[theme=light]:text-[#2E293A] data-[theme=light]:placeholder:text-[#6B6B7B] data-[theme=light]:focus:border-[#7A27FF]"
           )}
+          data-theme={isLightMode ? 'light' : 'dark'}
         />
       </div>
 
       <div>
         <label className={cn(
-          "block text-sm font-bold mb-1 px-1",
-          "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60",
-          "[font-variation-settings:'opsz'_18,'wdth'_110]"
-        )}>
-          Bio (Spanish) <span className="text-xs font-medium opacity-70">(Optional)</span>
+          "block text-sm font-semibold mb-2",
+          "text-[#E2DFD2]",
+          "data-[theme=light]:text-[#2E293A]"
+        )} data-theme={isLightMode ? 'light' : 'dark'}>
+          Bio (Spanish) <span className="text-xs font-normal opacity-60">(Optional)</span>
         </label>
         <textarea
           value={formData.bio_es}
@@ -304,22 +298,25 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
           placeholder="Descripción del modelo en español..."
           rows={3}
           className={cn(
-            "w-full px-4 py-2.5 rounded-xl transition-all font-bold",
+            "w-full px-4 py-3 rounded-xl text-sm transition-all duration-150 outline-none resize-none",
             "backdrop-blur-[8px]",
-            "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
-            "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
-            "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
-            "resize-none",
-            // Light mode
-            "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
-            "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
+            // Dark
+            "bg-[#353839]/60 border border-[#555D50] text-[#E2DFD2] placeholder:text-[#9E9E9E]",
+            "focus:border-[#7A27FF] focus:ring-2 focus:ring-[#7A27FF]/20",
+            // Light
+            "data-[theme=light]:bg-white/70 data-[theme=light]:border-[#CED9EF]/60 data-[theme=light]:text-[#2E293A] data-[theme=light]:placeholder:text-[#6B6B7B] data-[theme=light]:focus:border-[#7A27FF]"
           )}
+          data-theme={isLightMode ? 'light' : 'dark'}
         />
       </div>
 
       {/* Social Link */}
       <div>
-        <label className="block text-sm font-bold text-glass-muted mb-1 px-1">
+        <label className={cn(
+          "block text-sm font-semibold mb-2",
+          "text-[#E2DFD2]",
+          "data-[theme=light]:text-[#2E293A]"
+        )} data-theme={isLightMode ? 'light' : 'dark'}>
           Social Link (OnlyFans/Fansly) *
         </label>
         <div className="relative">
@@ -329,22 +326,22 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
             onChange={(e) => handleChange('social_link', e.target.value)}
             placeholder="https://onlyfans.com/username"
             className={cn(
-              "w-full px-4 py-2.5 pr-10 rounded-xl transition-all font-bold",
+              "w-full px-4 py-3 rounded-xl text-sm transition-all duration-150 outline-none pr-12",
               "backdrop-blur-[8px]",
-              "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
-              "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
-              "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
-              // Light mode
-              "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
-              "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
+              // Dark
+              "bg-[#353839]/60 border border-[#555D50] text-[#E2DFD2] placeholder:text-[#9E9E9E]",
+              "focus:border-[#7A27FF] focus:ring-2 focus:ring-[#7A27FF]/20",
+              // Light
+              "data-[theme=light]:bg-white/70 data-[theme=light]:border-[#CED9EF]/60 data-[theme=light]:text-[#2E293A] data-[theme=light]:placeholder:text-[#6B6B7B] data-[theme=light]:focus:border-[#7A27FF]"
             )}
+            data-theme={isLightMode ? 'light' : 'dark'}
           />
           {formData.social_link && (
             <a
               href={formData.social_link}
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 hover:text-accent-violet transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9E9E9E] hover:text-[#7A27FF] transition-colors"
             >
               <ExternalLink className="w-4 h-4" />
             </a>
@@ -355,10 +352,10 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
       {/* Profile Image URL */}
       <div>
         <label className={cn(
-          "block text-sm font-bold mb-1 px-1",
-          "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60",
-          "[font-variation-settings:'opsz'_18,'wdth'_110]"
-        )}>
+          "block text-sm font-semibold mb-2",
+          "text-[#E2DFD2]",
+          "data-[theme=light]:text-[#2E293A]"
+        )} data-theme={isLightMode ? 'light' : 'dark'}>
           Profile Image URL *
         </label>
         <input
@@ -367,17 +364,21 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
           onChange={(e) => handleChange('image_url', e.target.value)}
           placeholder="valentina-aguirre/profile.webp"
           className={cn(
-            "w-full px-4 py-2.5 rounded-xl transition-all font-bold",
+            "w-full px-4 py-3 rounded-xl text-sm transition-all duration-150 outline-none",
             "backdrop-blur-[8px]",
-            "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
-            "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
-            "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
-            // Light mode
-            "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
-            "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
+            // Dark
+            "bg-[#353839]/60 border border-[#555D50] text-[#E2DFD2] placeholder:text-[#9E9E9E]",
+            "focus:border-[#7A27FF] focus:ring-2 focus:ring-[#7A27FF]/20",
+            // Light
+            "data-[theme=light]:bg-white/70 data-[theme=light]:border-[#CED9EF]/60 data-[theme=light]:text-[#2E293A] data-[theme=light]:placeholder:text-[#6B6B7B] data-[theme=light]:focus:border-[#7A27FF]"
           )}
+          data-theme={isLightMode ? 'light' : 'dark'}
         />
-        <p className="text-xs text-[var(--text-obsidian-muted)]/60 liquid-light:text-[var(--text-irid-primary)]/40 mt-1 font-bold">
+        <p className={cn(
+          "text-xs font-medium mt-2",
+          "text-[#9E9E9E]",
+          "data-[theme=light]:text-[#6B6B7B]"
+        )} data-theme={isLightMode ? 'light' : 'dark'}>
           Path in R2 bucket (e.g., model-slug/profile.webp)
         </p>
       </div>
@@ -424,19 +425,28 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
 
       {/* Tags */}
       <div>
-        <label className="block text-sm font-medium text-muted-foreground mb-1">
-          Tags
+        <label className={cn(
+          "block text-sm font-semibold mb-2",
+          "text-[#E2DFD2]",
+          "data-[theme=light]:text-[#2E293A]"
+        )} data-theme={isLightMode ? 'light' : 'dark'}>
+          Model Tags
         </label>
-        <div className="flex flex-wrap gap-2 mb-2">
+        <div className="flex flex-wrap gap-2 mb-4">
           {formData.tags.map((tag: string) => (
             <span
               key={tag}
-              className="flex items-center gap-1 px-3 py-1 bg-accent-violet/20 text-accent-violet rounded-full text-sm font-semibold shadow-sm"
+              className={cn(
+                "flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all",
+                "bg-[#5B4965]/30 text-[#E2DFD2] border border-[#5B4965]/50",
+                "data-[theme=light]:bg-[#CED9EF]/30 data-[theme=light]:text-[#2E293A] data-[theme=light]:border-[#CED9EF]/50"
+              )}
+              data-theme={isLightMode ? 'light' : 'dark'}
             >
               {tag}
               <button
                 onClick={() => removeTag(tag)}
-                className="hover:text-accent-violet/80 transition-colors"
+                className="hover:text-[#FF4B4B] transition-colors"
                 aria-label={`Remove tag ${tag}`}
               >
                 <X className="w-3 h-3" />
@@ -450,26 +460,26 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
             value={newTag}
             onChange={(e) => setNewTag(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-            placeholder="Add tag..."
+            placeholder="Add a tag..."
             className={cn(
-              "flex-1 px-4 py-2.5 rounded-xl transition-all font-bold",
+              "flex-1 px-4 py-3 rounded-xl text-sm transition-all duration-150 outline-none",
               "backdrop-blur-[8px]",
-              "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
-              "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
-              "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
-              // Light mode
-              "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
-              "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
+              // Dark
+              "bg-[#353839]/60 border border-[#555D50] text-[#E2DFD2] placeholder:text-[#9E9E9E]",
+              "focus:border-[#7A27FF] focus:ring-2 focus:ring-[#7A27FF]/20",
+              // Light
+              "data-[theme=light]:bg-white/70 data-[theme=light]:border-[#CED9EF]/60 data-[theme=light]:text-[#2E293A] data-[theme=light]:placeholder:text-[#6B6B7B] data-[theme=light]:focus:border-[#7A27FF]"
             )}
+            data-theme={isLightMode ? 'light' : 'dark'}
           />
           <button
             onClick={addTag}
             className={cn(
-              "px-4 py-2 rounded-xl transition-all font-bold active:scale-95",
-              "bg-[var(--surface-obsidian-raised)]/80 border border-[var(--border-obsidian-rim)]/40 text-[var(--text-obsidian-primary)]",
-              "liquid-light:bg-[var(--surface-irid-glass)] liquid-light:text-[var(--text-irid-primary)] liquid-light:border-[var(--border-irid-rim)]/60"
+              "px-4 py-3 rounded-xl transition-all duration-150 active:scale-95",
+              "bg-[#5B4965]/40 text-[#E2DFD2] border border-[#555D50]/50 hover:bg-[#5B4965]/60",
+              "data-[theme=light]:bg-[#CED9EF]/40 data-[theme=light]:text-[#2E293A] data-[theme=light]:border-[#CED9EF]/50"
             )}
-            aria-label="Add tag"
+            data-theme={isLightMode ? 'light' : 'dark'}
           >
             <Plus className="w-5 h-5" />
           </button>
@@ -551,23 +561,40 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
         </label>
       </div>
 
-      {/* Save Button */}
-      <div className="flex justify-end pt-4 border-t border-[var(--border-obsidian-rim)]/20 liquid-light:border-[var(--border-irid-rim)]/20">
+      {/* Task 8.6: Save/Cancel Buttons */}
+      <div className={cn(
+        "flex items-center justify-end gap-3 px-6 py-4 mt-8",
+        "border-t border-[#555D50]/30",
+        "data-[theme=light]:border-[#CED9EF]/30"
+      )} data-theme={isLightMode ? 'light' : 'dark'}>
+        {!isNew && (
+          <button
+            onClick={() => window.location.reload()} // Quick way to reset as we're in a specialized view
+            className={cn(
+              "px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-150",
+              "border border-[#555D50] text-[#E2DFD2] hover:bg-[#5B4965]/30",
+              "data-[theme=light]:border-[#CED9EF]/60 data-[theme=light]:text-[#2E293A] data-[theme=light]:hover:bg-[#EFC8DF]/20"
+            )}
+            data-theme={isLightMode ? 'light' : 'dark'}
+          >
+            Reset Changes
+          </button>
+        )}
+
         <button
           onClick={handleSubmit}
           disabled={saving || !isFormValid}
           className={cn(
-            "flex items-center justify-center gap-2 px-8 py-3 rounded-2xl font-bold transition-all text-lg",
-            "bg-accent-emerald text-black shadow-lg shadow-accent-emerald/20",
-            "hover:opacity-90 active:scale-95 active:shadow-[inset_0_0_20px_4px_var(--glow-obsidian-internal)]",
-            "liquid-light:active:shadow-[inset_0_0_20px_4px_var(--glow-irid-warm)]",
-            (saving || !isFormValid) && "opacity-50 cursor-not-allowed transform-none shadow-none"
+            "px-8 py-3 rounded-xl text-sm font-bold transition-all duration-150 flex items-center justify-center gap-2",
+            "bg-[#00FF85] text-black shadow-[0_0_20px_rgba(0,255,133,0.3)] hover:bg-[#00E077] hover:shadow-[0_0_30px_rgba(0,255,133,0.5)]",
+            "active:scale-[0.98]",
+            "disabled:opacity-50 disabled:grayscale disabled:shadow-none"
           )}
         >
           {saving ? (
-            <Loader2 className="w-6 h-6 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
-            <Save className="w-6 h-6" />
+            <Save className="w-5 h-5" />
           )}
           {isNew ? 'Create Model' : 'Save Changes'}
         </button>

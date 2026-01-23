@@ -11,10 +11,12 @@ import {
   Pin,
   Clock,
   X,
-  CheckCircle2
+  CheckCircle2,
+  Grid3x3
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn, getImageUrl } from '@/lib/utils';
+import { useAdminTheme } from '@/hooks/use-admin-theme';
 import type { StoryGroupAdmin } from '@/types/admin';
 
 interface StoryManagerProps {
@@ -250,313 +252,324 @@ export function StoryManager({
     }
   };
 
+  const { isLightMode } = useAdminTheme();
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-            <Film className="w-5 h-5 text-accent-violet" />
-            Stories ({groups.reduce((acc, g) => acc + (g.stories?.length || 0), 0)})
-          </h3>
-          <p className="text-sm text-muted-foreground font-medium mt-1">
+      {/* Task 8.5: Stories Manager Panel - 3 Column Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* Left Column - Story Groups */}
+        <div className={cn(
+          "rounded-2xl p-5 h-fit",
+          "bg-[#353839]/40 border border-[#555D50]/30",
+          "data-[theme=light]:bg-white/50 data-[theme=light]:border-[#CED9EF]/30"
+        )} data-theme={isLightMode ? 'light' : 'dark'}>
+          <div className="flex items-center gap-2 mb-4">
+            <Grid3x3 className={cn(
+              "w-5 h-5",
+              "text-[#9E9E9E]",
+              "data-[theme=light]:text-[#6B6B7B]"
+            )} data-theme={isLightMode ? 'light' : 'dark'} />
+            <h3 className={cn(
+              "font-semibold",
+              "text-[#E2DFD2]",
+              "data-[theme=light]:text-[#2E293A]"
+            )} data-theme={isLightMode ? 'light' : 'dark'}>
+              Story Groups ({groups.length})
+            </h3>
+          </div>
+          <p className={cn(
+            "text-sm mb-6",
+            "text-[#9E9E9E]",
+            "data-[theme=light]:text-[#6B6B7B]"
+          )} data-theme={isLightMode ? 'light' : 'dark'}>
             Manage recent and pinned story groups
           </p>
+
+          <div className="space-y-6">
+            {/* Pinned Section */}
+            <div>
+              <div className={cn(
+                "flex items-center gap-2 py-2 mb-2",
+                "text-[10px] font-bold uppercase tracking-[0.2em]",
+                "text-[#00FF85]",
+              )}>
+                <Pin className="w-3.5 h-3.5" />
+                PINNED BLOCKS
+              </div>
+              <div className="space-y-2">
+                {pinnedGroups.length === 0 ? (
+                  <p className="text-xs text-[#9E9E9E]/40 italic px-2">No pinned blocks</p>
+                ) : pinnedGroups.map(group => (
+                  <button
+                    key={group.id}
+                    onClick={() => setSelectedGroup(group.id)}
+                    className={cn(
+                      "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all",
+                      selectedGroup === group.id
+                        ? "bg-[#5B4965]/40 text-[#E2DFD2]"
+                        : "hover:bg-[#5B4965]/20 text-[#9E9E9E]"
+                    )}
+                  >
+                    <span className="text-sm font-medium truncate">{group.title || 'Pinned'}</span>
+                    <span className="text-[10px] bg-black/20 px-1.5 py-0.5 rounded-lg">{group.stories?.length || 0}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Section */}
+            <div>
+              <div className={cn(
+                "flex items-center gap-2 py-2 mb-2",
+                "text-[10px] font-bold uppercase tracking-[0.2em]",
+                "text-[#9E9E9E]",
+                "data-[theme=light]:text-[#6B6B7B]"
+              )} data-theme={isLightMode ? 'light' : 'dark'}>
+                <Clock className="w-3.5 h-3.5" />
+                RECENT STORIES
+              </div>
+              <div className="space-y-2">
+                {recentGroups.length === 0 ? (
+                  <p className="text-xs text-[#9E9E9E]/40 italic px-2">No recent stories</p>
+                ) : recentGroups.map(group => (
+                  <button
+                    key={group.id}
+                    onClick={() => setSelectedGroup(group.id)}
+                    className={cn(
+                      "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all",
+                      selectedGroup === group.id
+                        ? "bg-[#5B4965]/40 text-[#E2DFD2]"
+                        : "hover:bg-[#5B4965]/20 text-[#9E9E9E]"
+                    )}
+                  >
+                    <span className="text-sm font-medium">Auto-Created Group</span>
+                    <span className="text-[10px] bg-black/20 px-1.5 py-0.5 rounded-lg">{group.stories?.length || 0}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="flex gap-2">
-          <select
-            value={mediaMode}
-            onChange={(e) => setMediaMode(e.target.value as 'image' | 'video')}
-            className="px-3 py-2 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-lg text-foreground text-sm font-medium focus:ring-2 focus:ring-[#7A27FF]/20 outline-none transition-all"
-          >
-            <option value="image">Image</option>
-            <option value="video">Video</option>
-          </select>
+        {/* Middle Column - Upload Area */}
+        <div className={cn(
+          "rounded-2xl p-5 h-fit",
+          "bg-[#353839]/40 border border-[#555D50]/30",
+          "data-[theme=light]:bg-white/50 data-[theme=light]:border-[#CED9EF]/30"
+        )} data-theme={isLightMode ? 'light' : 'dark'}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className={cn(
+              "font-semibold",
+              "text-[#E2DFD2]",
+              "data-[theme=light]:text-[#2E293A]"
+            )} data-theme={isLightMode ? 'light' : 'dark'}>
+              Upload New Story
+            </h3>
+            <div className="flex gap-1 bg-black/20 rounded-lg p-0.5">
+              <button
+                onClick={() => setMediaMode('image')}
+                className={cn("px-2 py-1 text-[10px] font-bold rounded-md transition-all", mediaMode === 'image' ? "bg-[#5B4965] text-white" : "text-[#9E9E9E]")}
+              >IMAGE</button>
+              <button
+                onClick={() => setMediaMode('video')}
+                className={cn("px-2 py-1 text-[10px] font-bold rounded-md transition-all", mediaMode === 'video' ? "bg-[#5B4965] text-white" : "text-[#9E9E9E]")}
+              >VIDEO</button>
+            </div>
+          </div>
 
           {mediaMode === 'image' ? (
-            <label className="flex items-center gap-2 px-4 py-2 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-lg text-foreground cursor-pointer hover:bg-black/[0.06] dark:hover:bg-white/10 transition-all active:scale-95">
-              <ImageIcon className="w-4 h-4 text-accent-violet" />
-              <span className="text-sm font-medium">Add to Recent</span>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => handleUpload(e.target.files, false)}
-                disabled={uploading}
-              />
-            </label>
+            <div className="space-y-4">
+              <p className="text-xs font-semibold text-[#00FF85] mb-2 uppercase tracking-wider">
+                MAIN IMAGE (WEBP/JPG)
+              </p>
+              <div className={cn(
+                "border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-300",
+                "border-[#555D50] hover:border-[#00FF85] hover:bg-[#00FF85]/5",
+                "data-[theme=light]:border-[#CED9EF] data-[theme=light]:hover:border-[#00FF85]"
+              )} data-theme={isLightMode ? 'light' : 'dark'}>
+                <label className="cursor-pointer block">
+                  <Upload className="w-8 h-8 mx-auto mb-3 text-[#9E9E9E]" />
+                  <p className="text-sm font-bold text-[#E2DFD2] data-[theme=light]:text-[#2E293A]" data-theme={isLightMode ? 'light' : 'dark'}>
+                    Click to select images
+                  </p>
+                  <p className="text-[10px] text-[#9E9E9E] mt-1 uppercase tracking-widest font-bold">Max 5MB per file</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleUpload(e.target.files, false)}
+                    disabled={uploading}
+                  />
+                </label>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={isPinnedForModal}
+                  onChange={(e) => setIsPinnedForModal(e.target.checked)}
+                  className="w-4 h-4 rounded border-[#555D50] bg-black/20 text-[#7A27FF] focus:ring-[#7A27FF]/40"
+                />
+                <span className="text-xs font-bold text-[#9E9E9E] group-hover:text-[#E2DFD2] transition-colors">Pin to Story Blocks</span>
+              </label>
+            </div>
           ) : (
-            <button
-              onClick={() => {
-                setIsPinnedForModal(false);
-                setMp4File(null);
-                setWebmFile(null);
-                setWebpFile(null);
-                setShowVideoModal(true);
-              }}
-              disabled={uploading}
-              className="flex items-center gap-2 px-4 py-2 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-lg text-foreground cursor-pointer hover:bg-black/[0.06] dark:hover:bg-white/10 transition-all active:scale-95 disabled:opacity-50"
-            >
-              <Film className="w-4 h-4 text-accent-red" />
-              <span className="text-sm font-medium">Add to Recent</span>
-            </button>
+            <div className="space-y-4">
+              {[
+                { label: '1. MAIN VIDEO (MP4)', key: 'mp4', accept: 'video/mp4', file: mp4File, setter: setMp4File },
+                { label: '2. OPTIMIZED VIDEO (WEBM)', key: 'webm', accept: 'video/webm', file: webmFile, setter: setWebmFile },
+                { label: '3. PREVIEW IMAGE (WEBP)', key: 'webp', accept: 'image/webp', file: webpFile, setter: setWebpFile }
+              ].map((zone) => (
+                <div key={zone.key}>
+                  <p className="text-[10px] font-bold text-[#00FF85] mb-2 uppercase tracking-wider">
+                    {zone.label}
+                  </p>
+                  <div className={cn(
+                    "border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all duration-300",
+                    zone.file ? "border-[#00FF85] bg-[#00FF85]/5" : "border-[#555D50] hover:border-[#5B4965] hover:bg-[#5B4965]/10",
+                    isLightMode && !zone.file && "data-[theme=light]:border-[#CED9EF] data-[theme=light]:hover:border-[#EFC8DF]"
+                  )} data-theme={isLightMode ? 'light' : 'dark'}>
+                    <label className="cursor-pointer flex items-center justify-center gap-2">
+                      <Upload className={cn("w-4 h-4 transition-colors", zone.file ? "text-[#00FF85]" : "text-[#9E9E9E]")} />
+                      <p className={cn(
+                        "text-xs font-bold truncate max-w-[150px]",
+                        zone.file ? "text-[#00FF85]" : "text-[#E2DFD2] data-[theme=light]:text-[#2E293A]"
+                      )} data-theme={isLightMode ? 'light' : 'dark'}>
+                        {zone.file ? zone.file.name : "Select File"}
+                      </p>
+                      <input
+                        type="file"
+                        accept={zone.accept}
+                        className="hidden"
+                        onChange={(e) => zone.setter(e.target.files?.[0] || null)}
+                      />
+                    </label>
+                  </div>
+                </div>
+              ))}
+
+              <div className="pt-2">
+                <label className="flex items-center gap-2 cursor-pointer group mb-4">
+                  <input
+                    type="checkbox"
+                    checked={isPinnedForModal}
+                    onChange={(e) => setIsPinnedForModal(e.target.checked)}
+                    className="w-4 h-4 rounded border-[#555D50] bg-black/20 text-[#7A27FF] focus:ring-[#7A27FF]/40"
+                  />
+                  <span className="text-xs font-bold text-[#9E9E9E] group-hover:text-[#E2DFD2] transition-colors">Pin to Story Blocks</span>
+                </label>
+                <button
+                  onClick={handleVideoStoryUpload}
+                  disabled={!mp4File || !webmFile || !webpFile || uploading}
+                  className={cn(
+                    "w-full py-3 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-2",
+                    "bg-[#00FF85] text-black shadow-lg shadow-[#00FF85]/20",
+                    "disabled:opacity-50 disabled:grayscale disabled:shadow-none"
+                  )}
+                >
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                  UPLOAD 3-FILE STORY
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column - Preview */}
+        <div className={cn(
+          "rounded-2xl p-5",
+          "bg-[#353839]/40 border border-[#555D50]/30",
+          "data-[theme=light]:bg-white/50 data-[theme=light]:border-[#CED9EF]/30"
+        )} data-theme={isLightMode ? 'light' : 'dark'}>
+          {selectedGroup ? (
+            <div className="h-full flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-[#E2DFD2] data-[theme=light]:text-[#2E293A]" data-theme={isLightMode ? 'light' : 'dark'}>
+                  Group Preview
+                </h3>
+                <button
+                  onClick={() => deleteGroup(selectedGroup)}
+                  className="p-2 rounded-lg text-[#9E9E9E] hover:text-[#FF4B4B] hover:bg-[#FF4B4B]/10 transition-all"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 overflow-y-auto custom-scrollbar pr-1">
+                {groups.find(g => g.id === selectedGroup)?.stories?.map((story) => (
+                  <div key={story.id} className="relative aspect-[3/4] rounded-lg overflow-hidden group/story bg-black/40">
+                    {story.media_type === 'video' ? (
+                      <video
+                        src={getImageUrl(story.media_url)}
+                        poster={story.poster_url ? getImageUrl(story.poster_url) : undefined}
+                        className="w-full h-full object-cover"
+                        muted
+                        playsInline
+                      />
+                    ) : (
+                      <Image
+                        src={getImageUrl(story.media_url)}
+                        alt="Story"
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/story:opacity-100 transition-opacity flex items-center justify-center">
+                      <button
+                        onClick={() => deleteStory(story.id, selectedGroup)}
+                        className="p-1.5 bg-[#FF4B4B] rounded-lg text-white"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            /* Task 8.5: Empty state */
+            <div className="flex flex-col items-center justify-center h-full text-center py-10">
+              <div className="w-20 h-20 rounded-full bg-black/20 flex items-center justify-center mb-6">
+                <Grid3x3 className={cn(
+                  "w-10 h-10",
+                  "text-[#555D50]",
+                  "data-[theme=light]:text-[#CED9EF]"
+                )} data-theme={isLightMode ? 'light' : 'dark'} />
+              </div>
+              <p className={cn(
+                "font-bold mb-2",
+                "text-[#E2DFD2]",
+                "data-[theme=light]:text-[#2E293A]"
+              )} data-theme={isLightMode ? 'light' : 'dark'}>
+                No group selected
+              </p>
+              <p className={cn(
+                "text-sm px-6 leading-relaxed",
+                "text-[#9E9E9E]",
+                "data-[theme=light]:text-[#6B6B7B]"
+              )} data-theme={isLightMode ? 'light' : 'dark'}>
+                Select a group on the left to view and manage its stories.
+              </p>
+            </div>
           )}
         </div>
       </div>
 
-      {/* Pinned Groups */}
-      {pinnedGroups.length > 0 && (
-        <div className="space-y-3">
-          <h4 className="text-sm font-bold text-foreground flex items-center gap-2 uppercase tracking-wider px-1">
-            <Pin className="w-4 h-4 text-accent-amber" />
-            Pinned Blocks
-          </h4>
-          {pinnedGroups.map((group) => (
-            <div
-              key={group.id}
-              className="bg-black/[0.02] dark:bg-white/5 border border-border dark:border-white/10 rounded-2xl p-4 shadow-sm"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <h5 className="font-bold text-foreground">{group.title || 'Pinned'}</h5>
-                  <span className="text-xs text-muted-foreground font-medium bg-black/[0.04] dark:bg-white/10 px-2 py-0.5 rounded-full">
-                    {group.stories?.length || 0} stories
-                  </span>
-                </div>
-                <button
-                  onClick={() => deleteGroup(group.id)}
-                  className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-
-              {group.stories && group.stories.length > 0 ? (
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  {group.stories.map((story) => (
-                    <div
-                      key={story.id}
-                      className="relative w-16 h-20 rounded-lg overflow-hidden bg-white/5 flex-shrink-0 group"
-                    >
-                      {story.media_type === 'video' ? (
-                        <video
-                          src={getImageUrl(story.media_url)}
-                          poster={story.poster_url ? getImageUrl(story.poster_url) : undefined}
-                          className="absolute inset-0 w-full h-full object-cover"
-                          muted
-                          playsInline
-                        />
-                      ) : (
-                        <Image
-                          src={getImageUrl(story.media_url)}
-                          alt="Story"
-                          fill
-                          className="object-cover"
-                          sizes="64px"
-                          unoptimized
-                        />
-                      )}
-
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <button
-                          onClick={() => deleteStory(story.id, group.id)}
-                          className="p-1 bg-red-500 rounded text-white"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-
-                      {story.media_type === 'video' && (
-                        <Film className="absolute top-1 right-1 w-3 h-3 text-white" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No stories in this pinned block
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Recent Stories */}
-      <div className="space-y-3">
-        <h4 className="text-sm font-bold text-foreground flex items-center gap-2 uppercase tracking-wider px-1">
-          <Clock className="w-4 h-4 text-accent-violet" />
-          Recent Stories
-        </h4>
-
-        {recentGroups.length === 0 ? (
-          <div className="text-center py-12 border-2 border-dashed border-border dark:border-white/10 rounded-2xl">
-            <Film className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-20" />
-            <p className="text-muted-foreground font-bold">No recent stories yet</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Upload stories to get started
-            </p>
-          </div>
-        ) : (
-          recentGroups.map((group) => (
-            <div
-              key={group.id}
-              className="bg-black/[0.02] dark:bg-white/5 border border-border dark:border-white/10 rounded-2xl p-4 shadow-sm"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <h5 className="font-bold text-foreground">Recent Stories</h5>
-                  <span className="text-xs text-muted-foreground font-medium bg-black/[0.04] dark:bg-white/10 px-2 py-0.5 rounded-full">
-                    {group.stories?.length || 0} stories
-                  </span>
-                </div>
-                <button
-                  onClick={() => deleteGroup(group.id)}
-                  className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-
-              {group.stories && group.stories.length > 0 ? (
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  {group.stories.map((story) => (
-                    <div
-                      key={story.id}
-                      className="relative w-16 h-20 rounded-lg overflow-hidden bg-white/5 flex-shrink-0 group"
-                    >
-                      {story.media_type === 'video' ? (
-                        <video
-                          src={getImageUrl(story.media_url)}
-                          poster={story.poster_url ? getImageUrl(story.poster_url) : undefined}
-                          className="absolute inset-0 w-full h-full object-cover"
-                          muted
-                          playsInline
-                        />
-                      ) : (
-                        <Image
-                          src={getImageUrl(story.media_url)}
-                          alt="Story"
-                          fill
-                          className="object-cover"
-                          sizes="64px"
-                          unoptimized
-                        />
-                      )}
-
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <button
-                          onClick={() => deleteStory(story.id, group.id)}
-                          className="p-1 bg-red-500 rounded text-white"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-
-                      {story.media_type === 'video' && (
-                        <Film className="absolute top-1 right-1 w-3 h-3 text-white" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No stories yet
-                </p>
-              )}
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Upload indicator */}
+      {/* Persistent Upload Status Indicator */}
       {uploading && (
-        <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-[110]">
-          <div className="bg-card border border-border dark:border-white/10 p-6 rounded-2xl text-center min-w-[300px] shadow-2xl liquid-glass-elevated">
-            <Loader2 className="w-8 h-8 animate-spin text-accent-violet mx-auto mb-4" />
-            <p className="text-foreground font-bold mb-1">Uploading...</p>
-            {uploadProgress && (
-              <p className="text-sm text-muted-foreground font-medium px-4">{uploadProgress}</p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Video Story Modal */}
-      {showVideoModal && (
-        <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-thick flex items-center justify-center z-[110]">
-          <div className="bg-glass-surface border border-obsidian-rim p-6 rounded-2xl w-full max-w-sm shadow-ao-stack space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-glass-primary">Upload Video Story</h3>
-              <button
-                onClick={() => setShowVideoModal(false)}
-                className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground transition-all"
-              >
-                <X className="w-5 h-5" />
-              </button>
+        <div className="fixed bottom-6 right-6 z-[100] animate-in slide-in-from-bottom-4">
+          <div className={cn(
+            "px-6 py-4 rounded-2xl flex items-center gap-4 bg-[#0B0C0C]/90 border border-[#00FF85]/30 shadow-[0_10px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl",
+          )}>
+            <div className="relative">
+              <Loader2 className="w-6 h-6 animate-spin text-[#00FF85]" />
+              <div className="absolute inset-0 blur-md bg-[#00FF85]/20 animate-pulse" />
             </div>
-
-            <div className="space-y-4">
-              <p className="text-xs text-muted-foreground font-medium px-1">
-                All 3 files are required for video stories.
-              </p>
-
-              {/* MP4 Input */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-muted-foreground uppercase px-1">1. Main Video (MP4)</label>
-                <div className={cn(
-                  "border-2 border-dashed rounded-xl p-4 transition-all duration-300 cursor-pointer",
-                  mp4File ? "border-emerald-500 bg-emerald-500/5" : "border-border dark:border-white/10 hover:border-black/20 dark:hover:border-white/20"
-                )}>
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    {mp4File ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
-                    <span className="text-sm text-foreground font-medium truncate">{mp4File ? mp4File.name : "Select MP4"}</span>
-                    <input type="file" accept="video/mp4" className="hidden" onChange={(e) => setMp4File(e.target.files?.[0] || null)} />
-                  </label>
-                </div>
-              </div>
-
-              {/* WebM Input */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-muted-foreground uppercase px-1">2. Optimized Video (WebM)</label>
-                <div className={cn(
-                  "border-2 border-dashed rounded-xl p-4 transition-all duration-300 cursor-pointer",
-                  webmFile ? "border-emerald-500 bg-emerald-500/5" : "border-border dark:border-white/10 hover:border-black/20 dark:hover:border-white/20"
-                )}>
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    {webmFile ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
-                    <span className="text-sm text-foreground font-medium truncate">{webmFile ? webmFile.name : "Select WebM"}</span>
-                    <input type="file" accept="video/webm" className="hidden" onChange={(e) => setWebmFile(e.target.files?.[0] || null)} />
-                  </label>
-                </div>
-              </div>
-
-              {/* WebP Input */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-muted-foreground uppercase px-1">3. Preview Image (WebP)</label>
-                <div className={cn(
-                  "border-2 border-dashed rounded-xl p-4 transition-all duration-300 cursor-pointer",
-                  webpFile ? "border-emerald-500 bg-emerald-500/5" : "border-border dark:border-white/10 hover:border-black/20 dark:hover:border-white/20"
-                )}>
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    {webpFile ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
-                    <span className="text-sm text-foreground font-medium truncate">{webpFile ? webpFile.name : "Select WebP"}</span>
-                    <input type="file" accept="image/webp" className="hidden" onChange={(e) => setWebpFile(e.target.files?.[0] || null)} />
-                  </label>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  onClick={handleVideoStoryUpload}
-                  disabled={!mp4File || !webmFile || !webpFile}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-accent-violet text-white rounded-xl font-bold transition-all shadow-lg shadow-accent-violet/20 disabled:opacity-50 active:scale-95"
-                >
-                  <Upload className="w-4 h-4" />
-                  Upload 3-File Story
-                </button>
-              </div>
+            <div>
+              <p className="text-sm font-bold text-[#E2DFD2]">Uploading Story...</p>
+              <p className="text-[10px] text-[#00FF85] font-bold uppercase tracking-widest">{uploadProgress}</p>
             </div>
           </div>
         </div>

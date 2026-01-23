@@ -1,16 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-  ArrowLeft,
-  User,
-  Image as ImageIcon,
-  Film,
-  Pin,
-  Loader2,
-  Lock
-} from 'lucide-react';
+import { ArrowLeft, User, Image as ImageIcon, Grid3x3, Film, Pin, Loader2, Lock, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAdminTheme } from '@/hooks/use-admin-theme';
 import { useMaterialFlux } from '@/hooks/use-material-flux';
 import { ModelBasicInfo } from './model-basic-info';
 import { GalleryManager } from './gallery-manager';
@@ -81,10 +74,10 @@ export function ModelEditor({
   }, [fetchModel]);
 
   // Define all possible tabs
-  const allTabs: { id: Tab; label: string; icon: typeof User; requiresPermission: keyof DashboardPermissions }[] = [
+  const allTabs: { id: Tab; label: string; icon: any; requiresPermission: keyof DashboardPermissions }[] = [
     { id: 'basic', label: 'Basic Info', icon: User, requiresPermission: 'canEditBasicInfo' },
     { id: 'gallery', label: 'Gallery', icon: ImageIcon, requiresPermission: 'showGalleryTab' },
-    { id: 'stories', label: 'Stories', icon: Film, requiresPermission: 'showStoriesTab' },
+    { id: 'stories', label: 'Stories', icon: Grid3x3, requiresPermission: 'showStoriesTab' },
     { id: 'pinned', label: 'Pinned Blocks', icon: Pin, requiresPermission: 'showPinnedTab' },
   ];
 
@@ -100,141 +93,174 @@ export function ModelEditor({
     }
   }, [availableTabs, activeTab]);
 
+  const { isLightMode } = useAdminTheme();
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-accent-violet" />
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-10 h-10 animate-spin text-accent-violet" />
       </div>
     );
   }
 
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={onBack}
-          className={cn(
-            "p-2 rounded-lg transition-all active:scale-95",
-            // Dark Mode
-            "bg-[var(--surface-obsidian-raised)] border border-[var(--border-obsidian-rim)]/30 text-[var(--text-obsidian-primary)] hover:bg-[var(--surface-obsidian-glass)]",
-            // Light Mode
-            "liquid-light:bg-[var(--surface-irid-glass)] liquid-light:border-[var(--border-irid-rim)] liquid-light:text-[var(--text-irid-primary)] liquid-light:hover:bg-black/5"
-          )}
-          aria-label="Back to models list"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h2 className={cn(
-            "text-xl font-bold text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]",
-            "[font-variation-settings:'opsz'_28,'wght'_600]"
-          )}>
-            {modelId ? `Edit: ${model?.name || 'Model'}` : 'Add New Model'}
-          </h2>
-          {model?.slug && (
-            <p className="text-sm text-muted-foreground">@{model.slug}</p>
-          )}
+    <div className="flex flex-col min-h-screen">
+      {/* Task 8.2: Editor Header with Back Button */}
+      <header className={cn(
+        "sticky top-0 z-40 px-6 py-4",
+        "backdrop-blur-[24px] saturate-[140%]",
+        "border-b transition-all duration-300",
+
+        // Dark
+        "bg-[#0B0C0C]/80 border-[#555D50]/50",
+        // Light
+        "data-[theme=light]:bg-[#F9F6EE]/80 data-[theme=light]:border-[#CED9EF]/50"
+      )} data-theme={isLightMode ? 'light' : 'dark'}>
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onBack}
+              className={cn(
+                "p-2 rounded-xl border transition-all duration-150 active:scale-95",
+                "border-[#555D50] text-[#9E9E9E] hover:text-[#E2DFD2] hover:bg-[#5B4965]/30",
+                "data-[theme=light]:border-[#CED9EF]/60 data-[theme=light]:text-[#6B6B7B] data-[theme=light]:hover:text-[#2E293A] data-[theme=light]:hover:bg-[#EFC8DF]/30"
+              )}
+              data-theme={isLightMode ? 'light' : 'dark'}
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className={cn(
+                "text-xl font-semibold",
+                "text-[#E2DFD2]",
+                "data-[theme=light]:text-[#2E293A]"
+              )} data-theme={isLightMode ? 'light' : 'dark'}>
+                {modelId ? `Edit: ${model?.name || 'Model'}` : 'Add New Model'}
+              </h1>
+              {model?.slug && (
+                <p className={cn(
+                  "text-sm font-bold",
+                  "text-[#9E9E9E]",
+                  "data-[theme=light]:text-[#6B6B7B]"
+                )} data-theme={isLightMode ? 'light' : 'dark'}>
+                  @{model.slug}
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* Role indicator for organization users */}
           {userRole === 'organization' && (
-            <p className={cn(
-              "text-xs text-accent-gold mt-1 flex items-center gap-1 font-bold",
-              "[font-variation-settings:'opsz'_18,'wdth'_110]"
-            )}>
-              <Lock className="w-3 h-3" />
-              Organization Access - Basic Info Only
-            </p>
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-accent-gold/10 border border-accent-gold/20 text-accent-gold text-xs font-bold">
+              <Lock className="w-3.5 h-3.5" />
+              Organization Access
+            </div>
           )}
         </div>
-      </div>
+      </header>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-[var(--border-obsidian-rim)]/20 liquid-light:border-white/30 pb-2 overflow-x-auto scrollbar-hide">
-        {availableTabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all",
-              "[font-variation-settings:'opsz'_24,'wdth'_105]",
-              activeTab === tab.id
-                ? "bg-accent-violet text-white shadow-lg shadow-accent-violet/20 active:shadow-[inset_0_0_20px_4px_rgba(255,255,255,0.2)]"
-                : "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 hover:text-[var(--text-obsidian-primary)] liquid-light:hover:text-[var(--text-irid-primary)] hover:bg-[var(--surface-obsidian-glass)]/30 liquid-light:hover:bg-[var(--surface-irid-glass)]/40"
-            )}
-          >
-            <tab.icon className="w-4 h-4" />
-            {tab.label}
-          </button>
-        ))}
+      {/* Task 8.3: Tab Navigation */}
+      <nav className={cn(
+        "sticky top-[73px] z-30 px-6 py-3",
+        "backdrop-blur-[12px] saturate-[120%]",
+        "border-b border-[#555D50]/30",
+        "data-[theme=light]:border-[#CED9EF]/30",
+        "bg-[#0B0C0C]/40 data-[theme=light]:bg-[#F9F6EE]/40"
+      )} data-theme={isLightMode ? 'light' : 'dark'}>
+        <div className="max-w-7xl mx-auto flex items-center gap-1 overflow-x-auto scrollbar-hide">
+          {availableTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap",
+                "text-sm font-bold transition-all duration-150 active:scale-95",
 
-        {/* Show locked tabs indicator for organization users */}
-        {userRole === 'organization' && modelId && (
-          <div className="flex items-center gap-2 px-4 py-2 text-muted-foreground/50">
-            <Lock className="w-4 h-4" />
-            <span className="text-xs">Content management restricted</span>
-          </div>
-        )}
-      </div>
+                activeTab === tab.id
+                  ? cn(
+                    "bg-[#5B4965]/40 text-[#E2DFD2] shadow-lg shadow-[#5B4965]/10",
+                    "data-[theme=light]:bg-[#CED9EF]/40 data-[theme=light]:text-[#2E293A]"
+                  )
+                  : cn(
+                    "text-[#9E9E9E] hover:text-[#E2DFD2] hover:bg-[#5B4965]/20",
+                    "data-[theme=light]:text-[#6B6B7B]",
+                    "data-[theme=light]:hover:text-[#2E293A]",
+                    "data-[theme=light]:hover:bg-[#EFC8DF]/20"
+                  )
+              )}
+              data-theme={isLightMode ? 'light' : 'dark'}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </nav>
 
-      {/* Tab Content */}
-      <div
-        ref={fluxRef}
-        className={cn(
-          "rounded-[var(--radius-squircle-sm)] p-6 shadow-[var(--shadow-ao-stack)] liquid-light:shadow-[var(--shadow-ao-light)] flux-border overflow-hidden",
-          // Base Glass
-          "backdrop-blur-[var(--blur-medium)] saturate-[140%]",
-          // Dark Mode
-          "bg-[var(--surface-obsidian-glass)]/60 border border-[var(--border-obsidian-rim)]/30",
-          // Light Mode
-          "liquid-light:bg-[var(--surface-irid-glass)] liquid-light:border-[var(--border-irid-rim)]/40"
-        )}
-      >
-        {activeTab === 'basic' && (
-          <ModelBasicInfo
-            adminKey={adminKey}
-            model={model}
-            isNew={!modelId}
-            onSaved={(savedModel) => {
-              setModel(savedModel);
-              if (!modelId) {
-                // If new model was created, go back to list
-                onSaved();
-              }
-            }}
-            userRole={userRole}
-            organizationId={organizationId}
-          />
-        )}
+      {/* Main Content Area */}
+      <div className="flex-1 max-w-7xl mx-auto w-full p-6">
+        <div
+          ref={fluxRef}
+          className={cn(
+            "rounded-3xl p-6 overflow-hidden transition-all duration-500",
+            "backdrop-blur-[40px] saturate-[180%]",
+            "border shadow-2xl",
 
-        {activeTab === 'gallery' && model && permissions.showGalleryTab && (
-          <GalleryManager
-            adminKey={adminKey}
-            modelId={model.id}
-            modelSlug={model.slug}
-            initialItems={model.gallery_items || []}
-            onUpdate={fetchModel}
-          />
-        )}
+            // Dark Mode
+            "bg-[#3C3F40]/40 border-[#555D50]/40 shadow-black/40",
 
-        {activeTab === 'stories' && model && permissions.showStoriesTab && (
-          <StoryManager
-            adminKey={adminKey}
-            modelId={model.id}
-            modelSlug={model.slug}
-            storyGroups={model.story_groups || []}
-            onUpdate={fetchModel}
-          />
-        )}
+            // Light Mode
+            "data-[theme=light]:bg-white/60 data-[theme=light]:border-[#CED9EF]/60 data-[theme=light]:shadow-[#CED9EF]/30"
+          )}
+          data-theme={isLightMode ? 'light' : 'dark'}
+        >
+          {activeTab === 'basic' && (
+            <ModelBasicInfo
+              adminKey={adminKey}
+              model={model}
+              isNew={!modelId}
+              onSaved={(savedModel) => {
+                setModel(savedModel);
+                if (!modelId) {
+                  onSaved();
+                }
+              }}
+              userRole={userRole}
+              organizationId={organizationId}
+            />
+          )}
 
-        {activeTab === 'pinned' && model && permissions.showPinnedTab && (
-          <PinnedBlocksManager
-            adminKey={adminKey}
-            modelId={model.id}
-            modelSlug={model.slug}
-            storyGroups={(model.story_groups || []).filter((g: any) => g.is_pinned)}
-            onUpdate={fetchModel}
-          />
-        )}
+          {activeTab === 'gallery' && model && permissions.showGalleryTab && (
+            <GalleryManager
+              adminKey={adminKey}
+              modelId={model.id}
+              modelSlug={model.slug}
+              initialItems={model.gallery_items || []}
+              onUpdate={fetchModel}
+            />
+          )}
+
+          {activeTab === 'stories' && model && permissions.showStoriesTab && (
+            <StoryManager
+              adminKey={adminKey}
+              modelId={model.id}
+              modelSlug={model.slug}
+              storyGroups={model.story_groups || []}
+              onUpdate={fetchModel}
+            />
+          )}
+
+          {activeTab === 'pinned' && model && permissions.showPinnedTab && (
+            <PinnedBlocksManager
+              adminKey={adminKey}
+              modelId={model.id}
+              modelSlug={model.slug}
+              storyGroups={(model.story_groups || []).filter((g: any) => g.is_pinned)}
+              onUpdate={fetchModel}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

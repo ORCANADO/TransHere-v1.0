@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn, getImageUrl } from '@/lib/utils';
+import { useAdminTheme } from '@/hooks/use-admin-theme';
 import type { StoryGroupAdmin } from '@/types/admin';
 
 interface PinnedBlocksManagerProps {
@@ -552,23 +553,36 @@ export function PinnedBlocksManager({
     }
   };
 
+  const { isLightMode } = useAdminTheme();
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h3 className="text-lg font-bold text-glass-primary flex items-center gap-2">
+          <h3 className={cn(
+            "text-lg font-bold flex items-center gap-2",
+            "text-[#E2DFD2]",
+            "data-[theme=light]:text-[#2E293A]"
+          )} data-theme={isLightMode ? 'light' : 'dark'}>
             <Pin className="w-5 h-5 text-accent-amber" />
             Pinned Blocks ({groups.length})
           </h3>
-          <p className="text-sm text-glass-muted font-bold">
-            Pinned blocks appear at the top of the model's story section
+          <p className={cn(
+            "text-sm font-medium mt-1",
+            "text-[#9E9E9E]",
+            "data-[theme=light]:text-[#6B6B7B]"
+          )} data-theme={isLightMode ? 'light' : 'dark'}>
+            Pinned blocks appear at the top of the story section
           </p>
         </div>
 
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-accent-amber text-black rounded-xl font-bold transition-all shadow-lg shadow-accent-amber/20 active:scale-95"
+          className={cn(
+            "flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all duration-150 active:scale-95",
+            "bg-accent-amber text-black shadow-lg shadow-accent-amber/20 hover:opacity-90"
+          )}
         >
           <Plus className="w-4 h-4" />
           Create Block
@@ -577,11 +591,17 @@ export function PinnedBlocksManager({
 
       {/* Blocks List */}
       {groups.length === 0 ? (
-        <div className="text-center py-12 border border-obsidian-rim rounded-2xl bg-glass-surface">
-          <Pin className="w-12 h-12 text-glass-muted mx-auto mb-3 opacity-20" />
-          <p className="text-glass-muted font-bold">No pinned blocks yet</p>
-          <p className="text-sm text-glass-muted mt-1 font-bold">
-            Create blocks like "Trips", "Behind the Scenes", etc.
+        <div className={cn(
+          "text-center py-20 rounded-3xl border-2 border-dashed transition-all duration-500",
+          "bg-white/5 border-[#555D50]/30",
+          "data-[theme=light]:bg-black/5 data-[theme=light]:border-[#CED9EF]/50"
+        )} data-theme={isLightMode ? 'light' : 'dark'}>
+          <Pin className={cn("w-16 h-16 mx-auto mb-4 opacity-20", "text-accent-amber")} />
+          <p className={cn("font-bold", "text-[#E2DFD2] data-[theme=light]:text-[#2E293A]")} data-theme={isLightMode ? 'light' : 'dark'}>
+            No pinned blocks yet
+          </p>
+          <p className={cn("text-sm mt-1", "text-[#9E9E9E] data-[theme=light]:text-[#6B6B7B]")} data-theme={isLightMode ? 'light' : 'dark'}>
+            Create blocks like "Trips", "BTS", etc.
           </p>
         </div>
       ) : (

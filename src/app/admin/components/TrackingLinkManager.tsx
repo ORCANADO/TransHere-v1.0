@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
     X,
     Plus,
@@ -13,6 +14,7 @@ import {
     Link2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAdminTheme } from '@/hooks/use-admin-theme';
 import { useMaterialFlux } from '@/hooks/use-material-flux';
 import type {
     TrackingLinkWithDetails,
@@ -324,511 +326,463 @@ export function TrackingLinkManager({
 
     if (!isOpen) return null;
 
+    const { isLightMode } = useAdminTheme();
     const fluxRef = useMaterialFlux<HTMLDivElement>();
 
-    // Render the component
-    return (
-        <>
-            {/* Backdrop */}
+    if (!isOpen) return null;
+
+    return createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+            {/* Task 7.1: Modal Backdrop */}
             <div
-                className="fixed inset-0 bg-black/60 backdrop-blur-[8px] z-[100]"
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
                 onClick={onClose}
             />
 
-            {/* Modal */}
-            <div className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[700px] md:max-h-[80vh] z-[101] flex flex-col">
-                <div
-                    ref={fluxRef}
-                    className={cn(
-                        "flex flex-col h-full rounded-2xl overflow-hidden",
-                        // Elevated Glass Treatment
-                        "bg-[var(--surface-obsidian-raised)]/95 liquid-light:bg-[var(--surface-irid-glass)]",
-                        "backdrop-blur-[40px] saturate-[180%]",
-                        "border border-[var(--border-obsidian-rim)]/40 liquid-light:border-white/60",
-                        "shadow-[var(--shadow-ao-stack)] liquid-light:shadow-[var(--shadow-ao-light)]",
-                        // Material Flux
-                        "flux-border-elevated"
-                    )}>
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--border-obsidian-rim)]/20 liquid-light:border-white/30 bg-[var(--surface-obsidian-glass)]/20 liquid-light:bg-[var(--surface-irid-glass)]/20">
-                        <div>
-                            <h2 className="text-xl font-bold text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]">
-                                Tracking Links
-                            </h2>
-                            <p className="text-sm text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 font-bold">{modelName}</p>
-                        </div>
-                        <button
-                            onClick={onClose}
-                            className="p-2 rounded-xl hover:bg-[var(--surface-obsidian-glass)]/40 liquid-light:hover:bg-[var(--surface-irid-glass)] text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 hover:text-[var(--text-obsidian-primary)] liquid-light:hover:text-[var(--text-irid-primary)] transition-all active:scale-90"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
+            {/* Task 7.2: Modal Container */}
+            <div
+                ref={fluxRef}
+                className={cn(
+                    "relative z-10 w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col",
+                    "rounded-3xl",
+                    "animate-in fade-in-0 zoom-in-95 duration-300",
+
+                    // === DARK MODE ===
+                    "bg-gradient-to-b from-[#3C3F40]/[0.98] to-[#353839]/[0.95]",
+                    "backdrop-blur-[40px] saturate-[180%]",
+                    "border border-[#555D50]",
+                    "shadow-[0_25px_50px_-12px_rgba(0,0,0,0.6),var(--admin-shadow-ao)]",
+
+                    // === LIGHT MODE ===
+                    "data-[theme=light]:from-white/[0.98] data-[theme=light]:to-[#F9F6EE]/[0.95]",
+                    "data-[theme=light]:border-[#CED9EF]/60",
+                    "data-[theme=light]:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15),var(--admin-shadow-light)]"
+                )}
+                data-theme={isLightMode ? 'light' : 'dark'}
+            >
+                {/* Task 7.3: Modal Header */}
+                <div className={cn(
+                    "flex items-center justify-between px-6 py-4",
+                    "border-b border-[#555D50]/50",
+                    "data-[theme=light]:border-[#CED9EF]/50"
+                )} data-theme={isLightMode ? 'light' : 'dark'}>
+                    <div>
+                        <h2 className={cn(
+                            "text-xl font-semibold",
+                            "text-[#E2DFD2]",
+                            "data-[theme=light]:text-[#2E293A]"
+                        )} data-theme={isLightMode ? 'light' : 'dark'}>
+                            Tracking Links
+                        </h2>
+                        <p className={cn(
+                            "text-sm font-bold",
+                            "text-[#9E9E9E]",
+                            "data-[theme=light]:text-[#6B6B7B]"
+                        )} data-theme={isLightMode ? 'light' : 'dark'}>
+                            {modelName}
+                        </p>
                     </div>
-
-                    {/* Content */}
-                    <div className="flex-1 overflow-y-auto p-6">
-                        {/* Error Display */}
-                        {error && (
-                            <div className="mb-4 p-3 rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 text-sm">
-                                {error}
-                            </div>
+                    <button
+                        onClick={onClose}
+                        className={cn(
+                            "p-2 rounded-xl transition-all duration-150",
+                            "text-[#9E9E9E] hover:text-[#E2DFD2]",
+                            "hover:bg-[#5B4965]/30",
+                            "data-[theme=light]:text-[#6B6B7B]",
+                            "data-[theme=light]:hover:text-[#2E293A]",
+                            "data-[theme=light]:hover:bg-[#EFC8DF]/30"
                         )}
+                        data-theme={isLightMode ? 'light' : 'dark'}
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
 
-                        {/* Loading State */}
-                        {isLoading ? (
-                            <div className="flex items-center justify-center py-24">
-                                <Loader2 className="w-10 h-10 text-accent-emerald animate-spin" />
-                            </div>
-                        ) : viewMode === 'list' ? (
-                            /* List View */
-                            <>
-                                {/* Create Button */}
+                {/* Content Area */}
+                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                    {/* Error Display */}
+                    {error && (
+                        <div className="mb-4 p-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-medium animate-in slide-in-from-top-2">
+                            {error}
+                        </div>
+                    )}
+
+                    {isLoading ? (
+                        <div className="flex items-center justify-center py-24">
+                            <Loader2 className="w-10 h-10 text-[#00FF85] animate-spin" />
+                        </div>
+                    ) : viewMode === 'list' ? (
+                        /* Task 7.4 & 7.5: List View */
+                        <>
+                            <button
+                                onClick={() => {
+                                    setFormState(initialFormState);
+                                    setViewMode('create');
+                                }}
+                                className={cn(
+                                    "w-full flex items-center justify-center gap-2",
+                                    "px-4 py-4 rounded-xl mb-6",
+                                    "text-sm font-bold",
+                                    "transition-all duration-150",
+
+                                    "border-2 border-dashed",
+                                    "border-[#555D50] text-[#E2DFD2]",
+                                    "hover:border-[#00FF85] hover:text-[#00FF85]",
+                                    "hover:bg-[#00FF85]/10",
+
+                                    "data-[theme=light]:border-[#CED9EF]",
+                                    "data-[theme=light]:text-[#2E293A]",
+                                    "data-[theme=light]:hover:border-[#00FF85]",
+                                    "data-[theme=light]:hover:text-[#00E077]"
+                                )}
+                                data-theme={isLightMode ? 'light' : 'dark'}
+                            >
+                                <Plus className="w-4 h-4" />
+                                Create New Tracking Link
+                            </button>
+
+                            {links.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <Link2 className="w-12 h-12 mx-auto mb-3 text-[#9E9E9E]/30" />
+                                    <p className="text-[#9E9E9E]/60 text-sm">No tracking links yet</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead>
+                                            <tr>
+                                                {['SLUG', 'SOURCE', 'SUBTAG', 'CLICKS', 'ACTIONS'].map((header) => (
+                                                    <th
+                                                        key={header}
+                                                        className={cn(
+                                                            "px-4 py-3 text-left",
+                                                            "text-[10px] font-bold uppercase tracking-[0.15em]",
+                                                            "text-[#9E9E9E]",
+                                                            "border-b border-[#555D50]/50",
+                                                            "data-[theme=light]:text-[#6B6B7B]",
+                                                            "data-[theme=light]:border-[#CED9EF]/50"
+                                                        )}
+                                                        data-theme={isLightMode ? 'light' : 'dark'}
+                                                    >
+                                                        {header}
+                                                    </th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-[#555D50]/20 data-[theme=light]:divide-[#CED9EF]/20" data-theme={isLightMode ? 'light' : 'dark'}>
+                                            {links.map((link) => (
+                                                <tr
+                                                    key={link.id}
+                                                    className={cn(
+                                                        "transition-colors duration-150",
+                                                        "hover:bg-[#5B4965]/10",
+                                                        "data-[theme=light]:hover:bg-[#EFC8DF]/10"
+                                                    )}
+                                                    data-theme={isLightMode ? 'light' : 'dark'}
+                                                >
+                                                    <td className="px-4 py-4">
+                                                        <code className="text-[#60A5FA] text-xs font-mono font-bold bg-[#60A5FA]/10 px-1.5 py-0.5 rounded">
+                                                            {link.slug}
+                                                        </code>
+                                                    </td>
+                                                    <td className={cn(
+                                                        "px-4 py-4 text-sm font-medium",
+                                                        "text-[#E2DFD2]",
+                                                        "data-[theme=light]:text-[#2E293A]"
+                                                    )} data-theme={isLightMode ? 'light' : 'dark'}>
+                                                        {link.source_name || '—'}
+                                                    </td>
+                                                    <td className={cn(
+                                                        "px-4 py-4 text-sm",
+                                                        "text-[#9E9E9E]",
+                                                        "data-[theme=light]:text-[#6B6B7B]"
+                                                    )} data-theme={isLightMode ? 'light' : 'dark'}>
+                                                        {link.subtag_name || '—'}
+                                                    </td>
+                                                    <td className="px-4 py-4">
+                                                        <span className="text-[#00FF85] font-bold tabular-nums">
+                                                            {link.click_count.toLocaleString()}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-4">
+                                                        <div className="flex items-center gap-1">
+                                                            <button
+                                                                onClick={() => copyToClipboard(link)}
+                                                                className={cn(
+                                                                    "p-2 rounded-lg transition-all",
+                                                                    copiedId === link.id
+                                                                        ? "bg-[#00FF85]/20 text-[#00FF85]"
+                                                                        : "text-[#9E9E9E] hover:text-[#E2DFD2] hover:bg-[#5B4965]/30 data-[theme=light]:text-[#6B6B7B] data-[theme=light]:hover:text-[#2E293A] data-[theme=light]:hover:bg-[#EFC8DF]/30"
+                                                                )}
+                                                                data-theme={isLightMode ? 'light' : 'dark'}
+                                                                title="Copy Link"
+                                                            >
+                                                                {copiedId === link.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => startEdit(link)}
+                                                                className={cn(
+                                                                    "p-2 rounded-lg transition-all",
+                                                                    "text-[#9E9E9E] hover:text-[#60A5FA] hover:bg-[#60A5FA]/10",
+                                                                    "data-[theme=light]:text-[#6B6B7B] data-[theme=light]:hover:text-[#2E293A] data-[theme=light]:hover:bg-[#CED9EF]/30"
+                                                                )}
+                                                                data-theme={isLightMode ? 'light' : 'dark'}
+                                                                title="Edit"
+                                                            >
+                                                                <Pencil className="w-4 h-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleArchive(link.id)}
+                                                                className={cn(
+                                                                    "p-2 rounded-lg transition-all",
+                                                                    "text-[#9E9E9E] hover:text-red-400 hover:bg-red-400/10"
+                                                                )}
+                                                                title="Delete"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        /* Create/Edit Form */
+                        <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                            <div className="flex items-center gap-3 mb-2">
                                 <button
                                     onClick={() => {
+                                        setViewMode('list');
+                                        setEditingLink(null);
                                         setFormState(initialFormState);
-                                        setViewMode('create');
                                     }}
                                     className={cn(
-                                        "w-full mb-6 py-4 px-4 rounded-2xl",
-                                        "bg-accent-emerald text-black font-bold",
-                                        "hover:opacity-90 transition-all",
-                                        "flex items-center justify-center gap-2",
-                                        "shadow-lg shadow-accent-emerald/20 active:scale-[0.98]"
+                                        "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                                        "bg-[#5B4965]/30 text-[#E2DFD2] hover:bg-[#5B4965]/50",
+                                        "data-[theme=light]:bg-[#EFC8DF]/30 data-[theme=light]:text-[#2E293A] data-[theme=light]:hover:bg-[#EFC8DF]/50"
                                     )}
+                                    data-theme={isLightMode ? 'light' : 'dark'}
                                 >
-                                    <Plus className="w-5 h-5" />
-                                    Create New Tracking Link
+                                    ← Back
                                 </button>
+                                <h3 className={cn(
+                                    "text-lg font-bold",
+                                    "text-[#E2DFD2]",
+                                    "data-[theme=light]:text-[#2E293A]"
+                                )} data-theme={isLightMode ? 'light' : 'dark'}>
+                                    {viewMode === 'create' ? 'Create New Link' : 'Edit Link Settings'}
+                                </h3>
+                            </div>
 
-                                {/* Links Table */}
-                                {links.length === 0 ? (
-                                    <div className="text-center py-12 text-white/40">
-                                        <Link2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                                        <p>No tracking links yet</p>
-                                        <p className="text-sm">Create your first link to start tracking traffic sources</p>
+                            {/* Task 7.6: Source Selection Grid */}
+                            <div>
+                                <label className={cn(
+                                    "block text-sm font-semibold mb-3",
+                                    "text-[#9E9E9E]",
+                                    "data-[theme=light]:text-[#6B6B7B]"
+                                )} data-theme={isLightMode ? 'light' : 'dark'}>
+                                    Traffic Source *
+                                </label>
+
+                                {showCustomSourceInput ? (
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={formState.customSourceName}
+                                            onChange={(e) => setFormState(prev => ({ ...prev, customSourceName: e.target.value }))}
+                                            placeholder="Enter source name..."
+                                            className={cn(
+                                                "flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
+                                                "bg-[#3C3F40]/60 border border-[#555D50] text-[#E2DFD2]",
+                                                "data-[theme=light]:bg-white/70 data-[theme=light]:border-[#CED9EF]/60 data-[theme=light]:text-[#2E293A]",
+                                                "focus:ring-2 focus:ring-[#7A27FF]/40 outline-none"
+                                            )}
+                                            data-theme={isLightMode ? 'light' : 'dark'}
+                                        />
+                                        <button
+                                            onClick={handleCreateCustomSource}
+                                            disabled={isSaving}
+                                            className="px-4 py-2 rounded-xl bg-[#00FF85] text-black font-bold text-sm hover:opacity-90 active:scale-95 disabled:opacity-50"
+                                        >
+                                            Add
+                                        </button>
+                                        <button
+                                            onClick={() => setShowCustomSourceInput(false)}
+                                            className="px-4 py-2 rounded-xl bg-[#5B4965]/30 text-[#E2DFD2] font-bold text-sm hover:bg-[#5B4965]/50"
+                                        >
+                                            Cancel
+                                        </button>
                                     </div>
                                 ) : (
-                                    <div className="space-y-2">
-                                        {/* Table Header */}
-                                        <div className="grid grid-cols-12 gap-2 px-3 py-2 text-[10px] text-glass-muted uppercase tracking-widest font-semibold">
-                                            <div className="col-span-2">Slug</div>
-                                            <div className="col-span-2">Source</div>
-                                            <div className="col-span-2">Subtag</div>
-                                            <div className="col-span-3">Preview</div>
-                                            <div className="col-span-1 text-center text-accent-violet">Clicks</div>
-                                            <div className="col-span-2 text-right">Actions</div>
-                                        </div>
-
-                                        {/* Table Rows */}
-                                        {links.map(link => (
-                                            <div
-                                                key={link.id}
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {sources.map((source) => (
+                                            <button
+                                                key={source.id}
+                                                onClick={() => setFormState(prev => ({ ...prev, sourceId: source.id, subtagId: '' }))}
                                                 className={cn(
-                                                    "grid grid-cols-12 gap-2 px-3 py-3 rounded-lg transition-all",
-                                                    "bg-[var(--surface-obsidian-glass)]/30 hover:bg-[var(--surface-obsidian-glass)]/50",
-                                                    "liquid-light:bg-[var(--surface-irid-glass)] liquid-light:hover:bg-[var(--surface-irid-glass)]/80",
-                                                    "border border-[var(--border-obsidian-rim)]/10 liquid-light:border-white/20",
-                                                    "items-center"
+                                                    "px-4 py-3 rounded-xl text-sm font-bold transition-all duration-150",
+                                                    "border",
+                                                    formState.sourceId === source.id
+                                                        ? cn(
+                                                            "bg-[#5B4965]/50 border-[#5B4965] text-[#E2DFD2] shadow-[0_0_15px_rgba(91,73,101,0.3)]",
+                                                            "data-[theme=light]:bg-[#CED9EF]/50 data-[theme=light]:border-[#CED9EF] data-[theme=light]:text-[#2E293A]"
+                                                        )
+                                                        : cn(
+                                                            "bg-[#3C3F40]/40 border-[#555D50]/50 text-[#9E9E9E]",
+                                                            "hover:border-[#5B4965] hover:text-[#E2DFD2]",
+                                                            "data-[theme=light]:bg-white/40 data-[theme=light]:border-[#CED9EF]/40 data-[theme=light]:text-[#6B6B7B]"
+                                                        )
+                                                )}
+                                                data-theme={isLightMode ? 'light' : 'dark'}
+                                            >
+                                                {source.name}
+                                            </button>
+                                        ))}
+                                        <button
+                                            onClick={() => setShowCustomSourceInput(true)}
+                                            className={cn(
+                                                "px-4 py-3 rounded-xl text-sm font-bold border-2 border-dashed transition-all",
+                                                "border-[#555D50] text-[#9E9E9E] hover:border-[#00FF85] hover:text-[#00FF85]",
+                                                "data-[theme=light]:border-[#CED9EF] data-[theme=light]:text-[#6B6B7B]",
+                                                "flex items-center justify-center gap-1"
+                                            )}
+                                            data-theme={isLightMode ? 'light' : 'dark'}
+                                        >
+                                            <Plus className="w-4 h-4" />
+                                            Add Custom
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Subtag Selection */}
+                            {formState.sourceId && (
+                                <div className="animate-in fade-in duration-300">
+                                    <label className={cn(
+                                        "block text-sm font-semibold mb-3",
+                                        "text-[#9E9E9E]",
+                                        "data-[theme=light]:text-[#6B6B7B]"
+                                    )} data-theme={isLightMode ? 'light' : 'dark'}>
+                                        Subtag Selection
+                                    </label>
+
+                                    <div className="flex flex-wrap gap-2 mb-4">
+                                        <button
+                                            onClick={() => setFormState(prev => ({ ...prev, subtagId: '' }))}
+                                            className={cn(
+                                                "px-4 py-2 rounded-xl text-xs font-bold border transition-all",
+                                                !formState.subtagId
+                                                    ? "bg-[#00FF85]/20 border-[#00FF85] text-[#00FF85]"
+                                                    : "bg-[#3C3F40]/40 border-[#555D50] text-[#9E9E9E] hover:text-[#E2DFD2]"
+                                            )}
+                                        >
+                                            None
+                                        </button>
+                                        {getSubtagsForSource(formState.sourceId).map(st => (
+                                            <button
+                                                key={st.id}
+                                                onClick={() => setFormState(prev => ({ ...prev, subtagId: st.id }))}
+                                                className={cn(
+                                                    "px-4 py-2 rounded-xl text-xs font-bold border transition-all",
+                                                    formState.subtagId === st.id
+                                                        ? "bg-[#5B4965]/50 border-[#5B4965] text-[#E2DFD2]"
+                                                        : "bg-[#3C3F40]/40 border-[#555D50] text-[#9E9E9E] hover:text-[#E2DFD2]"
                                                 )}
                                             >
-                                                {/* Slug */}
-                                                <div className="col-span-2">
-                                                    <code className="text-[#007AFF] dark:text-[#007AFF] font-mono text-sm font-semibold">
-                                                        {link.slug}
-                                                    </code>
-                                                </div>
-
-                                                {/* Source */}
-                                                <div className={cn(
-                                                    "col-span-2 text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)] text-sm truncate font-medium",
-                                                    "[font-variation-settings:'opsz'_24,'wdth'_105]"
-                                                )}>
-                                                    {link.source_name || '—'}
-                                                </div>
-
-                                                {/* Subtag */}
-                                                <div className={cn(
-                                                    "col-span-2 text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 text-sm truncate",
-                                                    "[font-variation-settings:'opsz'_24,'wdth'_105]"
-                                                )}>
-                                                    {link.subtag_name || '—'}
-                                                </div>
-
-                                                {/* Preview URL */}
-                                                <div className="col-span-3">
-                                                    {link.preview_url ? (
-                                                        <a
-                                                            href={link.preview_url.startsWith('http') ? link.preview_url : `https://${link.preview_url}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="text-primary text-sm hover:underline flex items-center gap-1 truncate"
-                                                        >
-                                                            <ExternalLink className="w-3 h-3 flex-shrink-0" />
-                                                            <span className="truncate font-medium">
-                                                                {(() => {
-                                                                    try {
-                                                                        const url = link.preview_url.startsWith('http') ? link.preview_url : `https://${link.preview_url}`;
-                                                                        return new URL(url).hostname;
-                                                                    } catch {
-                                                                        return link.preview_url;
-                                                                    }
-                                                                })()}
-                                                            </span>
-                                                        </a>
-                                                    ) : (
-                                                        <span className="text-[var(--text-obsidian-muted)]/30 liquid-light:text-[var(--text-irid-primary)]/20 text-sm">—</span>
-                                                    )}
-                                                </div>
-
-                                                {/* Clicks */}
-                                                <div className="col-span-1 text-center">
-                                                    <span className="text-accent-violet font-bold tabular-nums">
-                                                        {link.click_count.toLocaleString()}
-                                                    </span>
-                                                </div>
-
-                                                {/* Actions */}
-                                                <div className="col-span-2 flex items-center justify-end gap-1">
-                                                    {/* Copy Button */}
-                                                    <button
-                                                        onClick={() => copyToClipboard(link)}
-                                                        className={cn(
-                                                            "p-2 rounded-lg transition-all active:scale-90",
-                                                            copiedId === link.id
-                                                                ? "bg-accent-emerald/20 text-accent-emerald"
-                                                                : "hover:bg-glass-surface text-glass-muted hover:text-glass-primary"
-                                                        )}
-                                                        title="Copy tracking URL"
-                                                    >
-                                                        {copiedId === link.id ? (
-                                                            <Check className="w-4 h-4" />
-                                                        ) : (
-                                                            <Copy className="w-4 h-4" />
-                                                        )}
-                                                    </button>
-
-                                                    {/* Edit Button */}
-                                                    <button
-                                                        onClick={() => startEdit(link)}
-                                                        className="p-2 rounded-lg hover:bg-glass-surface text-glass-muted hover:text-glass-primary transition-all active:scale-95"
-                                                        title="Edit link"
-                                                    >
-                                                        <Pencil className="w-4 h-4" />
-                                                    </button>
-
-                                                    {/* Archive Button */}
-                                                    <button
-                                                        onClick={() => handleArchive(link.id)}
-                                                        className="p-2 rounded-lg hover:bg-red-500/10 dark:hover:bg-red-500/20 text-black/40 dark:text-white/60 hover:text-red-500 dark:hover:text-red-400 transition-all active:scale-95"
-                                                        title="Archive link"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
+                                                {st.name}
+                                            </button>
                                         ))}
                                     </div>
-                                )}
-                            </>
-                        ) : (
-                            /* Create/Edit Form */
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-2 mb-6">
-                                    <button
-                                        onClick={() => {
-                                            setViewMode('list');
-                                            setEditingLink(null);
-                                            setFormState(initialFormState);
-                                        }}
-                                        className="text-glass-muted hover:text-glass-primary font-bold transition-colors"
-                                    >
-                                        ← Back
-                                    </button>
-                                    <h3 className={cn(
-                                        "text-xl font-bold text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]",
-                                        "[font-variation-settings:'opsz'_24,'wdth'_110]"
-                                    )}>
-                                        {viewMode === 'create' ? 'Create New Link' : 'Edit Link'}
-                                    </h3>
+
+                                    {/* Task 7.7: Subtag Section */}
+                                    <div className={cn(
+                                        "p-4 rounded-xl",
+                                        "bg-[#5B4965]/20 border border-[#5B4965]/30",
+                                        "data-[theme=light]:bg-[#CED9EF]/20 data-[theme=light]:border-[#CED9EF]/30"
+                                    )} data-theme={isLightMode ? 'light' : 'dark'}>
+                                        <h4 className="text-sm font-bold mb-2 text-[#7A27FF]">
+                                            About Subtags
+                                        </h4>
+                                        <p className={cn(
+                                            "text-xs leading-relaxed",
+                                            "text-[#9E9E9E]",
+                                            "data-[theme=light]:text-[#6B6B7B]"
+                                        )} data-theme={isLightMode ? 'light' : 'dark'}>
+                                            Subtags are designed to track campaigns, multiple accounts in the same
+                                            traffic source (e.g., separate IG accounts), specific posts, or different
+                                            placements (like Bio vs. Story). Use them for granular attribution.
+                                        </p>
+                                    </div>
                                 </div>
+                            )}
 
-                                {/* Source Selection */}
-                                <div>
-                                    <label className={cn(
-                                        "block text-sm font-medium mb-2",
-                                        "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]",
-                                        "[font-variation-settings:'opsz'_24,'wdth'_110]"
-                                    )}>
-                                        Traffic Source <span className="text-accent-red liquid-light:text-red-600 font-bold">*</span>
-                                    </label>
-
-                                    {showCustomSourceInput ? (
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={formState.customSourceName}
-                                                onChange={(e) => setFormState(prev => ({
-                                                    ...prev,
-                                                    customSourceName: e.target.value
-                                                }))}
-                                                placeholder="Enter custom source name..."
-                                                className={cn(
-                                                    "flex-1 px-4 py-3 rounded-xl",
-                                                    "bg-[var(--surface-obsidian-glass)]/40 liquid-light:bg-[var(--surface-irid-glass)] border border-[var(--border-obsidian-rim)]/30 liquid-light:border-white/60",
-                                                    "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)] placeholder:text-[var(--text-obsidian-muted)]/50 liquid-light:placeholder:text-[var(--text-irid-primary)]/40",
-                                                    "focus:outline-none focus:ring-2 focus:ring-accent-violet/20 transition-all font-bold"
-                                                )}
-                                            />
-                                            <button
-                                                onClick={handleCreateCustomSource}
-                                                disabled={isSaving}
-                                                className={cn(
-                                                    "px-4 py-3 rounded-xl",
-                                                    "bg-[#007AFF] dark:bg-[#00FF85] text-white dark:text-black font-semibold",
-                                                    "hover:opacity-90 transition-opacity",
-                                                    "disabled:opacity-50"
-                                                )}
-                                            >
-                                                Add
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setShowCustomSourceInput(false);
-                                                    setFormState(prev => ({ ...prev, customSourceName: '' }));
-                                                }}
-                                                className={cn(
-                                                    "px-4 py-3 rounded-xl transition-all font-bold text-sm",
-                                                    "bg-[var(--surface-obsidian-glass)]/40 hover:bg-[var(--surface-obsidian-glass)]/60 text-[var(--text-obsidian-primary)]",
-                                                    "liquid-light:bg-[var(--surface-irid-glass)] liquid-light:text-[var(--text-irid-primary)] liquid-light:hover:bg-black/5"
-                                                )}
-                                            >
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                            {sources.map(source => (
-                                                <button
-                                                    key={source.id}
-                                                    onClick={() => setFormState(prev => ({
-                                                        ...prev,
-                                                        sourceId: source.id,
-                                                        subtagId: '', // Reset subtag when source changes
-                                                    }))}
-                                                    className={cn(
-                                                        "px-4 py-3 rounded-xl text-sm transition-all font-bold",
-                                                        formState.sourceId === source.id
-                                                            ? "bg-accent-violet text-white shadow-lg shadow-accent-violet/20"
-                                                            : "bg-[var(--surface-obsidian-glass)]/40 liquid-light:bg-[var(--surface-irid-glass)] border border-[var(--border-obsidian-rim)]/30 liquid-light:border-white/60 text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)] hover:bg-[var(--surface-obsidian-glass)]/60 liquid-light:hover:bg-[var(--surface-irid-glass)]"
-                                                    )}
-                                                >
-                                                    {source.name}
-                                                    {source.is_custom && (
-                                                        <span className={cn(
-                                                            "ml-1 text-[10px] opacity-60",
-                                                            formState.sourceId === source.id ? "text-white" : "text-glass-muted"
-                                                        )}>(custom)</span>
-                                                    )}
-                                                </button>
-                                            ))}
-                                            <button
-                                                onClick={() => setShowCustomSourceInput(true)}
-                                                className={cn(
-                                                    "px-4 py-3 rounded-xl text-sm font-bold",
-                                                    "bg-[var(--surface-obsidian-glass)]/30 liquid-light:bg-[var(--surface-irid-glass)]/50 border border-dashed border-[var(--border-obsidian-rim)]/30 liquid-light:border-white/60",
-                                                    "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 hover:text-[var(--text-obsidian-primary)] liquid-light:hover:text-[var(--text-irid-primary)] hover:border-accent-violet/50",
-                                                    "transition-all flex items-center justify-center gap-1"
-                                                )}
-                                            >
-                                                <Plus className="w-4 h-4" />
-                                                Add Custom
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Subtag Selection (if source is selected) */}
-                                {formState.sourceId && (
-                                    <div>
-                                        <label className={cn(
-                                            "block text-sm font-medium mb-2",
-                                            "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]",
-                                            "[font-variation-settings:'opsz'_24,'wdth'_110]"
-                                        )}>
-                                            Subtag (Optional)
-                                        </label>
-
-                                        {/* Explanation Text */}
-                                        <div className="mb-4 p-4 rounded-2xl bg-accent-violet/5 border border-accent-violet/10">
-                                            <p className="font-bold text-accent-violet mb-1 text-xs">About Subtags</p>
-                                            <p className={cn(
-                                                "leading-relaxed font-bold text-xs",
-                                                "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/70",
-                                                "[font-variation-settings:'opsz'_18,'wdth'_110]"
-                                            )}>Subtags are designed to track campaigns, multiple accounts in the same traffic source (e.g., separate IG accounts), specific posts, or different placements (like Bio vs. Story). Use them for granular attribution.</p>
-                                        </div>
-
-                                        {showCustomSubtagInput ? (
-                                            <div className="flex gap-2 mb-3">
-                                                <input
-                                                    type="text"
-                                                    value={formState.customSubtagName}
-                                                    onChange={(e) => setFormState(prev => ({
-                                                        ...prev,
-                                                        customSubtagName: e.target.value
-                                                    }))}
-                                                    placeholder="Enter subtag name..."
-                                                    className={cn(
-                                                        "flex-1 px-4 py-3 rounded-xl transition-all font-bold",
-                                                        "backdrop-blur-[8px]",
-                                                        "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
-                                                        "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
-                                                        "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
-                                                        // Light mode
-                                                        "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
-                                                        "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
-                                                    )}
-                                                />
-                                                <button
-                                                    onClick={handleCreateSubtag}
-                                                    disabled={isSaving}
-                                                    className={cn(
-                                                        "px-4 py-3 rounded-xl",
-                                                        "bg-accent-emerald text-black font-bold",
-                                                        "hover:opacity-90 transition-opacity disabled:opacity-50"
-                                                    )}
-                                                >
-                                                    Add
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setShowCustomSubtagInput(false);
-                                                        setFormState(prev => ({ ...prev, customSubtagName: '' }));
-                                                    }}
-                                                    className={cn(
-                                                        "px-4 py-3 rounded-xl transition-all font-bold text-sm",
-                                                        "bg-[var(--surface-obsidian-glass)]/20 hover:bg-[var(--surface-obsidian-glass)]/40 text-[var(--text-obsidian-muted)]",
-                                                        "liquid-light:bg-[var(--surface-irid-glass)]/40 liquid-light:text-[var(--text-irid-primary)]/60 liquid-light:hover:bg-black/5"
-                                                    )}
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className="flex flex-wrap gap-2">
-                                                <button
-                                                    onClick={() => setFormState(prev => ({ ...prev, subtagId: '' }))}
-                                                    className={cn(
-                                                        "px-4 py-2 rounded-xl text-sm transition-all font-bold",
-                                                        formState.subtagId === ''
-                                                            ? "bg-accent-emerald text-black shadow-lg shadow-accent-emerald/20 active:shadow-[inset_0_0_20px_4px_var(--glow-obsidian-internal)]"
-                                                            : "bg-[var(--surface-obsidian-glass)]/40 liquid-light:bg-[var(--surface-irid-glass)] border border-[var(--border-obsidian-rim)]/30 liquid-light:border-white/60 text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)] hover:bg-[var(--surface-obsidian-glass)]/60 liquid-light:hover:bg-black/5"
-                                                    )}
-                                                >
-                                                    None
-                                                </button>
-                                                {getSubtagsForSource(formState.sourceId).map(subtag => (
-                                                    <button
-                                                        key={subtag.id}
-                                                        onClick={() => setFormState(prev => ({ ...prev, subtagId: subtag.id }))}
-                                                        className={cn(
-                                                            "px-4 py-2 rounded-xl text-sm transition-all font-bold",
-                                                            formState.subtagId === subtag.id
-                                                                ? "bg-accent-emerald text-black shadow-lg shadow-accent-emerald/20"
-                                                                : "bg-glass-surface border border-obsidian-rim text-glass-primary hover:bg-glass-surface/80"
-                                                        )}
-                                                    >
-                                                        {subtag.name}
-                                                    </button>
-                                                ))}
-                                                <button
-                                                    onClick={() => setShowCustomSubtagInput(true)}
-                                                    className={cn(
-                                                        "px-4 py-2 rounded-xl text-sm font-bold transition-all",
-                                                        "bg-transparent border border-dashed border-[var(--border-obsidian-rim)]/30 liquid-light:border-[var(--border-irid-rim)]/40",
-                                                        "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 hover:text-[var(--text-obsidian-primary)] liquid-light:hover:text-[var(--text-irid-primary)] hover:border-accent-violet/50",
-                                                        "flex items-center justify-center gap-1"
-                                                    )}
-                                                >
-                                                    <Plus className="w-4 h-4" />
-                                                    Add New
-                                                </button>
-                                            </div>
+                            {/* Preview URL Input */}
+                            <div>
+                                <label className={cn(
+                                    "block text-sm font-semibold mb-2",
+                                    "text-[#9E9E9E]",
+                                    "data-[theme=light]:text-[#6B6B7B]"
+                                )} data-theme={isLightMode ? 'light' : 'dark'}>
+                                    Preview URL (Optional)
+                                </label>
+                                <div className="relative">
+                                    <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9E9E9E]" />
+                                    <input
+                                        type="url"
+                                        value={formState.previewUrl}
+                                        onChange={(e) => setFormState(prev => ({ ...prev, previewUrl: e.target.value }))}
+                                        placeholder="Paste original post URL..."
+                                        className={cn(
+                                            "w-full pl-11 pr-4 py-3 rounded-xl text-sm font-medium transition-all",
+                                            "bg-[#3C3F40]/60 border border-[#555D50] text-[#E2DFD2]",
+                                            "data-[theme=light]:bg-white/70 data-[theme=light]:border-[#CED9EF]/60 data-[theme=light]:text-[#2E293A]",
+                                            "focus:ring-2 focus:ring-[#7A27FF]/40 outline-none"
                                         )}
-                                    </div>
-                                )}
-
-                                {/* Preview URL */}
-                                <div>
-                                    <label className={cn(
-                                        "block text-sm mb-1",
-                                        "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]",
-                                        "[font-variation-settings:'opsz'_24,'wdth'_110]"
-                                    )}>
-                                        Preview URL (Optional)
-                                    </label>
-                                    <p className={cn(
-                                        "text-xs mb-3 font-bold",
-                                        "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/50",
-                                        "[font-variation-settings:'opsz'_18,'wdth'_110]"
-                                    )}>
-                                        Where is this tracking link placed? (e.g., Instagram post URL)
-                                    </p>
-                                    <div className="relative">
-                                        <ExternalLink className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-glass-muted" />
-                                        <input
-                                            type="url"
-                                            value={formState.previewUrl}
-                                            onChange={(e) => setFormState(prev => ({
-                                                ...prev,
-                                                previewUrl: e.target.value
-                                            }))}
-                                            placeholder="https://instagram.com/p/..."
-                                            className={cn(
-                                                "w-full pl-11 pr-4 py-3 rounded-xl transition-all font-bold",
-                                                "backdrop-blur-[8px]",
-                                                "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
-                                                "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
-                                                "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
-                                                // Light mode
-                                                "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
-                                                "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
-                                            )}
-                                        />
-                                    </div>
+                                        data-theme={isLightMode ? 'light' : 'dark'}
+                                    />
                                 </div>
+                            </div>
 
-                                {/* Generated URL Preview */}
-                                {viewMode === 'edit' && editingLink && (
-                                    <div className="p-4 rounded-xl bg-[var(--surface-obsidian-glass)]/20 liquid-light:bg-black/5 border border-[var(--border-obsidian-rim)]/20 liquid-light:border-black/10">
-                                        <p className="text-[10px] uppercase tracking-widest text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/50 mb-1 font-bold">Tracking URL</p>
-                                        <code className="text-accent-violet text-sm break-all font-mono font-bold">
-                                            {baseUrl}/model/{modelSlug}/{editingLink.slug}
-                                        </code>
-                                    </div>
-                                )}
-
+                            {/* Actions */}
+                            <div className="pt-4 flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setViewMode('list');
+                                        setEditingLink(null);
+                                        setFormState(initialFormState);
+                                    }}
+                                    className={cn(
+                                        "flex-1 py-4 rounded-2xl font-bold transition-all",
+                                        "bg-[#5B4965]/20 text-[#E2DFD2] hover:bg-[#5B4965]/40",
+                                        "data-[theme=light]:bg-[#CED9EF]/30 data-[theme=light]:text-[#2E293A] data-[theme=light]:hover:bg-[#CED9EF]/50"
+                                    )}
+                                    data-theme={isLightMode ? 'light' : 'dark'}
+                                >
+                                    Cancel
+                                </button>
                                 <button
                                     onClick={viewMode === 'create' ? handleCreate : handleUpdate}
                                     disabled={isSaving || !formState.sourceId}
                                     className={cn(
-                                        "w-full py-4 rounded-2xl font-bold text-base transition-all",
-                                        "bg-accent-emerald text-black",
-                                        "hover:opacity-90 hover:shadow-lg hover:shadow-accent-emerald/20",
-                                        "active:scale-[0.98]",
-                                        "disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none",
-                                        "flex items-center justify-center gap-2"
+                                        "flex-[2] py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2",
+                                        "bg-[#00FF85] text-black shadow-lg shadow-[#00FF85]/20 hover:opacity-90 active:scale-[0.98]",
+                                        "disabled:opacity-50 disabled:grayscale"
                                     )}
                                 >
-                                    {isSaving && <Loader2 className="w-5 h-5 animate-spin" />}
+                                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
                                     {viewMode === 'create' ? 'Create Tracking Link' : 'Save Changes'}
                                 </button>
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             </div>
-        </>
+        </div>,
+        document.body
     );
 }
 

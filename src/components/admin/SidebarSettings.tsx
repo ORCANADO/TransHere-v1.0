@@ -45,27 +45,28 @@ export function SidebarSettings({ onAddModel }: SidebarSettingsProps) {
         <div
             ref={fluxRef}
             className={cn(
-                "border-t transition-colors flux-border",
-                "border-[var(--border-obsidian-rim)]/20 liquid-light:border-[var(--border-irid-rim)]/20",
-                "bg-[var(--surface-obsidian-void)] liquid-light:bg-[var(--surface-irid-base)]"
+                "mt-auto border-t px-3 py-3",
+                "border-[#555D50]/50",
+                "data-[theme=light]:border-[#CED9EF]/50"
             )}
+            data-theme={isLightMode ? 'light' : 'dark'}
         >
             <Collapsible open={isOpen} onOpenChange={handleToggle}>
                 <CollapsibleTrigger asChild>
                     <button className={cn(
-                        "flex items-center justify-between w-full p-4 transition-all group",
-                        "hover:bg-[var(--surface-obsidian-glass)]/50 liquid-light:hover:bg-black/5",
-                        "active:scale-[0.99]"
-                    )}>
-                        <div className="flex items-center gap-2">
-                            <Settings className="w-4 h-4 text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 group-hover:text-accent-violet transition-colors" />
-                            <span className={cn(
-                                "font-bold text-sm text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]",
-                                "[font-variation-settings:'opsz'_24,'wdth'_105]"
-                            )}>Settings</span>
+                        "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all group",
+                        "text-[#9E9E9E] hover:text-[#E2DFD2]",
+                        "hover:bg-[#5B4965]/20",
+                        "data-[theme=light]:text-[#6B6B7B]",
+                        "data-[theme=light]:hover:text-[#2E293A]",
+                        "data-[theme=light]:hover:bg-[#EFC8DF]/15"
+                    )} data-theme={isLightMode ? 'light' : 'dark'}>
+                        <div className="flex items-center gap-3">
+                            <Settings className="w-5 h-5" />
+                            <span className="font-medium">Settings</span>
                         </div>
                         <ChevronDown className={cn(
-                            "w-4 h-4 text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/40 transition-transform duration-200",
+                            "w-4 h-4 transition-transform duration-200",
                             isOpen && "rotate-180"
                         )} />
                     </button>

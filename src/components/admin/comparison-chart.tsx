@@ -6,6 +6,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useAdminTheme } from '@/hooks/use-admin-theme';
 import { useMaterialFlux } from '@/hooks/use-material-flux';
 import {
     ResponsiveContainer,
@@ -15,107 +16,61 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    Legend,
-    TooltipProps,
 } from 'recharts';
 import { cn } from '@/lib/utils';
 import type {
     ComparisonChartProps,
-    ComparisonDataPoint,
-    ChartTooltipPayload
 } from '@/types/charts';
 
 /**
- * Calculate percentage change between two values
+ * Custom Tooltip Component (Task 6.4)
  */
-function calculateDelta(current: number, previous: number): string {
-    if (previous === 0) {
-        return current > 0 ? '+∞%' : '0%';
-    }
-    const delta = ((current - previous) / previous) * 100;
-    const sign = delta >= 0 ? '+' : '';
-    return `${sign}${delta.toFixed(1)}%`;
-}
-
-/**
- * Custom Tooltip Component with Delta Calculation
- */
-function CustomTooltip(props: any) {
-    const { active, payload, label } = props;
-    if (!active || !payload || payload.length < 2) {
-        return null;
-    }
-
-    const currentData = (payload as any[]).find(p => p.dataKey === 'current');
-    const previousData = (payload as any[]).find(p => p.dataKey === 'previous');
-
-    const current = currentData?.value ?? 0;
-    const previous = previousData?.value ?? 0;
-    const delta = calculateDelta(current, previous);
-    const isPositive = current >= previous;
+const CustomTooltip = ({ active, payload, label }: any) => {
+    const { isLightMode } = useAdminTheme();
+    if (!active || !payload) return null;
 
     return (
-        <div className="bg-[var(--surface-obsidian-raised)]/95 liquid-light:bg-[var(--surface-irid-glass)] backdrop-blur-[40px] saturate-[180%] rounded-2xl p-4 min-w-[180px] shadow-[var(--shadow-ao-stack)] liquid-light:shadow-[var(--shadow-ao-light)] border border-[var(--border-obsidian-rim)]/40 liquid-light:border-white/60">
-            {/* Date Label */}
-            <p className="text-sm font-bold text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)] mb-3 pb-2 border-b border-[var(--border-obsidian-rim)]/20 liquid-light:border-white/30">
+        <div className={cn(
+            "px-4 py-3 rounded-xl min-w-[180px]",
+            "backdrop-blur-[16px]",
+
+            // Dark Mode
+            "bg-[#3C3F40]/95",
+            "border border-[#555D50]",
+            "shadow-lg",
+
+            // Light Mode  
+            "data-[theme=light]:bg-white/95",
+            "data-[theme=light]:border-[#CED9EF]/60"
+        )} data-theme={isLightMode ? 'light' : 'dark'}>
+            <p className={cn(
+                "font-semibold mb-2",
+                "text-[#E2DFD2]",
+                "data-[theme=light]:text-[#2E293A]"
+            )} data-theme={isLightMode ? 'light' : 'dark'}>
                 {label}
             </p>
-
-            {/* Current Period */}
-            <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                    <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: 'var(--accent-violet)' }}
-                    />
-                    <span className="text-sm text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60">Current</span>
-                </div>
-                <span className="text-sm font-bold text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]">
-                    {current.toLocaleString()}
-                </span>
-            </div>
-
-            {/* Previous Period */}
-            <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                    <div
-                        className="w-3 h-3 rounded-full opacity-30"
-                        style={{ backgroundColor: 'var(--text-obsidian-muted)' }}
-                    />
-                    <span className="text-sm text-[var(--text-obsidian-muted)]/70 liquid-light:text-[var(--text-irid-primary)]/50">Previous</span>
-                </div>
-                <span className="text-sm font-semibold text-[var(--text-obsidian-muted)]/70 liquid-light:text-[var(--text-irid-primary)]/50">
-                    {previous.toLocaleString()}
-                </span>
-            </div>
-
-            {/* Delta Calculation */}
-            <div className="pt-2 border-t border-[var(--border-obsidian-rim)]/20 liquid-light:border-white/30">
-                <div className="flex items-center justify-between">
-                    <span className="text-sm text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60">Change</span>
-                    <span
-                        className={cn(
-                            "text-sm font-bold",
-                            isPositive ? "text-accent-emerald" : "text-accent-red"
-                        )}
-                    >
-                        {delta}
+            {payload.map((entry: any, index: number) => (
+                <div key={index} className="flex items-center justify-between gap-4 py-1">
+                    <span className={cn(
+                        "text-sm",
+                        "text-[#9E9E9E]",
+                        "data-[theme=light]:text-[#6B6B7B]"
+                    )} data-theme={isLightMode ? 'light' : 'dark'}>
+                        {entry.name === 'current' ? 'Current Period' : 'Previous Period'}
+                    </span>
+                    <span className={cn(
+                        "font-semibold text-sm",
+                        entry.name === 'current' ? "text-[#7A27FF]" : "text-[#9E9E9E]"
+                    )}>
+                        {entry.value.toLocaleString()}
                     </span>
                 </div>
-            </div>
+            ))}
         </div>
     );
-}
+};
 
-/**
- * ComparisonChart - Current vs Previous Period Line Chart
- * 
- * Visual Design:
- * - Current period: Solid Electric Emerald line (#00FF85)
- * - Previous period: Dashed muted line (50% opacity)
- * - Minimalist aesthetic: Hidden axis lines
- * - Custom tooltip with percentage delta
- */
 export function ComparisonChart({
     data,
     title,
@@ -126,6 +81,7 @@ export function ComparisonChart({
     className,
 }: ComparisonChartProps) {
     const fluxRef = useMaterialFlux<HTMLDivElement>();
+    const { isLightMode } = useAdminTheme();
     // Memoize formatted data for performance
     const chartData = useMemo(() => {
         return data.map(point => ({
@@ -151,43 +107,91 @@ export function ComparisonChart({
     return (
         <div
             ref={fluxRef}
-            className={cn("rounded-2xl p-4 lg:p-6 flux-border", className)}
-        >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                {title && (
-                    <h3 className="text-lg font-bold text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]">
-                        {title}
-                    </h3>
-                )}
+            className={cn(
+                "rounded-3xl p-6",
+                "backdrop-blur-[16px]",
 
-                {/* Metric Toggle */}
+                // Dark Mode
+                "bg-[#353839]/40",
+                "border border-[#555D50]/30",
+
+                // Light Mode
+                "data-[theme=light]:bg-white/50",
+                "data-[theme=light]:border-[#CED9EF]/40",
+                className
+            )}
+            data-theme={isLightMode ? 'light' : 'dark'}
+        >
+            <div className="flex items-center justify-between mb-6">
+                <h3 className={cn(
+                    "text-lg font-semibold",
+                    "text-[#E2DFD2]",
+                    "data-[theme=light]:text-[#2E293A]"
+                )} data-theme={isLightMode ? 'light' : 'dark'}>
+                    {title || `Traffic Over Time (${metric === 'views' ? 'Page Views' : 'Clicks'})`}
+                </h3>
+
+                {/* Views/Clicks Toggle (Task 6.2) */}
                 {onMetricChange && (
-                    <div className="flex p-1 bg-[var(--surface-obsidian-glass)]/40 liquid-light:bg-[var(--surface-irid-glass)] backdrop-blur-md rounded-xl border border-[var(--border-obsidian-rim)]/30 liquid-light:border-white/60 self-start sm:self-auto">
-                        <button
-                            onClick={() => onMetricChange('views')}
-                            className={cn(
-                                "px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200",
-                                metric === 'views'
-                                    ? "bg-accent-violet text-white shadow-lg shadow-accent-violet/20"
-                                    : "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 hover:text-[var(--text-obsidian-primary)] liquid-light:hover:text-[var(--text-irid-primary)]"
-                            )}
-                        >
-                            Views
-                        </button>
-                        <button
-                            onClick={() => onMetricChange('clicks')}
-                            className={cn(
-                                "px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200",
-                                metric === 'clicks'
-                                    ? "bg-accent-violet text-white shadow-lg shadow-accent-violet/20"
-                                    : "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 hover:text-[var(--text-obsidian-primary)] liquid-light:hover:text-[var(--text-irid-primary)]"
-                            )}
-                        >
-                            Clicks
-                        </button>
+                    <div className={cn(
+                        "inline-flex p-1 rounded-xl",
+                        "bg-[#353839]/60",
+                        "data-[theme=light]:bg-[#CED9EF]/30"
+                    )} data-theme={isLightMode ? 'light' : 'dark'}>
+                        {['Views', 'Clicks'].map((m) => {
+                            const value = m.toLowerCase() as 'views' | 'clicks';
+                            const isActive = metric === value;
+                            return (
+                                <button
+                                    key={m}
+                                    onClick={() => onMetricChange(value)}
+                                    className={cn(
+                                        "px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-150",
+                                        isActive
+                                            ? cn(
+                                                "bg-[#5B4965]/50 text-[#E2DFD2]",
+                                                "data-[theme=light]:bg-white/80 data-[theme=light]:text-[#2E293A]"
+                                            )
+                                            : cn(
+                                                "text-[#9E9E9E] hover:text-[#E2DFD2]",
+                                                "data-[theme=light]:text-[#6B6B7B] data-[theme=light]:hover:text-[#2E293A]"
+                                            )
+                                    )}
+                                    data-theme={isLightMode ? 'light' : 'dark'}
+                                >
+                                    {m}
+                                </button>
+                            );
+                        })}
                     </div>
                 )}
             </div>
+
+            {/* Custom Legend (Task 6.3) */}
+            {showLegend && (
+                <div className="flex items-center gap-6 mb-4">
+                    <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-[#7A27FF]"></span>
+                        <span className={cn(
+                            "text-sm",
+                            "text-[#E2DFD2]",
+                            "data-[theme=light]:text-[#2E293A]"
+                        )} data-theme={isLightMode ? 'light' : 'dark'}>
+                            Current Period
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-[#9E9E9E]/50"></span>
+                        <span className={cn(
+                            "text-sm",
+                            "text-[#9E9E9E]",
+                            "data-[theme=light]:text-[#6B6B7B]"
+                        )} data-theme={isLightMode ? 'light' : 'dark'}>
+                            Previous Period
+                        </span>
+                    </div>
+                </div>
+            )}
 
             <div style={{ height, minHeight: height }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -198,26 +202,27 @@ export function ComparisonChart({
                         {/* Subtle Grid Lines */}
                         <CartesianGrid
                             strokeDasharray="3 3"
-                            stroke="rgba(148, 163, 184, 0.1)"
+                            stroke={isLightMode ? '#CED9EF' : '#555D50'}
+                            strokeOpacity={0.2}
                             vertical={false}
                         />
 
-                        {/* X Axis - Minimalist */}
+                        {/* X Axis (Task 6.5) */}
                         <XAxis
                             dataKey="label"
-                            stroke="var(--text-obsidian-muted)"
-                            fontSize={11}
+                            stroke={isLightMode ? '#CED9EF' : '#555D50'}
+                            tick={{ fill: isLightMode ? '#6B6B7B' : '#9E9E9E', fontSize: 12 }}
                             tickLine={false}
-                            axisLine={false}
+                            axisLine={{ stroke: isLightMode ? '#CED9EF' : '#555D50' }}
                             tickMargin={12}
                         />
 
-                        {/* Y Axis - Hidden axis line */}
+                        {/* Y Axis (Task 6.5) */}
                         <YAxis
-                            stroke="var(--text-obsidian-muted)"
-                            fontSize={11}
+                            stroke={isLightMode ? '#CED9EF' : '#555D50'}
+                            tick={{ fill: isLightMode ? '#6B6B7B' : '#9E9E9E', fontSize: 12 }}
                             tickLine={false}
-                            axisLine={false}
+                            axisLine={{ stroke: isLightMode ? '#CED9EF' : '#555D50' }}
                             tickMargin={12}
                             tickFormatter={(value) => {
                                 if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
@@ -229,43 +234,28 @@ export function ComparisonChart({
                         {/* Custom Tooltip */}
                         <Tooltip content={<CustomTooltip />} />
 
-                        {/* Legend */}
-                        {showLegend && (
-                            <Legend
-                                verticalAlign="top"
-                                align="right"
-                                iconType="circle"
-                                height={36}
-                                formatter={(value: string) => (
-                                    <span className="text-xs font-bold text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 mr-4">
-                                        {value === 'current' ? 'Current Period' : 'Previous Period'}
-                                    </span>
-                                )}
-                            />
-                        )}
-
                         {/* Previous Period Line - Dashed, Muted */}
                         <Line
                             type="monotone"
                             dataKey="previous"
                             name="previous"
-                            stroke="var(--text-obsidian-muted)"
+                            stroke={isLightMode ? "#6B6B7B" : "#9E9E9E"}
                             strokeWidth={2}
-                            strokeOpacity={0.2}
+                            strokeOpacity={0.5}
                             strokeDasharray="5 5"
                             dot={false}
-                            activeDot={{ r: 4, fill: 'var(--text-obsidian-muted)', strokeWidth: 0 }}
+                            activeDot={{ r: 4, fill: isLightMode ? '#6B6B7B' : '#9E9E9E', strokeWidth: 0 }}
                         />
 
-                        {/* Current Period Line - Solid, Apple Blue */}
+                        {/* Current Period Line - Solid, Violet */}
                         <Line
                             type="monotone"
                             dataKey="current"
                             name="current"
-                            stroke="var(--accent-violet)"
+                            stroke="#7A27FF"
                             strokeWidth={3}
                             dot={false}
-                            activeDot={{ r: 6, fill: 'var(--accent-violet)', stroke: '#fff', strokeWidth: 2 }}
+                            activeDot={{ r: 6, fill: '#7A27FF', stroke: '#fff', strokeWidth: 2 }}
                         />
                     </LineChart>
                 </ResponsiveContainer>

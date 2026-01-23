@@ -7,6 +7,7 @@ import { useMaterialFlux } from '@/hooks/use-material-flux';
 import Image from 'next/image';
 import { getImageUrl } from '@/lib/utils';
 
+import { useAdminTheme } from '@/hooks/use-admin-theme';
 import { SidebarSettings } from './SidebarSettings';
 import { SidebarModelList } from './SidebarModelList';
 import type { Model } from '@/types';
@@ -40,6 +41,7 @@ export function AdminSidebar({
 }: AdminSidebarProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const fluxRef = useMaterialFlux<HTMLElement>();
+    const { isLightMode } = useAdminTheme();
 
     return (
         <>
@@ -55,43 +57,54 @@ export function AdminSidebar({
             <aside
                 ref={fluxRef}
                 className={cn(
-                    "h-screen transition-all duration-300 flex flex-col overflow-hidden z-50",
+                    // Structure
+                    "h-screen w-[280px] flex flex-col",
+                    "sticky top-0 left-0",
+                    "overflow-y-auto transition-all duration-300 z-50",
                     "fixed lg:relative",
-                    // Thick Glass Physics
+
+                    // === DARK MODE (Default) ===
+                    "bg-gradient-to-b from-[#3C3F40]/95 to-[#353839]/90",
                     "backdrop-blur-[40px] saturate-[180%]",
-                    // Obsidian Surface (Dark)
-                    "bg-[var(--surface-obsidian-glass)]/80",
-                    // AO Shadow Stack
-                    "shadow-[var(--shadow-ao-stack)]",
-                    // Super-Ellipse Border
-                    "rounded-[var(--radius-squircle)]",
-                    // Rim Highlight
-                    "border-r border-[var(--border-obsidian-rim)]/30",
-                    // Light Mode Override
-                    "liquid-light:bg-[var(--surface-irid-glass)]",
-                    "liquid-light:border-white/60",
-                    // Material Flux
-                    "flux-border",
+                    "border-r border-[#555D50]",
+                    "shadow-[var(--admin-shadow-ao)]",
+
+                    // === LIGHT MODE ===
+                    "data-[theme=light]:bg-gradient-to-b data-[theme=light]:from-white/85 data-[theme=light]:to-[#F9F6EE]/90",
+                    "data-[theme=light]:border-[#CED9EF]/60",
+                    "data-[theme=light]:shadow-[var(--admin-shadow-light)]",
+
                     isCollapsed ? "-translate-x-full lg:translate-x-0 lg:w-0" : "translate-x-0 w-[280px]"
-                )}>
-                <header className="flex items-center justify-between p-4 border-b border-[var(--border-obsidian-rim)]/20">
-                    <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)] tracking-tight uppercase">Admin</span>
-                    </div>
+                )}
+                data-theme={isLightMode ? 'light' : 'dark'}
+            >
+                <div className={cn(
+                    "px-4 py-5 border-b flex items-center justify-between",
+                    "border-[#555D50]/50",
+                    "data-[theme=light]:border-[#CED9EF]/50"
+                )} data-theme={isLightMode ? 'light' : 'dark'}>
+                    <h1 className={cn(
+                        "text-lg font-semibold tracking-wide",
+                        "text-[#E2DFD2]",
+                        "data-[theme=light]:text-[#2E293A]"
+                    )} data-theme={isLightMode ? 'light' : 'dark'}>
+                        ADMIN
+                    </h1>
                     <button
                         onClick={onToggleCollapse}
                         className={cn(
                             "p-2 rounded-xl transition-all",
-                            "hover:bg-[var(--surface-obsidian-glass)]/40",
+                            "hover:bg-[#5B4965]/20",
                             "active:scale-95",
-                            "text-[var(--text-obsidian-muted)] hover:text-[var(--text-obsidian-primary)]",
-                            "liquid-light:text-[var(--text-irid-primary)]/60 liquid-light:hover:text-[var(--text-irid-primary)]"
+                            "text-[#E2DFD2]/60 hover:text-[#E2DFD2]",
+                            "data-[theme=light]:text-[#2E293A]/60 data-[theme=light]:hover:text-[#2E293A]"
                         )}
+                        data-theme={isLightMode ? 'light' : 'dark'}
                         aria-label="Toggle sidebar"
                     >
                         {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                     </button>
-                </header>
+                </div>
 
                 {/* Model List Container */}
                 <div className="flex-1 flex flex-col overflow-hidden">

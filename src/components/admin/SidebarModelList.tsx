@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useMaterialFlux } from '@/hooks/use-material-flux';
 import { getImageUrl } from '@/lib/utils';
 import type { Model } from '@/types';
+import { useAdminTheme } from '@/hooks/use-admin-theme';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface SidebarModelListProps {
@@ -33,6 +34,7 @@ export function SidebarModelList({
 }: SidebarModelListProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [pinnedIds, setPinnedIds] = useState<string[]>([]);
+    const { isLightMode } = useAdminTheme();
 
     // Update pinned list when selection changes (keep last 3 - FIFO)
     useEffect(() => {
@@ -116,14 +118,13 @@ export function SidebarModelList({
     return (
         <div className="flex flex-col h-full">
             {/* Search Bar - Sticky */}
-            <div className={cn(
-                "sticky top-0 z-10 p-3 border-b",
-                "bg-[var(--surface-obsidian-glass)]/90 liquid-light:bg-[var(--surface-irid-glass)]",
-                "backdrop-blur-[var(--blur-medium)] saturate-[180%]",
-                "border-[var(--border-obsidian-rim)]/20 liquid-light:border-[var(--border-irid-rim)]/20"
-            )}>
+            <div className="px-3 py-3" data-theme={isLightMode ? 'light' : 'dark'}>
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/50" />
+                    <Search className={cn(
+                        "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors",
+                        "text-[#9E9E9E]",
+                        "data-[theme=light]:text-[#6B6B7B]"
+                    )} data-theme={isLightMode ? 'light' : 'dark'} />
                     <input
                         id="model-search-input"
                         type="text"
@@ -131,16 +132,26 @@ export function SidebarModelList({
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className={cn(
-                            "w-full pl-9 pr-3 py-2.5 rounded-xl text-sm font-bold transition-all outline-none",
+                            "w-full pl-9 pr-4 py-2.5 rounded-xl text-sm transition-all outline-none",
                             "backdrop-blur-[8px]",
-                            "bg-[var(--surface-obsidian-raised)]/60 text-[var(--text-obsidian-primary)]",
-                            "border border-[var(--border-obsidian-rim)]/30",
-                            "placeholder:text-[var(--text-obsidian-muted)]/50",
-                            "focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
-                            // Light mode
-                            "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
-                            "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
+
+                            // Dark Mode
+                            "bg-[#353839]/60",
+                            "border border-[#555D50]",
+                            "text-[#E2DFD2]",
+                            "placeholder:text-[#9E9E9E]",
+
+                            // Light Mode
+                            "data-[theme=light]:bg-white/60",
+                            "data-[theme=light]:border-[#CED9EF]/60",
+                            "data-[theme=light]:text-[#2E293A]",
+                            "data-[theme=light]:placeholder:text-[#6B6B7B]",
+
+                            // Focus
+                            "focus:outline-none focus:ring-2 focus:ring-[#7A27FF]/30",
+                            "focus:border-[#7A27FF]"
                         )}
+                        data-theme={isLightMode ? 'light' : 'dark'}
                     />
                 </div>
             </div>
@@ -186,20 +197,23 @@ export function SidebarModelList({
             {selectedIds.length > 0 && (
                 <div className={cn(
                     "sticky bottom-0 p-3 border-t",
-                    "bg-[var(--surface-obsidian-void)]/90 liquid-light:bg-[var(--surface-irid-base)]/90",
-                    "backdrop-blur-[var(--blur-thick)] saturate-[180%]",
-                    "border-[var(--border-obsidian-rim)]/20 liquid-light:border-[var(--border-irid-rim)]/20"
-                )}>
+                    "bg-[#0B0C0C]/90",
+                    "backdrop-blur-[40px] saturate-[180%]",
+                    "border-[#555D50]/50",
+                    "data-[theme=light]:bg-white/90",
+                    "data-[theme=light]:border-[#CED9EF]/50"
+                )} data-theme={isLightMode ? 'light' : 'dark'}>
                     <div className="flex items-center justify-between text-xs px-1">
                         <span className={cn(
-                            "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 font-bold uppercase tracking-wider",
-                            "[font-variation-settings:'opsz'_18,'wdth'_110]"
-                        )}>
+                            "text-[#9E9E9E]",
+                            "data-[theme=light]:text-[#6B6B7B]",
+                            "font-bold uppercase tracking-wider"
+                        )} data-theme={isLightMode ? 'light' : 'dark'}>
                             {selectedIds.length} model{selectedIds.length !== 1 ? 's' : ''} selected
                         </span>
                         <button
                             onClick={onClearSelection}
-                            className="text-accent-violet hover:opacity-80 transition-opacity font-bold active:scale-90"
+                            className="text-[#00FF85] hover:opacity-80 transition-opacity font-bold active:scale-90"
                         >
                             Clear all
                         </button>
@@ -219,33 +233,45 @@ interface ModelListItemProps {
 }
 
 function ModelListItem({ model, isSelected, onSelect, onEdit, onManageTracking, metrics }: ModelListItemProps) {
-    const fluxRef = useMaterialFlux<HTMLDivElement>();
+    const { isLightMode } = useAdminTheme();
 
     return (
         <div
-            ref={fluxRef}
             onClick={onSelect}
             className={cn(
-                "group relative flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all",
-                "flux-border",
-                isSelected
-                    ? "bg-accent-violet/10 border border-accent-violet/30 shadow-sm flux-sss-active"
-                    : "hover:bg-[var(--surface-obsidian-glass)]/30 liquid-light:hover:bg-black/5 border border-transparent"
+                "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-150 group cursor-pointer",
+
+                // Dark Mode
+                "hover:bg-[#5B4965]/20",
+                isSelected && "bg-[#5B4965]/40 border-l-3 border-[#00FF85]",
+
+                // Light Mode
+                "data-[theme=light]:hover:bg-[#EFC8DF]/15",
+                isSelected && "data-[theme=light]:bg-[#CED9EF]/30"
             )}
+            data-theme={isLightMode ? 'light' : 'dark'}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelect();
+                }
+            }}
         >
-            {/* Profile Photo (clickable for edit) */}
-            <button
+            {/* Avatar - Clicking this triggers the editor specifically */}
+            <div
+                className={cn(
+                    "w-10 h-10 rounded-full overflow-hidden border-2 flex-shrink-0 relative transition-all duration-200",
+                    "border-[#555D50]/50 hover:border-[#7A27FF] hover:scale-105 active:scale-95 cursor-pointer",
+                    "data-[theme=light]:border-[#CED9EF]/80 data-[theme=light]:hover:border-[#7A27FF]"
+                )}
                 onClick={(e) => {
                     e.stopPropagation();
                     onEdit(model);
                 }}
-                className={cn(
-                    "relative w-11 h-11 rounded-full overflow-hidden flex-shrink-0 z-10",
-                    "ring-2 ring-obsidian-rim",
-                    "group-hover:ring-accent-violet transition-all",
-                    "shadow-sm"
-                )}
                 title={`Edit ${model.name}`}
+                data-theme={isLightMode ? 'light' : 'dark'}
             >
                 {model.image_url ? (
                     <Image
@@ -255,59 +281,49 @@ function ModelListItem({ model, isSelected, onSelect, onEdit, onManageTracking, 
                         className="object-cover"
                     />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent-violet/20 to-accent-emerald/20 text-xs font-bold text-accent-violet">
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#7A27FF]/20 to-[#00FF85]/20 text-xs font-bold text-[#7A27FF]">
                         {model.name.substring(0, 2).toUpperCase()}
                     </div>
                 )}
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 text-left min-w-0">
+                <p className={cn(
+                    "font-medium text-sm truncate",
+                    "text-[#E2DFD2]",
+                    "data-[theme=light]:text-[#2E293A]"
+                )} data-theme={isLightMode ? 'light' : 'dark'}>
+                    {model.name}
+                </p>
+                <p className={cn(
+                    "text-xs truncate",
+                    "text-[#9E9E9E]",
+                    "data-[theme=light]:text-[#6B6B7B]"
+                )} data-theme={isLightMode ? 'light' : 'dark'}>
+                    {(metrics?.views || 0).toLocaleString()} views • {metrics?.clicks || 0} clicks
+                </p>
+            </div>
+
+            {/* Tracking Link Button */}
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onManageTracking(model);
+                }}
+                className={cn(
+                    "p-2 rounded-lg transition-all",
+                    "opacity-40 group-hover:opacity-100",
+                    "hover:bg-[#5B4965]/20",
+                    "text-[#9E9E9E] hover:text-[#00FF85]",
+                    "data-[theme=light]:text-[#6B6B7B] data-[theme=light]:hover:text-[#7A27FF]",
+                    "active:scale-95"
+                )}
+                title="Manage tracking links"
+                data-theme={isLightMode ? 'light' : 'dark'}
+            >
+                <Link2 className="w-4 h-4" />
             </button>
-
-            {/* Model Info */}
-            <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <div className="flex items-center gap-2">
-                    <div className={cn(
-                        "font-bold text-[12px] leading-tight transition-colors flex flex-col uppercase tracking-tight",
-                        "[font-variation-settings:'opsz'_24,'wdth'110]",
-                        isSelected
-                            ? "text-accent-violet"
-                            : "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]"
-                    )}>
-                        {model.slug.split('-').map((part, i) => (
-                            <span key={i} className={cn("block", i > 0 && "opacity-70 text-[10px]")}>
-                                {part}
-                            </span>
-                        ))}
-                    </div>
-
-                    {/* Tracking Link Button - Moved next to name */}
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onManageTracking(model);
-                        }}
-                        className={cn(
-                            "opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-all",
-                            "hover:bg-glass-surface",
-                            "text-glass-muted hover:text-accent-violet",
-                            "active:scale-95"
-                        )}
-                        title="Manage tracking links"
-                    >
-                        <Link2 className="w-3.5 h-3.5" />
-                    </button>
-                </div>
-            </div>
-
-            {/* Metrics (Views/Clicks) */}
-            <div className="flex flex-col items-end gap-0.5 text-[10px] sm:text-xs">
-                <div className="flex items-center gap-1.5 font-bold text-accent-violet">
-                    <span className="tabular-nums">{metrics?.views?.toLocaleString() || 0}</span>
-                    <span className="text-[9px] opacity-60 uppercase tracking-wider font-bold">Views</span>
-                </div>
-                <div className="flex items-center gap-1.5 font-bold text-accent-emerald">
-                    <span className="tabular-nums">{metrics?.clicks?.toLocaleString() || 0}</span>
-                    <span className="text-[9px] opacity-60 uppercase tracking-wider font-bold">Clicks</span>
-                </div>
-            </div>
         </div>
     );
 }

@@ -6,6 +6,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useAdminTheme } from '@/hooks/use-admin-theme';
 import { useMaterialFlux } from '@/hooks/use-material-flux';
 import {
     ResponsiveContainer,
@@ -16,52 +17,42 @@ import {
     CartesianGrid,
     Tooltip,
     Legend,
-    TooltipProps,
 } from 'recharts';
 import { cn } from '@/lib/utils';
 import type {
     ModelComparisonChartProps,
-    ModelComparisonDataPoint,
     ChartModelInfo
 } from '@/types/charts';
 
 /**
- * Custom Tooltip for Model Comparison
+ * Custom Tooltip for Model Comparison (iOS 26)
  */
-function ModelComparisonTooltip(props: any) {
-    const { active, payload, label, models } = props;
-    if (!active || !payload || payload.length === 0) {
-        return null;
-    }
+const ModelComparisonTooltip = ({ active, payload, label, models }: any) => {
+    const { isLightMode } = useAdminTheme();
+    if (!active || !payload || payload.length === 0) return null;
 
-    // Sort by value descending
-    const sortedPayload = [...payload].sort((a, b) =>
-        (b.value as number) - (a.value as number)
-    );
+    const sortedPayload = [...payload].sort((a, b) => (b.value as number) - (a.value as number));
 
     return (
-        <div className="bg-glass-surface backdrop-blur-thick rounded-2xl p-4 min-w-[200px] max-w-[300px] shadow-ao-stack border border-obsidian-rim">
-            {/* Date Label */}
-            <p className="text-sm font-bold text-glass-primary mb-3 pb-2 border-b border-obsidian-rim">
-                {label}
-            </p>
-
-            {/* Model Values */}
+        <div className={cn(
+            "px-4 py-3 rounded-xl min-w-[220px]",
+            "backdrop-blur-[16px]",
+            "bg-[#3C3F40]/95 border border-[#555D50] shadow-xl",
+            "data-[theme=light]:bg-white/95 data-[theme=light]:border-[#CED9EF]/60"
+        )} data-theme={isLightMode ? 'light' : 'dark'}>
+            <p className={cn("font-semibold mb-3 border-b pb-2", "text-[#E2DFD2] border-[#555D50]/30", "data-[theme=light]:text-[#2E293A] data-[theme=light]:border-[#CED9EF]/30")} data-theme={isLightMode ? 'light' : 'dark'}>{label}</p>
             <div className="space-y-2">
                 {sortedPayload.map((entry: any) => {
                     const model = (models as ChartModelInfo[]).find(m => m.slug === entry.dataKey);
                     return (
                         <div key={entry.dataKey} className="flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-2 min-w-0">
-                                <div
-                                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                                    style={{ backgroundColor: entry.color }}
-                                />
-                                <span className="text-sm text-glass-muted truncate font-medium">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                                <span className={cn("text-sm", "text-[#9E9E9E]", "data-[theme=light]:text-[#6B6B7B]")} data-theme={isLightMode ? 'light' : 'dark'}>
                                     {model?.name || entry.dataKey}
                                 </span>
                             </div>
-                            <span className="text-sm font-bold text-glass-primary flex-shrink-0">
+                            <span className={cn("text-sm font-bold", "text-[#E2DFD2]", "data-[theme=light]:text-[#2E293A]")} data-theme={isLightMode ? 'light' : 'dark'}>
                                 {(entry.value as number).toLocaleString()}
                             </span>
                         </div>
@@ -70,56 +61,8 @@ function ModelComparisonTooltip(props: any) {
             </div>
         </div>
     );
-}
+};
 
-/**
- * Metric Toggle Button Component
- */
-function MetricToggle({
-    metric,
-    onMetricChange,
-}: {
-    metric: 'views' | 'clicks';
-    onMetricChange: (metric: 'views' | 'clicks') => void;
-}) {
-    return (
-        <div className="flex items-center gap-1 bg-glass-surface rounded-xl p-1 border border-obsidian-rim shadow-sm">
-            <button
-                onClick={() => onMetricChange('views')}
-                className={cn(
-                    "px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200",
-                    metric === 'views'
-                        ? "bg-accent-emerald text-black shadow-lg shadow-accent-emerald/20"
-                        : "text-glass-muted hover:text-glass-primary"
-                )}
-            >
-                Views
-            </button>
-            <button
-                onClick={() => onMetricChange('clicks')}
-                className={cn(
-                    "px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200",
-                    metric === 'clicks'
-                        ? "bg-accent-violet text-white shadow-lg shadow-accent-violet/20"
-                        : "text-glass-muted hover:text-glass-primary"
-                )}
-            >
-                Clicks
-            </button>
-        </div>
-    );
-}
-
-/**
- * ModelComparisonChart - Multi-Model Line Comparison
- * 
- * Features:
- * - Dynamic lines for each selected model
- * - Automatic color assignment from palette
- * - Views/Clicks toggle
- * - Smooth monotone curves
- * - Custom tooltip with all model values
- */
 export function ModelComparisonChart({
     data,
     models,
@@ -130,129 +73,61 @@ export function ModelComparisonChart({
     className,
 }: ModelComparisonChartProps) {
     const fluxRef = useMaterialFlux<HTMLDivElement>();
-    // Memoize chart data
-    const chartData = useMemo(() => {
-        return data.map(point => ({
-            ...point,
-            label: point.label || point.date,
-        }));
-    }, [data]);
+    const { isLightMode } = useAdminTheme();
+
+    const chartData = useMemo(() => data.map(point => ({ ...point, label: point.label || point.date })), [data]);
 
     if (!data || data.length === 0 || models.length === 0) {
         return (
-            <div
-                className={cn(
-                    "liquid-glass rounded-xl p-6 flex items-center justify-center",
-                    className
-                )}
-                style={{ height }}
-            >
-                <p className="text-glass-muted">
-                    Select models to compare their performance
-                </p>
+            <div className={cn("rounded-3xl p-6 flex items-center justify-center bg-[#353839]/40 border border-[#555D50]/30", className)} style={{ height }}>
+                <p className="text-[#9E9E9E]">Select models to compare performance</p>
             </div>
         );
     }
 
     return (
-        <div
-            ref={fluxRef}
-            className={cn("rounded-2xl p-4 lg:p-6 flux-border", className)}
-        >
-            {/* Header with Title and Toggle */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                <h3 className="text-lg font-bold text-glass-primary">
-                    {title}
-                </h3>
-                {onMetricChange && <MetricToggle metric={metric} onMetricChange={onMetricChange} />}
+        <div ref={fluxRef} className={cn("rounded-3xl p-6 backdrop-blur-[16px] bg-[#353839]/40 border border-[#555D50]/30 data-[theme=light]:bg-white/50 data-[theme=light]:border-[#CED9EF]/40", className)} data-theme={isLightMode ? 'light' : 'dark'}>
+            <div className="flex items-center justify-between mb-6">
+                <h3 className={cn("text-lg font-semibold text-[#E2DFD2] data-[theme=light]:text-[#2E293A]")} data-theme={isLightMode ? 'light' : 'dark'}>{title}</h3>
+                {onMetricChange && (
+                    <div className={cn("inline-flex p-1 rounded-xl bg-[#353839]/60 data-[theme=light]:bg-[#CED9EF]/30")} data-theme={isLightMode ? 'light' : 'dark'}>
+                        {['Views', 'Clicks'].map((m) => {
+                            const value = m.toLowerCase() as 'views' | 'clicks';
+                            const isActive = metric === value;
+                            return (
+                                <button
+                                    key={m}
+                                    onClick={() => onMetricChange(value)}
+                                    className={cn(
+                                        "px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-150",
+                                        isActive ? "bg-[#5B4965]/50 text-[#E2DFD2] data-[theme=light]:bg-white/80 data-[theme=light]:text-[#2E293A]" : "text-[#9E9E9E] hover:text-[#E2DFD2] data-[theme=light]:text-[#6B6B7B] data-[theme=light]:hover:text-[#2E293A]"
+                                    )}
+                                    data-theme={isLightMode ? 'light' : 'dark'}
+                                >
+                                    {m}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
-            {/* Chart */}
             <div style={{ height, minHeight: height }}>
                 <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                        data={chartData}
-                        margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
-                    >
-                        {/* Subtle Grid */}
-                        <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="var(--border-obsidian-rim)"
-                            strokeOpacity={0.3}
-                            vertical={false}
-                        />
-
-                        {/* X Axis - Minimalist */}
-                        <XAxis
-                            dataKey="label"
-                            stroke="var(--text-obsidian-muted)"
-                            fontSize={11}
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={12}
-                        />
-
-                        {/* Y Axis - Hidden axis line */}
-                        <YAxis
-                            stroke="var(--text-obsidian-muted)"
-                            fontSize={11}
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={12}
-                            tickFormatter={(value) => {
-                                if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-                                if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
-                                return value.toString();
-                            }}
-                        />
-
-                        {/* Custom Tooltip */}
-                        <Tooltip
-                            content={(props) => <ModelComparisonTooltip {...props} models={models} />}
-                        />
-
-                        {/* Legend */}
-                        <Legend
-                            verticalAlign="bottom"
-                            height={36}
-                            formatter={(value: string) => {
-                                const model = models.find(m => m.slug === value);
-                                return (
-                                    <span className="text-xs font-semibold text-glass-muted mr-4">
-                                        {model?.name || value}
-                                    </span>
-                                );
-                            }}
-                        />
-
-                        {/* Dynamic Lines for Each Model */}
-                        {models.map((model, index) => (
-                            <Line
-                                key={model.slug}
-                                type="monotone"
-                                dataKey={model.slug}
-                                name={model.slug}
-                                stroke={model.color}
-                                strokeWidth={2}
-                                dot={false}
-                                activeDot={{
-                                    r: 6,
-                                    fill: model.color,
-                                    stroke: '#fff',
-                                    strokeWidth: 2,
-                                }}
-                            />
+                    <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke={isLightMode ? '#CED9EF' : '#555D50'} strokeOpacity={0.2} vertical={false} />
+                        <XAxis dataKey="label" stroke={isLightMode ? '#CED9EF' : '#555D50'} tick={{ fill: isLightMode ? '#6B6B7B' : '#9E9E9E', fontSize: 12 }} tickLine={false} axisLine={{ stroke: isLightMode ? '#CED9EF' : '#555D50' }} tickMargin={12} />
+                        <YAxis stroke={isLightMode ? '#CED9EF' : '#555D50'} tick={{ fill: isLightMode ? '#6B6B7B' : '#9E9E9E', fontSize: 12 }} tickLine={false} axisLine={{ stroke: isLightMode ? '#CED9EF' : '#555D50' }} tickMargin={12} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v} />
+                        <Tooltip content={<ModelComparisonTooltip models={models} />} />
+                        <Legend verticalAlign="bottom" height={36} formatter={(value) => {
+                            const model = models.find(m => m.slug === value);
+                            return <span className={cn("text-xs font-bold mr-4", "text-[#9E9E9E]", "data-[theme=light]:text-[#6B6B7B]")} data-theme={isLightMode ? 'light' : 'dark'}>{model?.name || value}</span>
+                        }} />
+                        {models.map((model) => (
+                            <Line key={model.slug} type="monotone" dataKey={model.slug} name={model.slug} stroke={model.color} strokeWidth={2} dot={false} activeDot={{ r: 6, fill: model.color, stroke: '#fff', strokeWidth: 2 }} />
                         ))}
                     </LineChart>
                 </ResponsiveContainer>
-            </div>
-
-            {/* Model Count Indicator */}
-            <div className="mt-4 pt-4 border-t border-obsidian-rim">
-                <p className="text-xs font-medium text-glass-muted">
-                    Comparing {models.length} model{models.length !== 1 ? 's' : ''} •
-                    Showing {metric === 'views' ? 'page views' : 'clicks'} over time
-                </p>
             </div>
         </div>
     );
