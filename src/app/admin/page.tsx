@@ -247,16 +247,6 @@ function AdminContent() {
 
         {/* Main Content Area */}
         <main className="h-screen overflow-y-auto relative">
-          <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-4 mb-6">
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Shield className="w-6 h-6 text-[#00FF85]" />
-                <span className="font-bold text-foreground">TransHere Admin</span>
-              </div>
-              <ThemeToggle showLabels />
-            </div>
-          </header>
-
           {/* Sidebar Toggle Button (Visible when collapsed) */}
           {isSidebarCollapsed && (
             <button
@@ -319,6 +309,15 @@ function AdminContent() {
               <AnalyticsDashboard
                 adminKey={adminKey}
                 onDataLoaded={handleDataLoaded}
+                header={
+                  <div className="flex items-center justify-between px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <Shield className="w-6 h-6 text-[#00FF85]" />
+                      <span className="font-bold text-foreground">TransHere Admin</span>
+                    </div>
+                    <ThemeToggle showLabels />
+                  </div>
+                }
               />
             )}
             {activeTab === 'organizations' && (

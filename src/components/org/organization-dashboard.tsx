@@ -252,6 +252,15 @@ export function OrganizationDashboard({
 
     return (
         <DashboardContainer
+            header={
+                <div className="flex items-center justify-between px-6 py-4">
+                    <div className="flex items-center gap-3">
+                        <Shield className="w-6 h-6 text-[#00FF85]" />
+                        <span className="font-bold text-foreground">Organization Manager</span>
+                    </div>
+                    <ThemeToggle showLabels />
+                </div>
+            }
             sidebar={
                 <SidebarModelList
                     models={orgModelsForSidebar}
@@ -281,18 +290,6 @@ export function OrganizationDashboard({
                 </div>
             }
         >
-            <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-4 mb-6">
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Shield className="w-6 h-6 text-[#00FF85]" />
-                        <span className="font-bold text-foreground">Organization Manager</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <ThemeToggle showLabels />
-                    </div>
-                </div>
-            </header>
-
             {/* Loading Skeleton or Content */}
             {isInitialLoading ? (
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

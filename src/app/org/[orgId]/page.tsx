@@ -215,6 +215,7 @@ function OrgDashboardContent() {
                     }}
                 />
 
+                {/* Main Content Area */}
                 <main className="h-screen overflow-y-auto relative">
                     {isSidebarCollapsed && (
                         <button
@@ -232,18 +233,6 @@ function OrgDashboardContent() {
                             <PanelLeft className="w-5 h-5 text-foreground/60 group-hover:text-[#007AFF] dark:group-hover:text-[#7A27FF] transition-colors" />
                         </button>
                     )}
-
-                    <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border px-4 py-4 mb-6">
-                        <div className="max-w-7xl mx-auto flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <Shield className="w-6 h-6 text-[#00FF85]" />
-                                <span className="font-bold text-foreground">Organization Manager</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <ThemeToggle showLabels />
-                            </div>
-                        </div>
-                    </header>
 
                     <div className="px-4 lg:px-6">
                         <div className="flex items-center gap-2 mb-6 border-b border-border">
@@ -266,10 +255,19 @@ function OrgDashboardContent() {
                         </div>
 
                         <AnalyticsDashboard
-                            adminKey={apiKey}
+                            adminKey={apiKey!}
                             onDataLoaded={handleDataLoaded}
                             endpoint="/api/org/analytics"
                             mode="org"
+                            header={
+                                <div className="flex items-center justify-between px-6 py-4">
+                                    <div className="flex items-center gap-3">
+                                        <Shield className="w-6 h-6 text-[#00FF85]" />
+                                        <span className="font-bold text-foreground">Organization Manager</span>
+                                    </div>
+                                    <ThemeToggle showLabels />
+                                </div>
+                            }
                         />
                     </div>
                 </main>

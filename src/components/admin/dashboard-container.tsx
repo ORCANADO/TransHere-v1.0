@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils';
 interface DashboardContainerProps {
   /** Left sidebar content (model list) */
   sidebar: ReactNode;
+  /** Top header content (branding, theme toggle) */
+  header?: ReactNode;
   /** Top filter bar */
   filters: ReactNode;
   /** Main dashboard content */
@@ -19,6 +21,7 @@ interface DashboardContainerProps {
 
 export function DashboardContainer({
   sidebar,
+  header,
   filters,
   children,
   sidebarOpen = false,
@@ -44,9 +47,16 @@ export function DashboardContainer({
 
         {/* Desktop Main Content: Scrollable */}
         <div className="h-screen overflow-y-auto">
-          {/* Sticky Filters Bar */}
+          {/* Sticky Header & Filters Bar */}
           <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-white/10">
-            {filters}
+            {header && (
+              <div className="border-b border-white/5">
+                {header}
+              </div>
+            )}
+            <div className="px-6 py-4">
+              {filters}
+            </div>
           </div>
 
           {/* Main Content */}
@@ -70,8 +80,13 @@ export function DashboardContainer({
 
         {/* Mobile Main Content */}
         <div className="h-screen overflow-y-auto">
-          {/* Mobile Filter Bar with Hamburger Menu */}
+          {/* Mobile Sticky Header & Filters */}
           <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-white/10">
+            {header && (
+              <div className="border-b border-white/5">
+                {header}
+              </div>
+            )}
             <div className="flex items-center gap-3 p-4">
               {/* Hamburger Menu Button */}
               <button
@@ -87,7 +102,7 @@ export function DashboardContainer({
               </button>
 
               {/* Filters Content */}
-              <div className="flex-1">
+              <div className="flex-1 overflow-x-auto scrollbar-hidden">
                 {filters}
               </div>
             </div>

@@ -42,6 +42,7 @@ interface AnalyticsDashboardProps {
   onDataLoaded?: (data: DashboardData) => void;
   endpoint?: string;
   mode?: 'admin' | 'org';
+  header?: React.ReactNode;
 }
 
 interface DashboardData {
@@ -99,6 +100,7 @@ export function AnalyticsDashboard({
   onDataLoaded,
   endpoint,
   mode = 'admin',
+  header,
 }: AnalyticsDashboardProps) {
   // State
   const [data, setData] = useState<DashboardData | null>(null);
@@ -288,6 +290,7 @@ export function AnalyticsDashboard({
 
   return (
     <DashboardContainer
+      header={header}
       sidebar={
         <SidebarModelList
           models={sidebarModels}
@@ -319,36 +322,7 @@ export function AnalyticsDashboard({
         )
       }
     >
-      {/* Header Info */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          {lastUpdated && !loading && (
-            <p className="text-muted-foreground text-xs font-medium">
-              Updated {lastUpdated.toLocaleTimeString()}
-            </p>
-          )}
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Query Performance Badge */}
-          {queryTime !== null && (
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-black/[0.03] dark:bg-white/5 border border-transparent dark:border-white/10 text-[10px] text-black/40 dark:text-white/40 font-mono uppercase tracking-wider">
-              <span>Query: {queryTime}ms</span>
-            </div>
-          )}
-
-          <RefreshButton
-            adminKey={adminKey}
-            onRefreshComplete={() => {
-              fetchData();
-            }}
-          />
-
-          <div className="h-8 w-[1px] bg-[#E5E5EA] dark:bg-white/10 hidden md:block mx-1" />
-        </div>
-      </div>
-
-      {/* Loading skeleton */}
+      {/* Dashboard content */}
       {loading && !data && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
