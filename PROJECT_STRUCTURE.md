@@ -138,14 +138,14 @@ INVALIDATE: invalidateTrackingLinkCache() → revalidateTag('tracking-links')
 INACTIVE:   is_archived=true or is_active=false → redirect without tracking
 ```
 
-#### `src/components/admin/analytics-dashboard.tsx` — Unified Analytics Component
+#### `src/components/admin/analytics-dashboard.tsx` — Dual Analytics Component
 ```
-PURPOSE:  Centralized analytics data fetching, filtering, and visualization
+PURPOSE:  Centralized analytics data fetching with dual data sources (filtered + unfiltered)
 PATTERN:  Unified filter state → fetchData() → adaptedData → onDataLoaded() callback
 PROPS:    adminKey, endpoint, onDataLoaded, mode, header, embedded, selectedModelSlugs
-DATA:     Maps raw API results (Stats, ChartData) to structured DashboardData
-FLOW:     Internal filter management + external data propagation via callback. 
-          Uses DashboardContainer for layout.
+DATA:     Maps raw API results to DashboardData with both filtered stats and allModelMetrics
+FLOW:     Conditional sidebar rendering + external model selection sync + dual data propagation.
+          Uses DashboardContainer with dynamic layout (sidebar presence affects grid).
 ```
 
 #### `src/middleware.ts` — Edge Gateway
@@ -179,6 +179,7 @@ Phase 6.12  → Nebula Dashboard Refactor (Unified Layout Engine)
 Phase 6.13  → Unified Dashboard Improvements & Layout Fixes
 Phase 6.14  → Embedded Analytics Architecture & State Flow Integration
 Phase 6.15  → Enhanced Dashboard API & Sidebar Integration
+Phase 6.16  → Dual Analytics System (Filtered + All-Models Metrics)
 ```
 
 ### Active Constraints

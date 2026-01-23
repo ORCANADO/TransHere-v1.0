@@ -134,7 +134,52 @@
 - **Responsive Design**: Layout automatically adjusts for embedded vs standalone usage
 
 ## Result:
-✅ **Comprehensive Analytics**: Dashboard provides both focused filtered views and comprehensive model comparisons  
-✅ **Clean Architecture**: Separation of filtered analysis (main content) from reference data (sidebar)  
-✅ **Seamless UX**: Model selection flows naturally from sidebar to dashboard filtering  
+✅ **Comprehensive Analytics**: Dashboard provides both focused filtered views and comprehensive model comparisons
+✅ **Clean Architecture**: Separation of filtered analysis (main content) from reference data (sidebar)
+✅ **Seamless UX**: Model selection flows naturally from sidebar to dashboard filtering
 ✅ **Scalable Design**: Components work in both embedded and standalone configurations
+
+---
+
+## [2026-01-23] - Dual Analytics System Implementation (Phase 6.16)
+**Status:** Complete
+
+### Dual Analytics Architecture:
+- **API Enhancement**: Dashboard API now returns BOTH filtered analytics AND all-models metrics in single request
+- **`fetchAllModelMetrics()`**: New function aggregates unfiltered model data from last 30 days
+- **Parallel Fetching**: Efficiently fetches both data sources concurrently for optimal performance
+- **Type Safety**: Updated `DashboardResponse` interface with optional `allModelMetrics?: ModelSummary[]`
+
+### Component Integration:
+- **`AnalyticsDashboard`**: Accepts `selectedModelSlugs` prop for external model selection control
+- **Conditional Sidebar**: Internal sidebar only renders when no external selection provided
+- **Dual Data Propagation**: `onDataLoaded` callback passes both filtered and unfiltered metrics
+- **Real-time Sync**: External model selection immediately updates internal filter state
+
+### Parent Component Architecture:
+- **`admin/page.tsx`**: Uses `sidebarMetrics` (unfiltered) for comprehensive sidebar display
+- **Model ID Conversion**: Converts selected model IDs to slugs for API compatibility
+- **Fallback Logic**: Robust handling of both `sidebarMetrics` and `modelAnalytics` formats
+
+### DashboardContainer Flexibility:
+- **Dynamic Layout**: Grid adjusts automatically based on sidebar presence (`sidebar ? "lg:grid-cols-[280px_1fr]" : "lg:grid-cols-1"`)
+- **Null Handling**: Gracefully handles null sidebar props
+- **Responsive Design**: Works seamlessly across desktop and mobile layouts
+
+### User Experience:
+- **Sidebar Reference**: Shows metrics for ALL models regardless of current filters
+- **Filtered Analysis**: Main dashboard content respects current model selections
+- **Real-time Updates**: Model selection in sidebar immediately filters dashboard
+- **Comprehensive Context**: Users can compare all models while focusing on filtered data
+
+### Technical Implementation:
+- **Single API Call**: Both data sources fetched efficiently in one request
+- **TypeScript Compliance**: Full type safety across all new interfaces and props
+- **Performance Optimized**: No duplicate queries, shared data structures
+- **Backward Compatible**: Existing functionality preserved with enhanced capabilities
+
+## Result:
+✅ **Dual Data Sources**: Filtered analytics + comprehensive model metrics in single system
+✅ **Real-time Synchronization**: Instant sidebar-to-dashboard filtering
+✅ **Smart Layout**: Dynamic container adapts to component configuration
+✅ **Production Ready**: Full type safety, error handling, and performance optimization
