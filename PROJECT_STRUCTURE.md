@@ -142,9 +142,10 @@ INACTIVE:   is_archived=true or is_active=false → redirect without tracking
 ```
 PURPOSE:  Centralized analytics data fetching, filtering, and visualization
 PATTERN:  Unified filter state → fetchData() → adaptedData → onDataLoaded() callback
-PROPS:    adminKey, endpoint, onDataLoaded
+PROPS:    adminKey, endpoint, onDataLoaded, mode, header
 DATA:     Maps raw API results (Stats, ChartData) to structured DashboardData
-FLOW:     Internal filter management + external data propagation via callback
+FLOW:     Internal filter management + external data propagation via callback. 
+          Uses DashboardContainer for layout.
 ```
 
 #### `src/middleware.ts` — Edge Gateway
@@ -175,6 +176,7 @@ Phase 6.8   → Ghost Link System (URL Obfuscation)
 Phase 6.10  → Bridge Page Implementation
 Phase 6.11  → Performance Optimization (PreconnectHints)
 Phase 6.12  → Nebula Dashboard Refactor (Unified Layout Engine)
+Phase 6.13  → Unified Dashboard Improvements & Layout Fixes
 ```
 
 ### Active Constraints

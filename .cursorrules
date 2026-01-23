@@ -308,21 +308,23 @@ Do not use `useRouter().push` for external links.
   - HomeStoriesBar uses `hasUnseenStories` for sorting logic
   - Real-time sync ensures all components update instantly
 
-### 2.21 Organization Dashboard Architecture (Nebula Integration)
-- **Shared Primitives:** Organization dashboards MUST use the same "Nebula" layout components as Admin dashboards.
-- **Layout Structure:** Always use `DashboardContainer` with `sidebar`, `filters`, and content slots:
+### 2.21 Organization & Admin Dashboard Architecture (Nebula Integration)
+- **Shared Primitives:** All dashboards MUST use the same "Nebula" layout components for structural consistency.
+- **Layout Structure:** Always use `DashboardContainer` with `header`, `sidebar`, and `filters` slots.
+- **Unified Sticky Block:** The `header` and `filters` must be unified within the `DashboardContainer` sticky area to prevent overlap.
+- **Header Prop Pattern:** Prefer passing header branding and theme toggles via the `header` prop of `DashboardContainer` (or `AnalyticsDashboard` wrapper) rather than rendering manual headers inside the content area.
   ```tsx
   <DashboardContainer
-    sidebar={<SidebarModelList models={orgModels} selectedSlugs={filters.modelSlugs} onSelectionChange={handleChange} />}
-    filters={<DashboardFiltersBar filters={filters} onFiltersChange={handleChange} availableCountries={countries} availableSources={sources} />}
+    header={<DashboardHeader title="Organization Manager" />}
+    sidebar={<SidebarModelList models={orgModels} ... />}
+    filters={<DashboardFiltersBar filters={filters} ... />}
   >
-    {/* Dashboard content */}
+    {/* Clean dashboard content here */}
   </DashboardContainer>
   ```
-- **Security First:** Filter models by `organization_id` before passing to `SidebarModelList` - never expose models from other organizations.
+- **Security First:** Filter models by `organization_id` before passing to `SidebarModelList`.
 - **Filter State:** Use Admin-compatible filter structure with arrays: `modelSlugs[]`, `countries[]`, `sources[]`.
-- **API Parameters:** Send filters as JSON arrays: `modelSlugs=["slug1"]&countries=["US"]&sources=["instagram"]`.
-- **Organization Ownership:** API routes must validate that all requested `modelSlugs` belong to the authenticated organization, returning 403 Forbidden if not.
+- **API Parameters:** Send filters as JSON arrays for consistency.
 
 ### 2.20 Real-Time Synchronization (localStorage Hooks)
 - **Pattern:** All localStorage-based hooks (`useFavorites`, `useViewedStories`, `useViewedModels`) support real-time sync
