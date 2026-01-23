@@ -163,7 +163,8 @@ export interface AggregatedModelFilterOption {
 export interface DashboardResponse {
     stats: DashboardStats;
     chartData: ChartDataPoint[];
-    modelComparison?: AggregatedModelComparisonDataPoint[];
+    modelComparisonViews?: AggregatedModelComparisonDataPoint[];
+    modelComparisonClicks?: AggregatedModelComparisonDataPoint[];
     lastRefresh: RefreshStatus;
     queryTime: number;
     availableCountries: string[];

@@ -58,7 +58,8 @@ interface DashboardData {
     trackingLinkVisits: number;
   };
   chartData: ComparisonDataPoint[];
-  modelComparisonData: ModelComparisonDataPoint[] | null;
+  modelComparisonViews: ModelComparisonDataPoint[] | null;
+  modelComparisonClicks: ModelComparisonDataPoint[] | null;
   countryBreakdown: { country: string; visits: number; clicks: number }[];
   sourceBreakdown: {
     sourceId: string;
@@ -169,7 +170,8 @@ export function AnalyticsDashboard({
           clicks: d.clicks || 0,
           clicksPrev: d.clicksPrev || 0,
         })),
-        modelComparisonData: dashboardData.modelComparison || null,
+        modelComparisonViews: dashboardData.modelComparisonViews || null,
+        modelComparisonClicks: dashboardData.modelComparisonClicks || null,
         sourceBreakdown: dashboardData.stats.topSources.map((s: any) => ({
           sourceId: s.source_name,
           sourceName: s.source_name,
@@ -242,7 +244,11 @@ export function AnalyticsDashboard({
 
   // Prepare model comparison data
   const modelChartData = useMemo((): { data: ModelComparisonDataPoint[]; models: ChartModelInfo[] } | null => {
-    if (!data?.modelComparisonData || currentModelSlugs.length < 2) {
+    const comparisonData = comparisonMetric === 'views'
+      ? data?.modelComparisonViews
+      : data?.modelComparisonClicks;
+
+    if (!comparisonData || currentModelSlugs.length < 2 || !data) {
       return null;
     }
 
@@ -256,10 +262,10 @@ export function AnalyticsDashboard({
     });
 
     return {
-      data: data.modelComparisonData,
+      data: comparisonData as ModelComparisonDataPoint[],
       models,
     };
-  }, [data, currentModelSlugs]);
+  }, [data, currentModelSlugs, comparisonMetric]);
 
   // Prepare comparison chart data based on selected metric
   const derivedChartData = useMemo(() => {
