@@ -1,11 +1,10 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useState, useCallback, useEffect } from 'react';
+import { Suspense, useState, useCallback, useEffect, useMemo } from 'react';
 import {
   Shield,
   AlertTriangle,
-  ChevronRight,
   PanelLeft
 } from 'lucide-react';
 import './admin-theme.css';
@@ -18,7 +17,6 @@ import { ModelEditor } from '@/components/admin/model-editor';
 import { TrackingLinkManager } from '@/app/admin/components/TrackingLinkManager';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { OrganizationManager } from '@/components/admin/organization-manager';
-import { createClient } from '@/lib/supabase/client';
 import type { Model } from '@/types';
 
 
@@ -38,6 +36,14 @@ function AdminContent() {
   useAdminTheme();
 
   const [models, setModels] = useState<Model[]>([]);
+
+  // Convert selected IDs to model slugs for AnalyticsDashboard
+  const selectedModelSlugs = useMemo(() => {
+    if (selectedIds.length === 0) return undefined;
+    return models
+      .filter(m => selectedIds.includes(m.id))
+      .map(m => m.slug);
+  }, [selectedIds, models]);
   const [modelMetrics, setModelMetrics] = useState<Record<string, { views: number; clicks: number }>>({});
   const [isModelsLoading, setIsModelsLoading] = useState(true);
   const [isTrackingManagerOpen, setIsTrackingManagerOpen] = useState(false);
@@ -46,14 +52,22 @@ function AdminContent() {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   const handleDataLoaded = useCallback((data: any) => {
-    // Transform analytics data for sidebar
-    if (data.modelAnalytics) {
-      const metricsMap: Record<string, { views: number; clicks: number }> = {};
-      data.modelAnalytics.forEach((m: any) => {
-        metricsMap[m.modelSlug] = { views: m.visits, clicks: m.clicks };
-      });
-      setModelMetrics(metricsMap);
-    }
+    // Use sidebarMetrics for ALL models (not just filtered)
+    // Falls back to modelAnalytics if sidebarMetrics not available
+    const metricsSource = data.sidebarMetrics || data.modelAnalytics || [];
+
+    const metricsMap: Record<string, { views: number; clicks: number }> = {};
+
+    metricsSource.forEach((m: any) => {
+      // Handle both formats (sidebarMetrics vs modelAnalytics)
+      const slug = m.modelSlug || m.model_slug;
+      const views = m.views ?? m.visits ?? m.total_views ?? 0;
+      const clicks = m.clicks ?? m.total_clicks ?? 0;
+
+      metricsMap[slug] = { views, clicks };
+    });
+
+    setModelMetrics(metricsMap);
   }, []); // Empty dependency array as setModelMetrics is stable
 
   useEffect(() => {
@@ -266,10 +280,29 @@ function AdminContent() {
             </button>
           )}
 
-          {/* Main Content with Tabs */}
-          <div className="p-4 lg:p-6">
+          {/* Unified Sticky Header */}
+          <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border">
+            {/* Branding Row */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
+              <div className="flex items-center gap-3">
+                <Shield className="w-6 h-6 text-[#00FF85]" />
+                <span className="font-bold text-foreground">TransHere Admin</span>
+                {activeTab === 'analytics' && (
+                  <span className="px-2 py-1 bg-[#7A27FF]/20 text-[#7A27FF] text-xs rounded-full">
+                    Analytics
+                  </span>
+                )}
+                {activeTab === 'organizations' && (
+                  <span className="px-2 py-1 bg-[#00FF85]/20 text-[#00FF85] text-xs rounded-full">
+                    Organizations
+                  </span>
+                )}
+              </div>
+              <ThemeToggle showLabels />
+            </div>
+
             {/* Tab Navigation */}
-            <div className="flex items-center gap-2 mb-6 border-b border-[#E5E5EA] dark:border-white/10">
+            <div className="flex items-center gap-2 px-6 border-b border-border/50">
               <button
                 onClick={() => setActiveTab('analytics')}
                 className={cn(
@@ -303,21 +336,16 @@ function AdminContent() {
                 </button>
               )}
             </div>
+          </div>
 
-            {/* Tab Content */}
+          {/* Main Content */}
+          <div className="p-4 lg:p-6">
             {activeTab === 'analytics' && (
               <AnalyticsDashboard
                 adminKey={adminKey}
                 onDataLoaded={handleDataLoaded}
-                header={
-                  <div className="flex items-center justify-between px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <Shield className="w-6 h-6 text-[#00FF85]" />
-                      <span className="font-bold text-foreground">TransHere Admin</span>
-                    </div>
-                    <ThemeToggle showLabels />
-                  </div>
-                }
+                embedded={true}
+                selectedModelSlugs={selectedModelSlugs}
               />
             )}
             {activeTab === 'organizations' && (

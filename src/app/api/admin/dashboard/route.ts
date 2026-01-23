@@ -313,6 +313,37 @@ async function fetchModelSummary(models?: string[]): Promise<ModelSummary[]> {
   return data || [];
 }
 
+// Add after fetchModelSummary function (around line 180)
+async function fetchAllModelMetrics(): Promise<ModelSummary[]> {
+  const { data, error } = await supabase
+    .from('analytics_daily_stats')
+    .select('model_slug, views, clicks')
+    .gte('date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+
+  if (error) throw error;
+
+  // Aggregate by model
+  const modelMap = new Map<string, { views: number; clicks: number }>();
+  (data || []).forEach((row: any) => {
+    const existing = modelMap.get(row.model_slug) || { views: 0, clicks: 0 };
+    modelMap.set(row.model_slug, {
+      views: existing.views + row.views,
+      clicks: existing.clicks + row.clicks,
+    });
+  });
+
+  return Array.from(modelMap.entries()).map(([slug, stats]) => ({
+    model_slug: slug,
+    total_views: stats.views,
+    total_clicks: stats.clicks,
+    ctr_percentage: stats.views > 0 ? Math.round((stats.clicks / stats.views) * 10000) / 100 : 0,
+    unique_countries: 0,
+    active_days: 0,
+    first_event: '',
+    last_event: '',
+  }));
+}
+
 // Fetch country summary from materialized view
 async function fetchCountrySummary(countries?: string[]): Promise<CountrySummary[]> {
   let query = supabase
@@ -613,6 +644,7 @@ export async function GET(
       dailyStats,
       prevDailyStats,
       refreshStatus,
+      allModelMetricsRaw,  // ADD THIS
     ] = await Promise.all([
       isHourly
         ? fetchHourlyStats(startDate, endDate, models, sourceFilterIds, countries)
@@ -621,6 +653,7 @@ export async function GET(
         ? fetchHourlyStats(prevStartDate, prevEndDate, models, sourceFilterIds, countries)
         : fetchDailyStats(prevStartDate, prevEndDate, models, sourceFilterIds, countries),
       fetchRefreshStatus(),
+      fetchAllModelMetrics(),  // ADD THIS
     ]);
 
     // Calculate aggregated stats with comparison data
@@ -696,6 +729,7 @@ export async function GET(
       availableCountries,
       availableSources,
       availableModels,
+      allModelMetrics: allModelMetricsRaw,  // ADD THIS
     };
 
     return NextResponse.json({

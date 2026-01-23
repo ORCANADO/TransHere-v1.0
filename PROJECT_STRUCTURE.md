@@ -142,7 +142,7 @@ INACTIVE:   is_archived=true or is_active=false → redirect without tracking
 ```
 PURPOSE:  Centralized analytics data fetching, filtering, and visualization
 PATTERN:  Unified filter state → fetchData() → adaptedData → onDataLoaded() callback
-PROPS:    adminKey, endpoint, onDataLoaded, mode, header
+PROPS:    adminKey, endpoint, onDataLoaded, mode, header, embedded, selectedModelSlugs
 DATA:     Maps raw API results (Stats, ChartData) to structured DashboardData
 FLOW:     Internal filter management + external data propagation via callback. 
           Uses DashboardContainer for layout.
@@ -177,6 +177,8 @@ Phase 6.10  → Bridge Page Implementation
 Phase 6.11  → Performance Optimization (PreconnectHints)
 Phase 6.12  → Nebula Dashboard Refactor (Unified Layout Engine)
 Phase 6.13  → Unified Dashboard Improvements & Layout Fixes
+Phase 6.14  → Embedded Analytics Architecture & State Flow Integration
+Phase 6.15  → Enhanced Dashboard API & Sidebar Integration
 ```
 
 ### Active Constraints

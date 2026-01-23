@@ -43,6 +43,8 @@ interface AnalyticsDashboardProps {
   endpoint?: string;
   mode?: 'admin' | 'org';
   header?: React.ReactNode;
+  embedded?: boolean;
+  selectedModelSlugs?: string[];  // External model selection from parent
 }
 
 interface DashboardData {
@@ -82,6 +84,7 @@ interface DashboardData {
   availableSources: TrafficSourceOption[];
   availableModels: ModelFilterOption[];
   allModelMetrics?: any[];
+  sidebarMetrics?: { modelSlug: string; views: number; clicks: number }[];  // ADD THIS
 }
 
 /**
@@ -102,6 +105,8 @@ export function AnalyticsDashboard({
   endpoint,
   mode = 'admin',
   header,
+  embedded = false,
+  selectedModelSlugs: externalModelSlugs,
 }: AnalyticsDashboardProps) {
   // State
   const [data, setData] = useState<DashboardData | null>(null);
@@ -111,7 +116,7 @@ export function AnalyticsDashboard({
   // Unified filter state
   const [filters, setFilters] = useState<DashboardFilters>({
     period: '7days',
-    modelSlugs: [],
+    modelSlugs: externalModelSlugs || [],
     country: null,
     countries: [],
     sources: [],
@@ -198,6 +203,12 @@ export function AnalyticsDashboard({
         availableSources: dashboardData.availableSources || [],
         availableModels: dashboardData.availableModels || [],
         allModelMetrics: dashboardData.stats.modelMetrics || [],
+        // ADD THIS: Dedicated field for ALL model metrics (unfiltered)
+        sidebarMetrics: (dashboardData.allModelMetrics || dashboardData.stats.modelMetrics || []).map((m: any) => ({
+          modelSlug: m.model_slug,
+          views: m.total_views,
+          clicks: m.total_clicks,
+        })),
       };
 
       setData(adaptedData);
@@ -215,6 +226,16 @@ export function AnalyticsDashboard({
     }
   }, [adminKey, filters, onDataLoaded, endpoint]);
 
+  // Sync external model selection with internal filters
+  useEffect(() => {
+    if (externalModelSlugs !== undefined) {
+      setFilters(f => ({
+        ...f,
+        modelSlugs: externalModelSlugs,
+      }));
+    }
+  }, [externalModelSlugs]);
+
   // Fetch on mount and filter changes
   useEffect(() => {
     fetchData();
@@ -226,18 +247,18 @@ export function AnalyticsDashboard({
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  // Model slugs for charts and filters
-  const currentModelSlugs = filters.modelSlugs;
+  // Model slugs for charts and filters - use external selection if provided
+  const currentModelSlugs = externalModelSlugs ?? filters.modelSlugs;
 
-  // Extract sidebar data from modelAnalytics
+  // Extract sidebar data from sidebarMetrics (unfiltered all-models data)
   const sidebarModels: SidebarModel[] = useMemo(() =>
-    data?.modelAnalytics.map(m => ({
+    data?.sidebarMetrics?.map(m => ({
       id: m.modelSlug,
       slug: m.modelSlug,
-      name: m.modelName,
-      imageUrl: m.imageUrl || null,
+      name: m.modelSlug, // Use slug as name if not available
+      imageUrl: null, // Add to API response if needed
       isVerified: false, // Add to API response if needed
-      totalViews: m.visits,
+      totalViews: m.views,
       totalClicks: m.clicks,
     })) || [],
     [data]);
@@ -306,16 +327,153 @@ export function AnalyticsDashboard({
     );
   }
 
+  if (embedded) {
+    return (
+      <div className="space-y-6">
+        {/* Filters Bar */}
+        {mode === 'org' ? (
+          <OrgFiltersBar
+            filters={filters}
+            onFiltersChange={(newFilters) => setFilters(newFilters)}
+            availableCountries={data?.availableCountries || []}
+            availableSources={availableSourcesMapped}
+            isLoading={loading}
+          />
+        ) : (
+          <AdminFiltersBar
+            filters={filters}
+            onFiltersChange={(partial) => setFilters(f => ({ ...f, ...partial }))}
+            availableCountries={data?.availableCountries || []}
+            availableSources={data?.availableSources?.map(s => ({
+              name: s.name,
+              icon: 'Link2'
+            })) || []}
+            loading={loading}
+          />
+        )}
+
+        {/* Dashboard content */}
+        {loading && !data && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-card border border-white/10 rounded-xl p-6 animate-pulse">
+                <div className="h-4 bg-white/10 rounded w-20 mb-2" />
+                <div className="h-8 bg-white/10 rounded w-24" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Dashboard content */}
+        {data && (
+          <div className="relative">
+            {/* Data Freshness Indicator */}
+            {lastRefresh && (
+              <div className="mb-4 flex items-center gap-2 text-sm text-black/40 dark:text-white/40">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00FF85] animate-pulse" />
+                <span>Data as of:</span>
+                <span className="font-medium text-black/60 dark:text-white/60">
+                  {new Date(lastRefresh!).toLocaleString()}
+                </span>
+              </div>
+            )}
+            {/* Refresh Overlay Spinner */}
+            {loading && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/20 dark:bg-black/20 backdrop-blur-[2px] transition-all duration-300 rounded-2xl overflow-hidden">
+                <div className="bg-white/90 dark:bg-[#0A1221]/90 border border-[#E5E5EA] dark:border-white/10 p-5 rounded-3xl shadow-2xl scale-up-subtle">
+                  <RefreshCw className="w-8 h-8 text-[#007AFF] animate-spin" />
+                </div>
+              </div>
+            )}
+
+            {/* Empty State: No data for filters */}
+            {data.overview.totalVisits === 0 && (
+              <div className="col-span-full p-8 text-center bg-card border border-white/10 rounded-xl">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#7A27FF]/10 flex items-center justify-center">
+                  <BarChart3 className="w-8 h-8 text-[#7A27FF]" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">No Analytics Data</h3>
+                <p className="text-muted-foreground max-w-md mx-auto">
+                  No events found for the selected filters. Try expanding the date range or clearing filters.
+                </p>
+              </div>
+            )}
+
+            {/* Show content when data exists and has values */}
+            {data.overview.totalVisits > 0 && (
+              <div className="space-y-6">
+                {/* Overview Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <StatCard
+                    title="Total Page Views"
+                    value={data.overview.totalVisits}
+                    icon={<Eye className="w-5 h-5 text-[#00FF85]" />}
+                    change={data.overview.visitsChange}
+                    valueClassName="text-[#00FF85] dark:text-[#00FF85]"
+                    subtitle={`${data.overview.mainLayoutVisits.toLocaleString()} organic • ${data.overview.trackingLinkVisits.toLocaleString()} from links`}
+                  />
+                  <StatCard
+                    title="Total Clicks"
+                    value={data.overview.totalClicks}
+                    subtitle="OnlyFans/Fansly redirects"
+                    icon={<MousePointer className="w-5 h-5 text-[#7A27FF]" />}
+                    valueClassName="text-[#7A27FF] dark:text-[#7A27FF]"
+                    change={data.overview.clicksChange}
+                  />
+                  <StatCard
+                    title="Conversion Rate"
+                    value={`${data.overview.conversionRate.toFixed(2)}%`}
+                    subtitle={<span className="flex items-center gap-1.5"><span className="text-[#7A27FF]">Clicks</span> / <span className="text-[#00FF85]">Views</span></span>}
+                    icon={<Percent className="w-5 h-5 text-[#D4AF37]" />}
+                  />
+                </div>
+
+                {/* Chart Section */}
+                {showModelComparison ? (
+                  /* Model Comparison Chart - When 2+ models selected */
+                  <ModelComparisonChart
+                    data={modelChartData!.data}
+                    models={modelChartData!.models}
+                    metric={comparisonMetric}
+                    onMetricChange={mode === 'org' ? undefined : setComparisonMetric}
+                    title={`Comparing ${currentModelSlugs.length} Models`}
+                    height={350}
+                    className="glass-panel rounded-2xl p-4 lg:p-6 border border-white/10"
+                  />
+                ) : (
+                  /* Standard Comparison Chart - Current vs Previous */
+                  <ComparisonChart
+                    data={derivedChartData}
+                    metric={comparisonMetric}
+                    onMetricChange={mode === 'org' ? undefined : setComparisonMetric}
+                    title={`Traffic Over Time (${comparisonMetric === 'views' ? 'Page Views' : 'Clicks'})`}
+                    height={300}
+                    className="glass-panel rounded-2xl p-4 lg:p-6 border border-white/10"
+                  />
+                )}
+
+
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <DashboardContainer
       header={header}
       sidebar={
-        <SidebarModelList
-          models={sidebarModels}
-          selectedSlugs={filters.modelSlugs}
-          onSelectionChange={(slugs) => setFilters(f => ({ ...f, modelSlugs: slugs }))}
-          loading={loading && !data}
-        />
+        // Only render internal sidebar if no external model selection
+        externalModelSlugs === undefined ? (
+          <SidebarModelList
+            models={sidebarModels}
+            selectedSlugs={filters.modelSlugs}
+            onSelectionChange={(slugs) => setFilters(f => ({ ...f, modelSlugs: slugs }))}
+            loading={loading && !data}
+          />
+        ) : null
       }
       filters={
         mode === 'org' ? (

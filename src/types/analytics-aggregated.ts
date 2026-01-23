@@ -170,6 +170,7 @@ export interface DashboardResponse {
     availableCountries: string[];
     availableSources: AggregatedTrafficSourceOption[];
     availableModels: AggregatedModelFilterOption[];
+    allModelMetrics?: ModelSummary[];
 }
 
 // ============================================

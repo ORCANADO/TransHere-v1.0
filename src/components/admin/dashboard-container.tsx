@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 interface DashboardContainerProps {
   /** Left sidebar content (model list) */
-  sidebar: ReactNode;
+  sidebar?: ReactNode;
   /** Top header content (branding, theme toggle) */
   header?: ReactNode;
   /** Top filter bar */
@@ -39,11 +39,16 @@ export function DashboardContainer({
       />
 
       {/* Desktop Layout: CSS Grid */}
-      <div className="hidden lg:grid lg:grid-cols-[280px_1fr] lg:h-full lg:gap-6">
+      <div className={cn(
+        "hidden lg:grid lg:h-full lg:gap-6",
+        sidebar ? "lg:grid-cols-[280px_1fr]" : "lg:grid-cols-1"
+      )}>
         {/* Desktop Sidebar: Sticky */}
-        <div className="sticky top-0 h-screen overflow-hidden">
-          {sidebar}
-        </div>
+        {sidebar && (
+          <div className="sticky top-0 h-screen overflow-hidden">
+            {sidebar}
+          </div>
+        )}
 
         {/* Desktop Main Content: Scrollable */}
         <div className="h-screen overflow-y-auto">
@@ -69,14 +74,16 @@ export function DashboardContainer({
       {/* Mobile Layout: Single Column */}
       <div className="lg:hidden">
         {/* Mobile Sidebar: Slide-over Drawer */}
-        <div
-          className={cn(
-            "fixed inset-y-0 left-0 w-[280px] z-50 transform transition-transform duration-300 ease-out bg-background",
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          )}
-        >
-          {sidebar}
-        </div>
+        {sidebar && (
+          <div
+            className={cn(
+              "fixed inset-y-0 left-0 w-[280px] z-50 transform transition-transform duration-300 ease-out bg-background",
+              sidebarOpen ? "translate-x-0" : "-translate-x-full"
+            )}
+          >
+            {sidebar}
+          </div>
+        )}
 
         {/* Mobile Main Content */}
         <div className="h-screen overflow-y-auto">
@@ -87,22 +94,30 @@ export function DashboardContainer({
                 {header}
               </div>
             )}
-            <div className="flex items-center gap-3 p-4">
-              {/* Hamburger Menu Button */}
-              <button
-                onClick={onSidebarToggle}
-                className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-200 active:scale-95"
-                aria-label="Toggle sidebar"
-              >
-                {sidebarOpen ? (
-                  <X className="w-5 h-5 text-foreground" />
-                ) : (
-                  <Menu className="w-5 h-5 text-foreground" />
-                )}
-              </button>
+            <div className={cn(
+              "flex items-center gap-3 p-4",
+              sidebar ? "" : "justify-center"
+            )}>
+              {/* Hamburger Menu Button - Only show if sidebar exists */}
+              {sidebar && (
+                <button
+                  onClick={onSidebarToggle}
+                  className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-200 active:scale-95"
+                  aria-label="Toggle sidebar"
+                >
+                  {sidebarOpen ? (
+                    <X className="w-5 h-5 text-foreground" />
+                  ) : (
+                    <Menu className="w-5 h-5 text-foreground" />
+                  )}
+                </button>
+              )}
 
               {/* Filters Content */}
-              <div className="flex-1 overflow-x-auto scrollbar-hidden">
+              <div className={cn(
+                "overflow-x-auto scrollbar-hidden",
+                sidebar ? "flex-1" : "w-full"
+              )}>
                 {filters}
               </div>
             </div>
