@@ -74,15 +74,7 @@
 **Status:** Complete
 
 ### Improvements:
-- **Unified Sticky Engine**: Refactored `DashboardContainer` to house both `header` and `filters` in a single sticky block.
-  - Eliminated overlapping layout bugs on both mobile and desktop.
-  - Added horizontal scroll support for filters on small viewports.
-- **Sidebar Unification**:
-  - Synchronized `AdminSidebar` (uppercase) and `sidebar-model-list` (lowercase) with identical `onManageTrackingLinks` prop support.
-  - Added tracking link management icons to all sidebar implementations.
-- **Enhanced Org Context**:
-  - Switched `OrganizationDashboard` to use subtag-aware filters.
-  - Ensured consistent premium branding ("Organization Manager") via unified header prop.
-- **Structural Cleanup**:
-  - Removed redundant internal theme switchers from shared components.
-  - Hardened prop types across `AnalyticsDashboard` and dependent pages.
+- **Enhanced Dashboards**:
+  - Refactored `DashboardContainer` to house both `header` and `filters` in a single sticky block, eliminating overlap.
+  - Fixed "Traffic Over Time" chart metric toggle: restored dynamic data mapping for Views/Clicks comparison.
+  - Synchronized sidebar implementations with shared tracking link management capabilities.

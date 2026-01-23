@@ -10,6 +10,8 @@ export interface ComparisonDataPoint {
     label: string;          // Display label (e.g., "Jan 15")
     current: number;        // Current period value
     previous: number;       // Previous period value
+    clicks?: number;        // Current period clicks
+    clicksPrev?: number;    // Previous period clicks
 }
 
 /**
@@ -19,6 +21,7 @@ export interface ComparisonChartProps {
     data: ComparisonDataPoint[];
     title?: string;
     metric?: 'views' | 'clicks';
+    onMetricChange?: (metric: 'views' | 'clicks') => void;
     height?: number;
     showLegend?: boolean;
     className?: string;

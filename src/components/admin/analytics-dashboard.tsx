@@ -166,6 +166,8 @@ export function AnalyticsDashboard({
           label: new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
           current: d.views,
           previous: d.visitsPrev || 0,
+          clicks: d.clicks || 0,
+          clicksPrev: d.clicksPrev || 0,
         })),
         modelComparisonData: dashboardData.modelComparison || null,
         sourceBreakdown: dashboardData.stats.topSources.map((s: any) => ({
@@ -259,6 +261,16 @@ export function AnalyticsDashboard({
     };
   }, [data, currentModelSlugs]);
 
+  // Prepare comparison chart data based on selected metric
+  const derivedChartData = useMemo(() => {
+    if (!data?.chartData) return [];
+    return data.chartData.map(point => ({
+      ...point,
+      current: comparisonMetric === 'views' ? point.current : (point.clicks || 0),
+      previous: comparisonMetric === 'views' ? point.previous : (point.clicksPrev || 0),
+    }));
+  }, [data?.chartData, comparisonMetric]);
+
   // Determine which chart to show
   const showModelComparison = currentModelSlugs.length >= 2 && modelChartData;
 
@@ -343,7 +355,7 @@ export function AnalyticsDashboard({
               <span className="w-1.5 h-1.5 rounded-full bg-[#00FF85] animate-pulse" />
               <span>Data as of:</span>
               <span className="font-medium text-black/60 dark:text-white/60">
-                {new Date(lastRefresh).toLocaleString()}
+                {new Date(lastRefresh!).toLocaleString()}
               </span>
             </div>
           )}
@@ -413,8 +425,10 @@ export function AnalyticsDashboard({
               ) : (
                 /* Standard Comparison Chart - Current vs Previous */
                 <ComparisonChart
-                  data={data.chartData}
-                  title="Traffic Over Time (Current vs Previous Period)"
+                  data={derivedChartData}
+                  metric={comparisonMetric}
+                  onMetricChange={setComparisonMetric}
+                  title={`Traffic Over Time (${comparisonMetric === 'views' ? 'Page Views' : 'Clicks'})`}
                   height={300}
                   className="glass-panel rounded-2xl p-4 lg:p-6 border border-white/10"
                 />

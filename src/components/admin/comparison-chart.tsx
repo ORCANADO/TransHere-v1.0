@@ -119,6 +119,7 @@ export function ComparisonChart({
     data,
     title,
     metric = 'views',
+    onMetricChange,
     height = 300,
     showLegend = true,
     className,
@@ -147,11 +148,41 @@ export function ComparisonChart({
 
     return (
         <div className={cn("rounded-2xl p-4 lg:p-6", className)}>
-            {title && (
-                <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-white mb-4">
-                    {title}
-                </h3>
-            )}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                {title && (
+                    <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-white">
+                        {title}
+                    </h3>
+                )}
+
+                {/* Metric Toggle */}
+                {onMetricChange && (
+                    <div className="flex p-1 bg-white/5 dark:bg-black/20 backdrop-blur-md rounded-xl border border-white/10 self-start sm:self-auto">
+                        <button
+                            onClick={() => onMetricChange('views')}
+                            className={cn(
+                                "px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200",
+                                metric === 'views'
+                                    ? "bg-[#007AFF] text-white shadow-lg"
+                                    : "text-[#86868B] hover:text-white"
+                            )}
+                        >
+                            Views
+                        </button>
+                        <button
+                            onClick={() => onMetricChange('clicks')}
+                            className={cn(
+                                "px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200",
+                                metric === 'clicks'
+                                    ? "bg-[#007AFF] text-white shadow-lg"
+                                    : "text-[#86868B] hover:text-white"
+                            )}
+                        >
+                            Clicks
+                        </button>
+                    </div>
+                )}
+            </div>
 
             <div style={{ height, minHeight: height }}>
                 <ResponsiveContainer width="100%" height="100%">
