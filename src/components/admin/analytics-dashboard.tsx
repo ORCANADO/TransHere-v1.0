@@ -423,7 +423,7 @@ export function AnalyticsDashboard({
                   data={modelChartData!.data}
                   models={modelChartData!.models}
                   metric={comparisonMetric}
-                  onMetricChange={setComparisonMetric}
+                  onMetricChange={mode === 'org' ? undefined : setComparisonMetric}
                   title={`Comparing ${currentModelSlugs.length} Models`}
                   height={350}
                   className="glass-panel rounded-2xl p-4 lg:p-6 border border-white/10"
@@ -433,7 +433,7 @@ export function AnalyticsDashboard({
                 <ComparisonChart
                   data={derivedChartData}
                   metric={comparisonMetric}
-                  onMetricChange={setComparisonMetric}
+                  onMetricChange={mode === 'org' ? undefined : setComparisonMetric}
                   title={`Traffic Over Time (${comparisonMetric === 'views' ? 'Page Views' : 'Clicks'})`}
                   height={300}
                   className="glass-panel rounded-2xl p-4 lg:p-6 border border-white/10"

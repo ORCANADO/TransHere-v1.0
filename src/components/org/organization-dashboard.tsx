@@ -359,30 +359,6 @@ export function OrganizationDashboard({
                                     <h2 className="text-xl font-bold text-white">
                                         {showModelComparison ? `Comparing ${filters.modelSlugs.length} Models` : 'Traffic Over Time'}
                                     </h2>
-                                    <div className="flex bg-white/5 p-1 rounded-lg border border-white/10">
-                                        <button
-                                            onClick={() => setComparisonMetric('views')}
-                                            className={cn(
-                                                "px-4 py-1.5 rounded-md text-xs font-bold transition-all",
-                                                comparisonMetric === 'views'
-                                                    ? "bg-[#00FF85] text-black shadow-lg"
-                                                    : "text-muted-foreground hover:text-white"
-                                            )}
-                                        >
-                                            Views
-                                        </button>
-                                        <button
-                                            onClick={() => setComparisonMetric('clicks')}
-                                            className={cn(
-                                                "px-4 py-1.5 rounded-md text-xs font-bold transition-all",
-                                                comparisonMetric === 'clicks'
-                                                    ? "bg-[#7A27FF] text-white shadow-lg"
-                                                    : "text-muted-foreground hover:text-white"
-                                            )}
-                                        >
-                                            Clicks
-                                        </button>
-                                    </div>
                                 </div>
 
                                 {showModelComparison ? (
@@ -390,7 +366,6 @@ export function OrganizationDashboard({
                                         data={modelChartData!.data}
                                         models={modelChartData!.models}
                                         metric={comparisonMetric}
-                                        onMetricChange={setComparisonMetric}
                                         height={350}
                                         className="p-0 border-none"
                                     />
@@ -506,20 +481,24 @@ export function OrganizationDashboard({
                                 </div>
                             )}
                         </>
-                    )}
-                </div>
-            )}
+                    )
+                    }
+                </div >
+            )
+            }
 
-            {trackingModel && (
-                <TrackingLinkManager
-                    isOpen={isTrackingManagerOpen}
-                    onClose={() => setIsTrackingManagerOpen(false)}
-                    modelId={trackingModel.id}
-                    modelSlug={trackingModel.slug}
-                    modelName={trackingModel.name}
-                    adminKey={apiKey}
-                />
-            )}
-        </DashboardContainer>
+            {
+                trackingModel && (
+                    <TrackingLinkManager
+                        isOpen={isTrackingManagerOpen}
+                        onClose={() => setIsTrackingManagerOpen(false)}
+                        modelId={trackingModel.id}
+                        modelSlug={trackingModel.slug}
+                        modelName={trackingModel.name}
+                        adminKey={apiKey}
+                    />
+                )
+            }
+        </DashboardContainer >
     );
 }

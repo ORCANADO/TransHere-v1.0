@@ -53,7 +53,7 @@ export interface ModelComparisonChartProps {
     data: ModelComparisonDataPoint[];
     models: ChartModelInfo[];
     metric: 'views' | 'clicks';
-    onMetricChange: (metric: 'views' | 'clicks') => void;
+    onMetricChange?: (metric: 'views' | 'clicks') => void;
     title?: string;
     height?: number;
     className?: string;

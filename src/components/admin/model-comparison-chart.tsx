@@ -159,7 +159,7 @@ export function ModelComparisonChart({
                 <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-white">
                     {title}
                 </h3>
-                <MetricToggle metric={metric} onMetricChange={onMetricChange} />
+                {onMetricChange && <MetricToggle metric={metric} onMetricChange={onMetricChange} />}
             </div>
 
             {/* Chart */}

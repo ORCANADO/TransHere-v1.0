@@ -76,5 +76,5 @@
 ### Improvements:
 - **Enhanced Dashboards**:
   - Refactored `DashboardContainer` to house both `header` and `filters` in a single sticky block, eliminating overlap.
-  - Fixed "Traffic Over Time" chart metric toggle: restored dynamic data mapping for Views/Clicks comparison.
+  - Fixed "Traffic Over Time" chart metric toggle: restored dynamic data mapping for Views/Clicks comparison (Admin only; restricted in Org view per request).
   - Synchronized sidebar implementations with shared tracking link management capabilities.
