@@ -97,7 +97,10 @@ Client Components for filtering.
 
 ### 2.9 UI/UX Physics & Layout Standards
 - **Scroll Snap:** For simple lists, use `snap-x`.
-For complex Carousels (Embla), prioritize the Library's Physics API.
+### 2.10 Analytics & Data Mapping
+- **API Response:** Use CamelCase in specialized `ModelSummary` or `SourceSummary` objects returned by Aggregation APIs to maintain internal consistency, but allow snake_case from DB-level RPC calls if explicitly mapped in the frontend.
+- **Frontend Mapping:** The `onDataLoaded` callback in `AnalyticsDashboard` must propagate all raw metrics to parent pages to ensure complete data availability for sidebars and other child components.
+- **Robustness:** Mapping logic should handle both `snake_case` (raw API) and `camelCase` (mapped component state) property names to prevent "0 views" or "undefined" errors during API structural changes.
 - **Responsive Architecture (The "Hybrid" Rule):**
   - **Mobile (< 1024px):** Single column, Full width, Carousel Gallery (Swipe).
 - **Desktop (>= 1024px):** Dual Column "Split View".

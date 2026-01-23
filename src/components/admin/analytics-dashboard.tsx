@@ -77,6 +77,7 @@ interface DashboardData {
   availableCountries: string[];
   availableSources: TrafficSourceOption[];
   availableModels: ModelFilterOption[];
+  allModelMetrics?: any[];
 }
 
 /**
@@ -183,6 +184,7 @@ export function AnalyticsDashboard({
         availableCountries: dashboardData.availableCountries || [],
         availableSources: dashboardData.availableSources || [],
         availableModels: dashboardData.availableModels || [],
+        allModelMetrics: dashboardData.stats.modelMetrics || [],
       };
 
       setData(adaptedData);
@@ -225,7 +227,7 @@ export function AnalyticsDashboard({
       totalViews: m.visits,
       totalClicks: m.clicks,
     })) || [],
-  [data]);
+    [data]);
 
   // Prepare model comparison data
   const modelChartData = useMemo((): { data: ModelComparisonDataPoint[]; models: ChartModelInfo[] } | null => {
@@ -258,7 +260,7 @@ export function AnalyticsDashboard({
       value: s.slug || s.id,
       icon: 'Link2', // Default icon name for sources
     })) || [],
-  [data?.availableSources]);
+    [data?.availableSources]);
 
   // Error state
   if (error) {

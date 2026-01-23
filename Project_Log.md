@@ -69,3 +69,13 @@
   - Maintain single source of truth for project structure
   - Enable rapid context loading for new development sessions
   - Track meaningful development decisions and milestones
+
+## [2026-01-23] - Dashboard Analytics Hardening
+**Status:** Complete
+
+### Improvements:
+- **Organization Sidebar Fix:** Resolved "0 Views" bug by unifying data propagation.
+  - Corrected `src/app/api/org/analytics/route.ts` to expose full `modelMetrics`.
+  - Updated `AnalyticsDashboard` to propagate raw metrics.
+  - Enhanced `src/app/org/[orgId]/page.tsx` with robust mapping for raw and mapped field names.
+- **Type Safety:** Removed invalid props from `AnalyticsDashboard` usage.

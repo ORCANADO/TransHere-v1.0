@@ -44,10 +44,20 @@ function OrgDashboardContent() {
     const [modelMetrics, setModelMetrics] = useState<Record<string, { views: number; clicks: number }>>({});
 
     const handleDataLoaded = useCallback((data: any) => {
-        if (data.modelAnalytics) {
+        // We prefer allModelMetrics which contains the full list from the API
+        const metricsData = data.allModelMetrics || data.modelAnalytics;
+
+        if (metricsData) {
             const metricsMap: Record<string, { views: number; clicks: number }> = {};
-            data.modelAnalytics.forEach((m: any) => {
-                metricsMap[m.modelSlug] = { views: m.visits, clicks: m.clicks };
+            metricsData.forEach((m: any) => {
+                // Handle both raw API fields (model_slug, total_views) and mapped fields (modelSlug, visits)
+                const slug = m.model_slug || m.modelSlug;
+                const views = m.total_views !== undefined ? m.total_views : (m.visits || 0);
+                const clicks = m.total_clicks !== undefined ? m.total_clicks : (m.clicks || 0);
+
+                if (slug) {
+                    metricsMap[slug] = { views, clicks };
+                }
             });
             setModelMetrics(metricsMap);
         }
@@ -240,10 +250,7 @@ function OrgDashboardContent() {
 
                         <AnalyticsDashboard
                             adminKey={apiKey}
-                            selectedModelIds={selectedIds}
-                            onModelSelectionChange={selectMultiple}
                             onDataLoaded={handleDataLoaded}
-                            isSidebarCollapsed={isSidebarCollapsed}
                             endpoint="/api/org/analytics"
                         />
                     </div>

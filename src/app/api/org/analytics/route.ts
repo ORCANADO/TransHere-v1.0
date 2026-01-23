@@ -155,8 +155,7 @@ export async function GET(
         ]);
 
         // 6. Aggregate results
-        const result = calculateOverallStats(dailyStats, prevDailyStats, sourceMap);
-        const { modelMetrics, ...stats } = result;
+        const stats = calculateOverallStats(dailyStats, prevDailyStats, sourceMap);
 
         const chartData: ChartDataPoint[] = aggregateChartData(dailyStats, prevDailyStats);
 

@@ -138,6 +138,15 @@ INVALIDATE: invalidateTrackingLinkCache() → revalidateTag('tracking-links')
 INACTIVE:   is_archived=true or is_active=false → redirect without tracking
 ```
 
+#### `src/components/admin/analytics-dashboard.tsx` — Unified Analytics Component
+```
+PURPOSE:  Centralized analytics data fetching, filtering, and visualization
+PATTERN:  Unified filter state → fetchData() → adaptedData → onDataLoaded() callback
+PROPS:    adminKey, endpoint, onDataLoaded
+DATA:     Maps raw API results (Stats, ChartData) to structured DashboardData
+FLOW:     Internal filter management + external data propagation via callback
+```
+
 #### `src/middleware.ts` — Edge Gateway
 ```
 PURPOSE:  Bot detection + security headers + org auth routing
