@@ -80,15 +80,23 @@ const getIconComponent = (iconName: string) => {
 };
 
 /**
- * Default source options as specified in requirements
+ * Default source options - MUST match traffic_sources table names/slugs
+ * These are the display names that will be sent to the API
  */
 const DEFAULT_SOURCES: SourceOption[] = [
-    { name: 'direct', icon: 'Users' },
-    { name: 'instagram', icon: 'Instagram' },
-    { name: 'twitter', icon: 'Twitter' },
-    { name: 'onlyfans', icon: 'Heart' },
-    { name: 'fansly', icon: 'Cloud' },
+    { name: 'Organic', icon: 'Globe' },
+    { name: 'Instagram', icon: 'Instagram' },
+    { name: 'X', icon: 'Twitter' },
+    { name: 'Reddit', icon: 'Users' },
+    { name: 'Model Directory', icon: 'ExternalLink' },
 ];
+
+/**
+ * Normalize source name for consistent matching
+ */
+const normalizeSourceName = (name: string): string => {
+    return name.toLowerCase().trim();
+};
 
 /**
  * DashboardFiltersBar - Main Filter Component
@@ -102,6 +110,16 @@ export function DashboardFiltersBar({
 }: DashboardFiltersBarProps) {
     // Dropdown open states
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
+    // Derive actual sources to use
+    const effectiveSources = React.useMemo(() => {
+        // If API provided sources, use those (they're authoritative)
+        if (availableSources && availableSources.length > 0) {
+            return availableSources;
+        }
+        // Fallback to defaults
+        return DEFAULT_SOURCES;
+    }, [availableSources]);
 
     // Toggle dropdown
     const toggleDropdown = (dropdown: string) => {
@@ -149,21 +167,26 @@ export function DashboardFiltersBar({
     // Handle source multi-select
     const handleSourceToggle = (sourceName: string) => {
         const currentSources = filters.sources || [];
-        const isSelected = currentSources.includes(sourceName);
+        const normalizedName = sourceName; // Keep original case for display
+        const isSelected = currentSources.some(
+            s => normalizeSourceName(s) === normalizeSourceName(sourceName)
+        );
 
         if (isSelected) {
             onFiltersChange({
-                sources: currentSources.filter(s => s !== sourceName)
+                sources: currentSources.filter(
+                    s => normalizeSourceName(s) !== normalizeSourceName(sourceName)
+                )
             });
         } else {
             onFiltersChange({
-                sources: [...currentSources, sourceName]
+                sources: [...currentSources, normalizedName]
             });
         }
     };
 
     const handleSelectAllSources = () => {
-        onFiltersChange({ sources: availableSources.map(s => s.name) });
+        onFiltersChange({ sources: effectiveSources.map(s => s.name) });
     };
 
     const handleClearSources = () => {
@@ -378,8 +401,10 @@ export function DashboardFiltersBar({
 
                         {/* Source List */}
                         <div className="py-1">
-                            {availableSources.map((source) => {
-                                const isSelected = filters.sources?.includes(source.name) || false;
+                            {effectiveSources.map((source) => {
+                                const isSelected = (filters.sources || []).some(
+                                    s => normalizeSourceName(s) === normalizeSourceName(source.name)
+                                );
                                 const IconComponent = getIconComponent(source.icon);
                                 return (
                                     <button
@@ -401,7 +426,7 @@ export function DashboardFiltersBar({
                                             {isSelected && <Check className="w-3 h-3 text-white" />}
                                         </div>
                                         <IconComponent className="w-4 h-4" />
-                                        <span className="capitalize">{source.name}</span>
+                                        <span>{source.name}</span>
                                     </button>
                                 );
                             })}

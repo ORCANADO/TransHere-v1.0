@@ -4,6 +4,22 @@
 
 ---
 
+## [2026-01-23] - Phase 6.18: Dashboard Data Display & Selection Fixes
+**Status:** Complete
+
+### Analytics Accuracy & Parity:
+- [x] **"All Sources" Bug**: Fixed source resolution logic to robustly match tracking link IDs (case-insensitive, slug/name matching).
+- [x] **Period Parity**: Sidebar and main dashboard now share same logic for all periods, including "Last Hour" (hourly stats support).
+- [x] **Pagination Robustness**: Implemented stable multi-column ordering and recursive fetching in `fetchAllModelMetrics` to prevent 1000-row truncation.
+- [x] **Traffic Breakdown**: Implemented accurate "organic" vs "from links" calculation based on `traffic_source` field.
+
+### UX & Interface Refinements:
+- [x] **Model Selection Persistence**: Fixed bug where dashboard stayed "stuck" on last selection; now resets to global data on "Clear all".
+- [x] **Sidebar Consolidation**: Deleted redundant basic sidebar and unified app on the feature-rich `SidebarModelList`.
+- [x] **Type Safety**: Resolved all build-time type errors in Organization Dashboard and Filter components.
+
+---
+
 ## [2026-01-23] - Phase 6.17: Materialized View Refresh & Data Verification
 **Status:** Complete
 

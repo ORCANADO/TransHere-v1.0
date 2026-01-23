@@ -13,7 +13,7 @@ import { ModelComparisonChart } from './model-comparison-chart';
 import { DashboardContainer } from './dashboard-container';
 import { DashboardFiltersBar as OrgFiltersBar } from './dashboard-filters';
 import { DashboardFiltersBar as AdminFiltersBar } from './dashboard-filters-bar';
-import { SidebarModelList } from './sidebar-model-list';
+import { SidebarModelList } from './SidebarModelList';
 
 // Import the default sources from the filters component
 const DEFAULT_SOURCES = [
@@ -250,18 +250,30 @@ export function AnalyticsDashboard({
   // Model slugs for charts and filters - use external selection if provided
   const currentModelSlugs = externalModelSlugs ?? filters.modelSlugs;
 
-  // Extract sidebar data from sidebarMetrics (unfiltered all-models data)
-  const sidebarModels: SidebarModel[] = useMemo(() =>
-    data?.sidebarMetrics?.map(m => ({
-      id: m.modelSlug,
-      slug: m.modelSlug,
-      name: m.modelSlug, // Use slug as name if not available
-      imageUrl: null, // Add to API response if needed
-      isVerified: false, // Add to API response if needed
-      totalViews: m.views,
-      totalClicks: m.clicks,
-    })) || [],
-    [data]);
+  // Map sidebar models by linking available model metadata with analytics metrics
+  const sidebarModels = useMemo(() => {
+    if (!data?.availableModels) return [];
+
+    // Sort models: those with current metrics first, then alphabetically
+    return [...data.availableModels].sort((a, b) => {
+      const aMetric = data.sidebarMetrics?.find(m => m.modelSlug === a.slug);
+      const bMetric = data.sidebarMetrics?.find(m => m.modelSlug === b.slug);
+
+      if (aMetric && !bMetric) return -1;
+      if (!aMetric && bMetric) return 1;
+      if (aMetric && bMetric) return (bMetric.views - aMetric.views);
+      return a.name.localeCompare(b.name);
+    });
+  }, [data?.availableModels, data?.sidebarMetrics]);
+
+  // Create a metrics map for the sidebar's specific metrics prop
+  const metricsMap = useMemo(() => {
+    const map: Record<string, { views: number; clicks: number }> = {};
+    data?.sidebarMetrics?.forEach(m => {
+      map[m.modelSlug] = { views: m.views, clicks: m.clicks };
+    });
+    return map;
+  }, [data?.sidebarMetrics]);
 
   // Prepare model comparison data
   const modelChartData = useMemo((): { data: ModelComparisonDataPoint[]; models: ChartModelInfo[] } | null => {
@@ -468,10 +480,19 @@ export function AnalyticsDashboard({
         // Only render internal sidebar if no external model selection
         externalModelSlugs === undefined ? (
           <SidebarModelList
-            models={sidebarModels}
-            selectedSlugs={filters.modelSlugs}
-            onSelectionChange={(slugs) => setFilters(f => ({ ...f, modelSlugs: slugs }))}
-            loading={loading && !data}
+            models={sidebarModels as any}
+            metrics={metricsMap}
+            selectedIds={filters.modelSlugs}
+            onModelToggle={(slug) => {
+              const newSlugs = filters.modelSlugs.includes(slug)
+                ? filters.modelSlugs.filter(s => s !== slug)
+                : [...filters.modelSlugs, slug];
+              setFilters(f => ({ ...f, modelSlugs: newSlugs }));
+            }}
+            onClearSelection={() => setFilters(f => ({ ...f, modelSlugs: [] }))}
+            onEditModel={() => { }}
+            onManageTrackingLinks={() => { }}
+            isLoading={loading && !data}
           />
         ) : null
       }

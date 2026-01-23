@@ -137,6 +137,7 @@ Do not use `useRouter().push` for external links.
     - **API Limits & Scaling:** Supabase PostgREST has a 1000 row default limit. 
         - ALWAYS fetch in `DESC` order to prioritize recent data.
         - **Recursive Pagination:** For dashboards, implement a `while` loop with `.range(from, to)` to fetch chunks until the full range (capped at 10,000) is retrieved.
+        - **Stable Ordering:** ALL paginated queries must include a stable secondary sort column (e.g., `.order('created_at').order('id')`) to prevent missing/dup rows.
         - **Materialized Views:** For high-volume analytics (>10k events), ALWAYS query materialized views (`analytics_daily_stats` or `analytics_hourly_stats`) instead of raw event logs to ensure sub-second performance.
         - **Today/Last Hour Granularity:** Use `analytics_hourly_stats` for timeframes requiring hourly resolution.
         - **Dashboard Synchronization:** Derive ALL breakdowns (Sources, Countries, Models) from the exact same filtered dataset in a single-pass aggregation in the API. NEVER perform independent summary queries that could lead to data drift or mismatched totals.

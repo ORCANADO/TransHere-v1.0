@@ -10,7 +10,7 @@ import { ComparisonChart } from '@/components/admin/comparison-chart';
 import { ModelComparisonChart } from '@/components/admin/model-comparison-chart';
 import { DashboardContainer } from '@/components/admin/dashboard-container';
 import { DashboardFiltersBar } from '@/components/admin/dashboard-filters';
-import { SidebarModelList } from '@/components/admin/sidebar-model-list';
+import { SidebarModelList } from '@/components/admin/SidebarModelList';
 import { ThemeToggle } from '@/components/admin/theme-toggle';
 import { TrackingLinkManager } from '@/app/admin/components/TrackingLinkManager';
 import { useAdminTheme } from '@/hooks/use-admin-theme';
@@ -117,6 +117,15 @@ export function OrganizationDashboard({
             };
         });
     }, [initialModels, data?.stats.modelMetrics]);
+
+    // Create a metrics map for the sidebar's specific metrics prop
+    const metricsMap = useMemo(() => {
+        const map: Record<string, { views: number; clicks: number }> = {};
+        data?.stats.modelMetrics?.forEach(m => {
+            map[m.model_slug] = { views: m.total_views, clicks: m.total_clicks };
+        });
+        return map;
+    }, [data?.stats.modelMetrics]);
 
     // Map available sources to match expected format
     const mappedAvailableSources = useMemo(() => {
@@ -267,14 +276,25 @@ export function OrganizationDashboard({
             }
             sidebar={
                 <SidebarModelList
-                    models={orgModelsForSidebar}
-                    selectedSlugs={filters.modelSlugs}
-                    onSelectionChange={(slugs) => handleFiltersChange({ modelSlugs: slugs })}
+                    models={orgModelsForSidebar as any}
+                    selectedIds={filters.modelSlugs}
+                    onModelToggle={(slug) => {
+                        const newSlugs = filters.modelSlugs.includes(slug)
+                            ? filters.modelSlugs.filter(s => s !== slug)
+                            : [...filters.modelSlugs, slug];
+                        handleFiltersChange({ modelSlugs: newSlugs });
+                    }}
+                    onClearSelection={() => handleFiltersChange({ modelSlugs: [] })}
+                    onEditModel={(model) => {
+                        setSelectedModel(model as any);
+                        setIsPanelOpen(true);
+                    }}
                     onManageTrackingLinks={(model) => {
                         setTrackingModel({ id: model.id, name: model.name, slug: model.slug });
                         setIsTrackingManagerOpen(true);
                     }}
-                    loading={loading}
+                    isLoading={loading}
+                    metrics={metricsMap}
                 />
             }
             filters={

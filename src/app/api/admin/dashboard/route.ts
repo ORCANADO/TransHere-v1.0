@@ -25,11 +25,13 @@ const ADMIN_KEY = process.env.ADMIN_KEY;
 
 // Static available sources for filter dropdown
 const AVAILABLE_SOURCES: SourceOption[] = [
-  { name: 'Direct', value: 'direct', icon: 'Globe' },
+  { name: 'Organic', value: 'organic', icon: 'Globe' },
   { name: 'Instagram', value: 'instagram', icon: 'Instagram' },
-  { name: 'Twitter/X', value: 'twitter', icon: 'Twitter' },
-  { name: 'OnlyFans', value: 'onlyfans', icon: 'ExternalLink' },
-  { name: 'Fansly', value: 'fansly', icon: 'ExternalLink' },
+  { name: 'X', value: 'x', icon: 'Twitter' },
+  { name: 'Reddit', value: 'reddit', icon: 'Users' },
+  { name: 'Model Directory', value: 'model-directory', icon: 'ExternalLink' },
+  { name: 'OnlyFans', value: 'onlyfans', icon: 'Heart' },
+  { name: 'Fansly', value: 'fansly', icon: 'Cloud' },
 ];
 
 function verifyAdmin(request: NextRequest): boolean {
@@ -161,7 +163,7 @@ async function fetchDailyStats(
   startDate: string,
   endDate: string,
   models: string[],
-  sources: string[],
+  sources: string[] | undefined,
   countries: string[]
 ): Promise<DailyStats[]> {
   const allData: DailyStats[] = [];
@@ -176,6 +178,9 @@ async function fetchDailyStats(
       .gte('date', startDate)
       .lte('date', endDate)
       .order('date', { ascending: true })
+      .order('model_slug', { ascending: true })
+      .order('traffic_source', { ascending: true })
+      .order('country', { ascending: true })
       .range(offset, offset + pageSize - 1);
 
     // Apply filters
@@ -183,8 +188,13 @@ async function fetchDailyStats(
       query = query.in('model_slug', models);
     }
 
-    if (sources.length > 0) {
+    if (sources && sources.length > 0) {
       query = query.in('traffic_source', sources);
+    } else if (sources && sources.length === 0) {
+      // If sources were explicitly passed as empty array (meaning no matching links found)
+      // but the filter was originally requested, we should return nothing.
+      // We'll use a dummy UUID to ensure 0 results.
+      query = query.eq('traffic_source', '00000000-0000-0000-0000-000000000000');
     }
 
     if (countries.length > 0) {
@@ -214,7 +224,7 @@ async function fetchHourlyStats(
   startHour: string,
   endHour: string,
   models: string[],
-  sources: string[],
+  sources: string[] | undefined,
   countries: string[]
 ): Promise<DailyStats[]> {
   const allData: DailyStats[] = [];
@@ -229,6 +239,9 @@ async function fetchHourlyStats(
       .gte('hour', startHour)
       .lte('hour', endHour)
       .order('hour', { ascending: true })
+      .order('model_slug', { ascending: true })
+      .order('tracking_link_id', { ascending: true })
+      .order('country', { ascending: true })
       .range(offset, offset + pageSize - 1);
 
     // Apply filters
@@ -236,9 +249,12 @@ async function fetchHourlyStats(
       query = query.in('model_slug', models);
     }
 
-    if (sources.length > 0) {
+    if (sources && sources.length > 0) {
       // For hourly view, traffic_source is stored as tracking_link_id
       query = query.in('tracking_link_id', sources);
+    } else if (sources && sources.length === 0) {
+      // If sources were requested but none found, return 0 results
+      query = query.eq('tracking_link_id', '00000000-0000-0000-0000-000000000000');
     }
 
     if (countries.length > 0) {
@@ -314,17 +330,75 @@ async function fetchModelSummary(models?: string[]): Promise<ModelSummary[]> {
 }
 
 // Add after fetchModelSummary function (around line 180)
-async function fetchAllModelMetrics(): Promise<ModelSummary[]> {
-  const { data, error } = await supabase
-    .from('analytics_daily_stats')
-    .select('model_slug, views, clicks')
-    .gte('date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+async function fetchAllModelMetrics(
+  startDate: string,
+  endDate: string,
+  isHourly: boolean,
+  sources: string[] | undefined,
+  countries: string[]
+): Promise<ModelSummary[]> {
+  const allData: any[] = [];
+  const pageSize = 1000;
+  let offset = 0;
+  let hasMore = true;
 
-  if (error) throw error;
+  const table = isHourly ? 'analytics_hourly_stats' : 'analytics_daily_stats';
+  const dateField = isHourly ? 'hour' : 'date';
+
+  // If daily, ensure we compare dates correctly by trimming to YYYY-MM-DD
+  const effectiveStart = isHourly ? startDate : startDate.split('T')[0];
+  const effectiveEnd = isHourly ? endDate : endDate.split('T')[0];
+
+  while (hasMore) {
+    let query = supabase
+      .from(table)
+      .select(`model_slug, views, clicks, ${dateField}`)
+      .gte(dateField, effectiveStart)
+      .lte(dateField, effectiveEnd);
+
+    // Apply filters
+    if (sources && sources.length > 0) {
+      const sourceCol = table === 'analytics_daily_stats' ? 'traffic_source' : 'tracking_link_id';
+      query = query.in(sourceCol, sources);
+    } else if (sources && sources.length === 0) {
+      const sourceCol = table === 'analytics_daily_stats' ? 'traffic_source' : 'tracking_link_id';
+      query = query.eq(sourceCol, '00000000-0000-0000-0000-000000000000');
+    }
+
+    if (countries.length > 0) {
+      query = query.in('country', countries);
+    }
+
+    query = query
+      .order(dateField, { ascending: true })
+      .order('model_slug', { ascending: true });
+
+    // For stable pagination, add more columns if possible
+    if (table === 'analytics_daily_stats') {
+      query = query.order('traffic_source', { ascending: true }).order('country', { ascending: true });
+    } else {
+      query = query.order('tracking_link_id', { ascending: true }).order('country', { ascending: true });
+    }
+
+    const { data, error } = await query.range(offset, offset + pageSize - 1);
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      allData.push(...data);
+      if (data.length < pageSize) {
+        hasMore = false;
+      } else {
+        offset += pageSize;
+      }
+    } else {
+      hasMore = false;
+    }
+  }
 
   // Aggregate by model
   const modelMap = new Map<string, { views: number; clicks: number }>();
-  (data || []).forEach((row: any) => {
+  allData.forEach((row: any) => {
     const existing = modelMap.get(row.model_slug) || { views: 0, clicks: 0 };
     modelMap.set(row.model_slug, {
       views: existing.views + row.views,
@@ -438,6 +512,8 @@ function calculateOverallStats(
   // Current period totals
   let totalViews = 0;
   let totalClicks = 0;
+  let mainLayoutVisits = 0;
+  let trackingLinkVisits = 0;
   const countryMap = new Map<string, { views: number; clicks: number }>();
   const modelMap = new Map<string, { views: number; clicks: number }>();
   const sourceNameMap = new Map<string, { views: number; clicks: number }>();
@@ -445,6 +521,13 @@ function calculateOverallStats(
   currentStats.forEach(stat => {
     totalViews += stat.views;
     totalClicks += stat.clicks;
+
+    // Traffic breakdown
+    if (stat.traffic_source === 'organic') {
+      mainLayoutVisits += stat.views;
+    } else {
+      trackingLinkVisits += stat.views;
+    }
 
     // Country Aggregation
     const c = countryMap.get(stat.country) || { views: 0, clicks: 0 };
@@ -520,6 +603,8 @@ function calculateOverallStats(
     uniqueCountries: countryMap.size,
     visitsChange: calculateChange(totalViews, prevViews),
     clicksChange: calculateChange(totalClicks, prevClicks),
+    mainLayoutVisits,
+    trackingLinkVisits,
     topSources: sourceMetrics,
     topCountries: countryMetrics,
     topModels: modelMetrics.slice(0, 10),
@@ -595,45 +680,106 @@ export async function GET(
       countries
     } = queryParams;
 
+    // ============================================
+    // SOURCE FILTER RESOLUTION (CASE-INSENSITIVE)
+    // ============================================
+
     // 1. Fetch source mapping and link mapping
     const [{ data: linksData }, { data: allSourcesData }] = await Promise.all([
       supabase.from('tracking_links').select('id, source_id'),
-      supabase.from('traffic_sources').select('id, name')
+      supabase.from('tracking_sources').select('id, name, slug')
     ]);
 
+    // Build case-insensitive lookup maps
     const sourceIdToName = new Map<string, string>();
-    (allSourcesData || []).forEach(s => sourceIdToName.set(s.id, s.name));
+    const sourceNameToId = new Map<string, string>(); // name (lowercase) -> source UUID
+    const sourceSlugToId = new Map<string, string>(); // slug -> source UUID
 
+    (allSourcesData || []).forEach(s => {
+      sourceIdToName.set(s.id, s.name);
+      sourceNameToId.set(s.name.toLowerCase(), s.id);
+      if (s.slug) {
+        sourceSlugToId.set(s.slug.toLowerCase(), s.id);
+      }
+    });
+
+    // Build tracking link mappings
     const sourceMap = new Map<string, string>(); // Link UUID -> Source Name
-    const nameToLinkIds = new Map<string, string[]>(); // Source Name -> [Link UUIDs]
+    const sourceIdToLinkIds = new Map<string, string[]>(); // Source UUID -> [Link UUIDs]
+    const nameToLinkIds = new Map<string, string[]>(); // Source Name (lowercase) -> [Link UUIDs]
 
     (linksData || []).forEach((link: any) => {
-      const name = sourceIdToName.get(link.source_id) || 'Unknown';
-      sourceMap.set(link.id, name);
+      const sourceName = sourceIdToName.get(link.source_id) || 'Unknown';
+      sourceMap.set(link.id, sourceName);
 
-      const ids = nameToLinkIds.get(name) || [];
-      ids.push(link.id);
-      nameToLinkIds.set(name, ids);
+      // Map by source_id
+      const idsBySourceId = sourceIdToLinkIds.get(link.source_id) || [];
+      idsBySourceId.push(link.id);
+      sourceIdToLinkIds.set(link.source_id, idsBySourceId);
+
+      // Map by name (lowercase for case-insensitive matching)
+      const nameLower = sourceName.toLowerCase();
+      const idsByName = nameToLinkIds.get(nameLower) || [];
+      idsByName.push(link.id);
+      nameToLinkIds.set(nameLower, idsByName);
     });
 
     sourceMap.set('organic', 'Organic');
 
-    // 2. Resolve source filter names to IDs if filtering
-    let sourceFilterIds: string[] = [];
+    // 2. Resolve source filter names to tracking_link IDs
+    let sourceFilterIds: string[] | undefined = undefined;
     if (sourceNames.length > 0) {
+      sourceFilterIds = [];
       sourceNames.forEach(name => {
-        if (name === 'Organic') {
-          sourceFilterIds.push('organic');
-        } else {
-          const ids = nameToLinkIds.get(name) || [];
-          sourceFilterIds.push(...ids);
+        const nameLower = name.toLowerCase();
+
+        // Handle "Organic" / "Direct" specially
+        if (nameLower === 'organic' || nameLower === 'direct') {
+          sourceFilterIds!.push('organic');
+          return;
+        }
+
+        // Try matching by name (case-insensitive)
+        let linkIds = nameToLinkIds.get(nameLower);
+
+        // Fallback: try matching by slug
+        if (!linkIds || linkIds.length === 0) {
+          const sourceId = sourceSlugToId.get(nameLower);
+          if (sourceId) {
+            linkIds = sourceIdToLinkIds.get(sourceId);
+          }
+        }
+
+        // Fallback: try partial name match (e.g., "Twitter/X" matches "twitter")
+        if (!linkIds || linkIds.length === 0) {
+          for (const [mapName, ids] of nameToLinkIds.entries()) {
+            if (mapName.includes(nameLower) || nameLower.includes(mapName)) {
+              linkIds = ids;
+              break;
+            }
+          }
+        }
+
+        if (linkIds && linkIds.length > 0) {
+          sourceFilterIds!.push(...linkIds);
         }
       });
 
-      // If we are filtering by a name that has no links, use a dummy UUID 
-      // to ensure the query returns 0 records instead of returning everything.
+      // Debug logging (remove in production)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Dashboard API] Source Resolution Debug:', {
+          requestedSources: sourceNames,
+          resolvedLinkIds: sourceFilterIds.length,
+          availableSourceNames: Array.from(nameToLinkIds.keys()),
+        });
+      }
+
+      // CRITICAL: If no matching links found, DON'T use dummy UUID
+      // Instead, filter by source_id directly if the view supports it
       if (sourceFilterIds.length === 0) {
-        sourceFilterIds.push('00000000-0000-0000-0000-000000000000');
+        console.warn(`[Dashboard API] No tracking links found for sources: ${sourceNames.join(', ')}`);
+        // Return empty dataset intentionally - better than dummy UUID
+        // The frontend should show "No data for selected sources"
       }
     }
 
@@ -644,7 +790,7 @@ export async function GET(
       dailyStats,
       prevDailyStats,
       refreshStatus,
-      allModelMetricsRaw,  // ADD THIS
+      allModelMetricsRaw,
     ] = await Promise.all([
       isHourly
         ? fetchHourlyStats(startDate, endDate, models, sourceFilterIds, countries)
@@ -653,8 +799,12 @@ export async function GET(
         ? fetchHourlyStats(prevStartDate, prevEndDate, models, sourceFilterIds, countries)
         : fetchDailyStats(prevStartDate, prevEndDate, models, sourceFilterIds, countries),
       fetchRefreshStatus(),
-      fetchAllModelMetrics(),  // ADD THIS
+      fetchAllModelMetrics(startDate, endDate, isHourly, sourceFilterIds, countries),
     ]);
+
+    // Check if we have source filters but no results
+    const hasSourceFilter = sourceNames.length > 0;
+    const noMatchingLinks = hasSourceFilter && (sourceFilterIds?.length === 0);
 
     // Calculate aggregated stats with comparison data
     const result = calculateOverallStats(
@@ -729,7 +879,16 @@ export async function GET(
       availableCountries,
       availableSources,
       availableModels,
-      allModelMetrics: allModelMetricsRaw,  // ADD THIS
+      allModelMetrics: allModelMetricsRaw,
+
+      // Add debug info for empty results
+      ...(sourceFilterIds?.length === 0 && sourceNames.length > 0 && {
+        debug: {
+          message: 'No tracking links found for selected sources',
+          requestedSources: sourceNames,
+          availableSources: Array.from(nameToLinkIds.keys()),
+        } as any
+      }),
     };
 
     return NextResponse.json({

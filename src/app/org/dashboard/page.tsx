@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { DashboardContainer } from '@/components/admin/dashboard-container';
+import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
 import { getAuthContext } from '@/lib/auth-utils';
 
 export const runtime = 'edge';
@@ -25,9 +25,9 @@ export default async function OrganizationDashboard({ searchParams }: Organizati
     }
 
     return (
-        <DashboardContainer
+        <AnalyticsDashboard
             adminKey={key || ''}
-            authContext={authContext}
+            mode="org"
         />
     );
 }

@@ -39,7 +39,7 @@ function AdminContent() {
 
   // Convert selected IDs to model slugs for AnalyticsDashboard
   const selectedModelSlugs = useMemo(() => {
-    if (selectedIds.length === 0) return undefined;
+    if (selectedIds.length === 0) return [];
     return models
       .filter(m => selectedIds.includes(m.id))
       .map(m => m.slug);

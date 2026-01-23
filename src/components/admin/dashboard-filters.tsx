@@ -193,7 +193,7 @@ export function DashboardFiltersBar({
         const source = currentSources[sourceIndex];
         const hasSubtag = source.subtags.includes(subtagName);
         const newSubtags = hasSubtag
-            ? source.subtags.filter(st => st !== subtagName)
+            ? source.subtags.filter((st: string) => st !== subtagName)
             : [...source.subtags, subtagName];
 
         const newSource = { ...source, subtags: newSubtags };

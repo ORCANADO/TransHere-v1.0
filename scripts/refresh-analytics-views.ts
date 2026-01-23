@@ -5,7 +5,10 @@
  * EXECUTION: npx tsx scripts/refresh-analytics-views.ts
  */
 
+import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
+
+config({ path: '.env.local' });
 
 // Use environment variables for Supabase connection
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
