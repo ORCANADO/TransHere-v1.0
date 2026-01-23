@@ -3,7 +3,7 @@ import { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { after } from 'next/server'
 import { getProfileBySlug } from '@/lib/supabase/queries'
-import BridgeProtector from '@/components/features/bridge-protector'
+import BridgeAirlock from '@/components/features/bridge-airlock'
 import PreconnectHints from '@/components/features/preconnect-hints'
 import { captureTelemetry, logBridgeView } from '@/lib/stealth-logger'
 import { DEBUG_BYPASS_PARAM, DEBUG_BYPASS_VALUE } from '@/lib/bot-detection'
@@ -92,13 +92,12 @@ export default async function BridgePage({ params, searchParams }: PageProps) {
     return (
         <main className="min-h-screen bg-background">
             <PreconnectHints priority={true} />
-            <BridgeProtector
+            <BridgeAirlock
                 encodedDestination={encodedDestination}
-                isCrawler={telemetry.isCrawler}
-                modelId={profile.id}
+                profileName={profile.name}
+                avatarUrl={profile.image_url || ''}
                 modelSlug={profile.slug}
-                modelName={profile.name}
-                isVerified={profile.is_verified}
+                modelId={profile.id}
             />
         </main>
     )

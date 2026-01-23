@@ -37,7 +37,6 @@ export function BridgeProtector({
     className = '',
     variant = 'fixed'
 }: BridgeProtectorProps) {
-    const { trackClick } = useAnalytics();
     const [decodedUrl, setDecodedUrl] = useState<string | null>(null);
     const [isMounted, setIsMounted] = useState(false);
 
@@ -49,38 +48,6 @@ export function BridgeProtector({
             setDecodedUrl(decoded);
         }
     }, [isCrawler, encodedDestination]);
-
-    const handleClick = async (e: React.MouseEvent) => {
-        // If it's a crawler or not mounted yet, do nothing but prevent default if it were a link
-        if (isCrawler || !isMounted) {
-            e.preventDefault();
-            await trackClick('social', {
-                modelId,
-                modelSlug,
-                pagePath: `/model/${modelSlug}`,
-            }); // We can still track that a crawler clicked if we want, but the requirement said NOTHING or specifically blocked
-            // Requirement: trackClick(modelId, 'blocked_crawler_click')
-            // Note: useAnalytics trackClick expects ClickType ('social' | 'content')
-            // I will follow the hook's signature but try to pass meaningful info if possible, 
-            // or just follow the requirement's intent.
-            return;
-        }
-
-        if (decodedUrl) {
-            // Prevent default to handle tracking first
-            e.preventDefault();
-
-            // Track the click before navigating
-            await trackClick('social', {
-                modelId,
-                modelSlug,
-                pagePath: `/model/${modelSlug}`,
-            });
-
-            // Open URL in new tab safely
-            window.open(decodedUrl, '_blank', 'noopener,noreferrer');
-        }
-    };
 
     // Generic text for crawlers, personalized for humans
     const buttonText = isCrawler
@@ -113,7 +80,7 @@ export function BridgeProtector({
         : 'w-full';
 
     // Skeleton/Loading state
-    if (!isMounted) {
+    if (!isMounted || !decodedUrl) {
         return (
             <div className={`${baseClasses} ${variantClasses} ${positionClasses} opacity-50 cursor-wait ${className}`}>
                 <div className="w-5 h-5 mr-3 rounded-full bg-white/20 animate-pulse" />
@@ -122,18 +89,17 @@ export function BridgeProtector({
         );
     }
 
+    // DIRECT LINK - Works on all browsers including Safari
     return (
-        <button
-            onClick={handleClick}
+        <a
+            href={decodedUrl}
+            rel="noopener noreferrer"
             className={`${baseClasses} ${variantClasses} ${positionClasses} ${className}`}
-            data-blocked={isCrawler ? "true" : "false"}
             aria-label={buttonText}
-            type="button"
         >
             <MessageCircle className="w-5 h-5 mr-3 text-[#00FF85]" />
             {buttonText}
-            {isCrawler && <div className="sr-only">External content hidden</div>}
-        </button>
+        </a>
     );
 }
 

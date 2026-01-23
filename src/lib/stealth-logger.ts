@@ -87,3 +87,41 @@ export async function logBridgeView(
         console.error('[StealthLogger] Network error:', error);
     }
 }
+
+/**
+ * Fire-and-forget client-side analytics using sendBeacon.
+ * Safe to call immediately before navigation - browser guarantees delivery.
+ */
+export function beaconTrack(
+    eventType: string,
+    modelSlug: string,
+    additionalData?: Record<string, unknown>
+): boolean {
+    if (typeof navigator === 'undefined' || !navigator.sendBeacon) {
+        // Fallback for old browsers: use fetch with keepalive
+        if (typeof fetch !== 'undefined') {
+            fetch('/api/analytics', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    eventType,
+                    modelSlug,
+                    timestamp: new Date().toISOString(),
+                    ...additionalData,
+                }),
+                keepalive: true, // Ensures request completes even after navigation
+            }).catch(() => { }) // Silent fail
+            return true
+        }
+        return false
+    }
+
+    const payload = JSON.stringify({
+        eventType,
+        modelSlug,
+        timestamp: new Date().toISOString(),
+        ...additionalData,
+    })
+
+    return navigator.sendBeacon('/api/analytics', payload)
+}

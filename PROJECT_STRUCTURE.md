@@ -189,7 +189,8 @@ Phase 6.15  → Enhanced Dashboard API & Sidebar Integration
 Phase 6.16  → Dual Analytics System Implementation
 Phase 6.17  → Materialized View Refresh & Data Verification
 Phase 6.18  → Dashboard Data Display & Selection Fixes
-Phase 6.19  → Live Pulse & Monitoring Infrastructure (Real-Time Ingestion Visibility)
+Phase 6.20  → Safari Popup Blocker Fix (Direct Link Protocol)
+Phase 6.21  → Mobile Gallery Rendering Fix (Flex-Shrink Implementation)
 ```
 
 ### Active Constraints

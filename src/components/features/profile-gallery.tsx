@@ -267,15 +267,19 @@ export function ProfileGallery({
               {isCrawler ? "Premium Content" : "Want to see more?"}
             </h3>
 
-            <div
-              onClick={handleLockedClick}
-              className={cn(
-                "px-7 py-3.5 rounded-full bg-black/50 backdrop-blur-[19px] text-[#D4AF37] font-semibold border-2 border-[#D4AF37]/40 shadow-[0_0_15px_rgba(212,175,55,0.25)] transition-all duration-300",
-                !isCrawler && "hover:bg-black/60 hover:border-[#D4AF37]/60 hover:scale-[1.02] cursor-pointer"
-              )}
-            >
-              {isCrawler ? "Premium Content" : "Unlock VIP Content"}
-            </div>
+            {decodedUrl ? (
+              <a
+                href={decodedUrl}
+                rel="noopener noreferrer"
+                className="px-7 py-3.5 rounded-full bg-black/50 backdrop-blur-[19px] text-[#D4AF37] font-semibold border-2 border-[#D4AF37]/40 shadow-[0_0_15px_rgba(212,175,55,0.25)] transition-all duration-300 hover:bg-black/60 hover:border-[#D4AF37]/60 hover:scale-[1.02] cursor-pointer inline-block"
+              >
+                {isCrawler ? "Premium Content" : "Unlock VIP Content"}
+              </a>
+            ) : (
+              <div className="px-7 py-3.5 rounded-full bg-black/50 backdrop-blur-[19px] text-[#D4AF37] font-semibold border-2 border-[#D4AF37]/40 shadow-[0_0_15px_rgba(212,175,55,0.25)] opacity-50">
+                {isCrawler ? "Premium Content" : "Unlock VIP Content"}
+              </div>
+            )}
           </div>
         </div>
       );
@@ -333,9 +337,9 @@ export function ProfileGallery({
     <>
       {/* Mobile Carousel */}
       <div ref={containerRef} className="relative w-full aspect-[3/4] group overflow-hidden lg:hidden">
-        <div ref={scrollContainerRef} className="w-full h-full overflow-x-auto overflow-y-hidden scrollbar-hide gallery-scroll-container overscroll-x-contain">
+        <div ref={scrollContainerRef} className="flex w-full h-full overflow-x-auto overflow-y-hidden scrollbar-hide overscroll-x-contain snap-x snap-mandatory">
           {allSlides.map((slide, index) => (
-            <div key={slide.key} className="h-full gallery-slide bg-card">
+            <div key={slide.key} className="flex-shrink-0 w-full h-full snap-center bg-card">
               {renderMedia(slide, index)}
             </div>
           ))}

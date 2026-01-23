@@ -1096,18 +1096,22 @@ export function StoryViewer({
                 }`}
             >
               {/* Respond to Story Button - iOS Glassmorphism Style */}
-              <button
-                onClick={handleRespondToStory}
-                disabled={isCrawler || !hasHydrated || !decodedUrl}
-                className={cn(
-                  "flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-xl text-[#00FF85] border border-white/20 rounded-full font-bold transition-all duration-300 shadow-[0_0_20px_rgba(0,255,133,0.15)] active:scale-[0.98] active:bg-white/20",
-                  isCrawler || !hasHydrated || !decodedUrl
-                    ? "opacity-80 cursor-default grayscale-[0.5]"
-                    : "hover:bg-white/15 hover:border-[#00FF85]/40 hover:shadow-[0_0_25px_rgba(0,255,133,0.25)]"
-                )}
-              >
-                <span>{isCrawler ? "Premium Content" : "Respond to Story"}</span>
-              </button>
+              {decodedUrl && hasHydrated && !isCrawler ? (
+                <a
+                  href={decodedUrl}
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-xl text-[#00FF85] border border-white/20 rounded-full font-bold transition-all duration-300 shadow-[0_0_20px_rgba(0,255,133,0.15)] active:scale-[0.98] active:bg-white/20 hover:bg-white/15 hover:border-[#00FF85]/40 hover:shadow-[0_0_25px_rgba(0,255,133,0.25)]"
+                >
+                  <span>Respond to Story</span>
+                </a>
+              ) : (
+                <button
+                  disabled
+                  className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-xl text-[#00FF85] border border-white/20 rounded-full font-bold transition-all duration-300 shadow-[0_0_20px_rgba(0,255,133,0.15)] opacity-80 cursor-default grayscale-[0.5]"
+                >
+                  <span>{isCrawler ? "Premium Content" : "Respond to Story"}</span>
+                </button>
+              )}
 
               {/* Share Button - Neon Cyber Violet Dark Glass */}
               <button

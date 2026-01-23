@@ -4,6 +4,30 @@
 
 ---
 
+## [2026-01-23] - Phase 6.20: Safari Compatibility & Conversion Hardening
+**Status:** Complete
+
+### Safari "Popup Blocked" Resolution:
+- [x] **Synchronous Navigation**: Refactored `src/components/features/bridge-airlock.tsx` to eliminate all async operations (state updates, awaits) between click and navigation.
+- [x] **`navigator.sendBeacon`**: Migrated bridge telemetry to non-blocking beacon API to ensure data collection without delaying user redirection.
+- [x] **CSS-based Feedback**: Implemented `:active` state visual feedback to replace React-controlled loading states, preserving the user gesture token.
+- [x] **Prop Hardening & Integration**: Updated `src/app/[slug]/page.tsx` to pass `modelSlug` and `modelId` to the new `BridgeAirlock` component, ensuring precise conversion tracking.
+- [x] **Component Consolidation**: Renamed component to `BridgeAirlock` to resolve naming collisions with legacy sticky components.
+- [x] **Safari Popup Blocker Resolution**: Converted all conversion buttons to direct `<a>` tags to bypass Safari's Intelligent Tracking Prevention:
+  - `BridgeProtector` ("Chat with Me" button)
+  - `ProfileGallery` ("Unlock VIP Content" button)
+  - `StoryViewer` ("Respond to Story" button)
+
+---
+
+## [2026-01-23] - Phase 6.21: Mobile Gallery Fix
+**Status:** Complete
+
+### Mobile Gallery Rendering:
+- [x] **Horizontal Scroll Fix**: Fixed mobile gallery black screen issue by adding `flex` display to scroll container and `flex-shrink-0 w-full` to each slide for proper horizontal scrolling.
+
+---
+
 ## [2026-01-23] - Phase 6.19: Live Pulse & Monitoring Infrastructure
 **Status:** Complete
 

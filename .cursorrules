@@ -126,15 +126,18 @@ Do not use `useRouter().push` for external links.
 - **Content Strategy:**
   - Static UI text MUST be added to `DICTIONARY` in `i18n.ts`.
 - Database content (Models) should support optional `_es` columns for key text fields (Bio), falling back to English if null.
-- **External Links:** ALL buttons that lead to OnlyFans/Fansly MUST use a standard `<a>` tag or `window.open` with `target="_blank"` and `rel="noopener noreferrer"`.
-- **Copy-Go Protocol:** High-intent conversion buttons (specifically "Respond to Story") MUST trigger a clipboard write of the context URL (Deep Link) *simultaneously* with the external navigation.
-    - *Goal:* User lands in DMs -> Pastes -> Model knows exactly which story they are replying to.
-- **Telemetry:** 
-    - Every conversion click MUST trigger `trackClick(modelId, type)` or `logTrackingEvent(payload)` before/after the user leaves.
-    - **Bot Filtering:** ALWAYS use `isBot(userAgent)` from `@/lib/bot-detection` to skip logging for crawlers.
-    - **Performance:** Use Next.js `after()` for non-blocking analytics logging in Route Handlers.
-    - **Caching:** Use `getTrackingLinkCached` with `unstable_cache` for tracking attribution lookups.
-    - **API Limits & Scaling:** Supabase PostgREST has a 1000 row default limit. 
+- **API Limits & Scaling:** Supabase PostgREST has a 1000 row default limit. 
+- **Safari Compatibility Protocol:**
+    - **CRITICAL:** ALL high-intent conversion buttons (CTAs) MUST use direct `<a>` tags for external redirects.
+    - **ITP Mitigation:** Safari's Intelligent Tracking Prevention blocks `window.open` or `window.location.href` redirects within `onClick` handlers if they target external domains from "gateway" pages.
+    - **No-JS Navigation:** Even with `sendBeacon`, Safari may block popups if there's any delay. Use pure HTML navigation where possible.
+
+### 2.16 Gallery Items Architecture (Hybrid Video Support)
+- **Database:** Use `gallery_items` table instead of deprecated `gallery_urls` array.
+- **Mobile Gallery Fix:** 
+    - The mobile horizontal scroll container (`flex w-full overflow-x-auto`) REQUIRES `flex-shrink-0 w-full` on child slides.
+    - WITHOUT these classes, slides collapse to 0 width and cause a black screen.
+    - ALWAYS use `snap-x snap-mandatory` for smooth mobile carousel feel.
         - ALWAYS fetch in `DESC` order to prioritize recent data.
         - **Recursive Pagination:** For dashboards, implement a `while` loop with `.range(from, to)` to fetch chunks until the full range (capped at 10,000) is retrieved.
         - **Stable Ordering:** ALL paginated queries must include a stable secondary sort column (e.g., `.order('created_at').order('id')`) to prevent missing/dup rows.

@@ -33,13 +33,37 @@ async function recordEventWithRetry(
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    // 1. Handle both JSON and plain text (sendBeacon default)
+    const contentType = request.headers.get('content-type') || ''
+    let body: any
+
+    if (contentType.includes('application/json')) {
+      body = await request.json()
+    } else {
+      // sendBeacon or ping attribute sends as text/plain or similar
+      const text = await request.text()
+      try {
+        body = text === 'PING' ? {} : JSON.parse(text)
+      } catch (e) {
+        body = {}
+      }
+    }
+
+    // 2. Merge data from query parameters (crucial for native 'ping' attribute)
+    const { searchParams } = new URL(request.url)
+    const queryData: Record<string, string> = {}
+    searchParams.forEach((value, key) => {
+      queryData[key] = value
+    })
+
+    const payload = { ...body, ...queryData }
+
     const {
       modelId,
       eventType,
       modelSlug,
       pagePath
-    } = body;
+    } = payload;
 
     // Validate required fields (eventType is required)
     if (!eventType) {
