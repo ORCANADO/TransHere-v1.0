@@ -212,13 +212,13 @@ export function DashboardFiltersBar({
                     <button
                         className={cn(
                             "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                            "bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10",
-                            "hover:bg-[#EBECF0] dark:hover:bg-white/10 shadow-sm active:scale-95",
-                            openDropdown === 'period' && "ring-2 ring-[#007AFF]/20 dark:ring-[#7A27FF]/50"
+                            "bg-glass-surface border border-obsidian-rim",
+                            "hover:bg-glass-surface/80 shadow-sm active:scale-95",
+                            openDropdown === 'period' && "ring-2 ring-accent-violet/50"
                         )}
                     >
-                        <Calendar className="w-4 h-4 text-[#86868B]" />
-                        <span className="text-[#1D1D1F] dark:text-white">
+                        <Calendar className={cn("w-4 h-4", openDropdown === 'period' ? "text-accent-violet" : "text-glass-muted")} />
+                        <span className="text-glass-primary">
                             {TIME_PERIODS.find(p => p.value === filters.period)?.label || 'Select Period'}
                         </span>
                         <ChevronDown className={cn(
@@ -228,7 +228,7 @@ export function DashboardFiltersBar({
                     </button>
                 </PopoverTrigger>
                 <PopoverContent
-                    className="min-w-[200px] bg-[#F9F9FB]/95 dark:bg-[#0A1221]/95 backdrop-blur-3xl rounded-2xl border border-[#E5E5EA] dark:border-white/10 shadow-2xl"
+                    className="min-w-[200px] bg-glass-surface backdrop-blur-thick rounded-2xl border border-obsidian-rim shadow-ao-stack"
                     align="start"
                     side="bottom"
                     sideOffset={8}
@@ -239,10 +239,10 @@ export function DashboardFiltersBar({
                                 key={period.value}
                                 onClick={() => handlePeriodChange(period.value)}
                                 className={cn(
-                                    "w-full px-4 py-2.5 text-left text-sm hover:bg-black/[0.05] dark:hover:bg-white/5 transition-colors cursor-pointer",
+                                    "w-full px-4 py-2.5 text-left text-sm hover:bg-glass-surface transition-colors cursor-pointer",
                                     filters.period === period.value
-                                        ? "text-[#007AFF] dark:text-[#007AFF] font-bold"
-                                        : "text-[#1D1D1F] dark:text-white"
+                                        ? "text-accent-violet font-bold"
+                                        : "text-glass-primary"
                                 )}
                             >
                                 {period.label}
@@ -252,8 +252,8 @@ export function DashboardFiltersBar({
 
                     {/* Custom Date Range */}
                     {filters.period === 'custom' && (
-                        <div className="p-3 border-t border-[#E5E5EA] dark:border-white/10 space-y-2">
-                            <p className="text-[10px] uppercase tracking-widest text-[#86868B] font-bold px-1 mb-1">Custom Range</p>
+                        <div className="p-3 border-t border-obsidian-rim space-y-2">
+                            <p className="text-[10px] uppercase tracking-widest text-glass-muted font-bold px-1 mb-1">Custom Range</p>
                             <DatePicker
                                 value={filters.startDate || ''}
                                 onChange={(date) => {
@@ -281,13 +281,13 @@ export function DashboardFiltersBar({
                     <button
                         className={cn(
                             "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                            "bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10",
-                            "hover:bg-[#EBECF0] dark:hover:bg-white/10 shadow-sm active:scale-95",
-                            openDropdown === 'countries' && "ring-2 ring-[#007AFF]/20 dark:ring-[#7A27FF]/50"
+                            "bg-glass-surface border border-obsidian-rim",
+                            "hover:bg-glass-surface/80 shadow-sm active:scale-95",
+                            openDropdown === 'countries' && "ring-2 ring-accent-violet/50"
                         )}
                     >
-                        <Globe className="w-4 h-4 text-[#86868B]" />
-                        <span className="text-[#1D1D1F] dark:text-white">
+                        <Globe className={cn("w-4 h-4", openDropdown === 'countries' ? "text-accent-violet" : "text-glass-muted")} />
+                        <span className="text-glass-primary">
                             {getCountriesDisplay()}
                         </span>
                         <ChevronDown className={cn(
@@ -297,24 +297,24 @@ export function DashboardFiltersBar({
                     </button>
                 </PopoverTrigger>
                 <PopoverContent
-                    className="min-w-[200px] bg-[#F9F9FB]/95 dark:bg-[#0A1221]/95 backdrop-blur-3xl rounded-2xl border border-[#E5E5EA] dark:border-white/10 shadow-2xl"
+                    className="min-w-[200px] bg-glass-surface backdrop-blur-thick rounded-2xl border border-obsidian-rim shadow-ao-stack"
                     align="start"
                     side="bottom"
                     sideOffset={8}
                 >
                     <div className="max-h-[300px] overflow-y-auto">
                         {/* Select All / Clear Actions */}
-                        <div className="p-3 border-b border-[#E5E5EA] dark:border-white/10 space-y-2">
+                        <div className="p-3 border-b border-obsidian-rim space-y-2">
                             <div className="flex gap-2">
                                 <button
                                     onClick={handleSelectAllCountries}
-                                    className="flex-1 px-3 py-1.5 text-xs bg-[#007AFF] text-white rounded-lg hover:opacity-90 transition-opacity"
+                                    className="flex-1 px-3 py-1.5 text-xs bg-accent-violet text-white rounded-lg hover:opacity-90 transition-opacity font-bold shadow-sm"
                                 >
                                     Select All
                                 </button>
                                 <button
                                     onClick={handleClearCountries}
-                                    className="flex-1 px-3 py-1.5 text-xs bg-[#86868B] text-white rounded-lg hover:opacity-90 transition-opacity"
+                                    className="flex-1 px-3 py-1.5 text-xs bg-glass-surface border border-obsidian-rim text-glass-primary rounded-lg hover:bg-glass-surface/80 transition-all font-bold"
                                 >
                                     Clear
                                 </button>
@@ -337,10 +337,10 @@ export function DashboardFiltersBar({
                                         )}
                                     >
                                         <div className={cn(
-                                            "w-4 h-4 border-2 rounded flex items-center justify-center",
+                                            "w-4 h-4 border-2 rounded-lg flex items-center justify-center transition-all",
                                             isSelected
-                                                ? "bg-[#007AFF] border-[#007AFF]"
-                                                : "border-[#E5E5EA] dark:border-white/30"
+                                                ? "bg-accent-violet border-accent-violet"
+                                                : "border-obsidian-rim"
                                         )}>
                                             {isSelected && <Check className="w-3 h-3 text-white" />}
                                         </div>
@@ -359,13 +359,13 @@ export function DashboardFiltersBar({
                     <button
                         className={cn(
                             "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                            "bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10",
-                            "hover:bg-[#EBECF0] dark:hover:bg-white/10 shadow-sm active:scale-95",
-                            openDropdown === 'sources' && "ring-2 ring-[#007AFF]/20 dark:ring-[#7A27FF]/50"
+                            "bg-glass-surface border border-obsidian-rim",
+                            "hover:bg-glass-surface/80 shadow-sm active:scale-95",
+                            openDropdown === 'sources' && "ring-2 ring-accent-violet/50"
                         )}
                     >
-                        <Link2 className="w-4 h-4 text-[#86868B]" />
-                        <span className="text-[#1D1D1F] dark:text-white">
+                        <Link2 className={cn("w-4 h-4", openDropdown === 'sources' ? "text-accent-violet" : "text-glass-muted")} />
+                        <span className="text-glass-primary">
                             {getSourcesDisplay()}
                         </span>
                         <ChevronDown className={cn(
@@ -375,24 +375,24 @@ export function DashboardFiltersBar({
                     </button>
                 </PopoverTrigger>
                 <PopoverContent
-                    className="min-w-[200px] bg-[#F9F9FB]/95 dark:bg-[#0A1221]/95 backdrop-blur-3xl rounded-2xl border border-[#E5E5EA] dark:border-white/10 shadow-2xl"
+                    className="min-w-[200px] bg-glass-surface backdrop-blur-thick rounded-2xl border border-obsidian-rim shadow-ao-stack"
                     align="start"
                     side="bottom"
                     sideOffset={8}
                 >
                     <div className="max-h-[300px] overflow-y-auto">
                         {/* Select All / Clear Actions */}
-                        <div className="p-3 border-b border-[#E5E5EA] dark:border-white/10 space-y-2">
+                        <div className="p-3 border-b border-obsidian-rim space-y-2">
                             <div className="flex gap-2">
                                 <button
                                     onClick={handleSelectAllSources}
-                                    className="flex-1 px-3 py-1.5 text-xs bg-[#007AFF] text-white rounded-lg hover:opacity-90 transition-opacity"
+                                    className="flex-1 px-3 py-1.5 text-xs bg-accent-violet text-white rounded-lg hover:opacity-90 transition-opacity font-bold shadow-sm"
                                 >
                                     Select All
                                 </button>
                                 <button
                                     onClick={handleClearSources}
-                                    className="flex-1 px-3 py-1.5 text-xs bg-[#86868B] text-white rounded-lg hover:opacity-90 transition-opacity"
+                                    className="flex-1 px-3 py-1.5 text-xs bg-glass-surface border border-obsidian-rim text-glass-primary rounded-lg hover:bg-glass-surface/80 transition-all font-bold"
                                 >
                                     Clear
                                 </button>
@@ -418,10 +418,10 @@ export function DashboardFiltersBar({
                                         )}
                                     >
                                         <div className={cn(
-                                            "w-4 h-4 border-2 rounded flex items-center justify-center",
+                                            "w-4 h-4 border-2 rounded-lg flex items-center justify-center transition-all",
                                             isSelected
-                                                ? "bg-[#007AFF] border-[#007AFF]"
-                                                : "border-[#E5E5EA] dark:border-white/30"
+                                                ? "bg-accent-violet border-accent-violet"
+                                                : "border-obsidian-rim"
                                         )}>
                                             {isSelected && <Check className="w-3 h-3 text-white" />}
                                         </div>
@@ -441,21 +441,21 @@ export function DashboardFiltersBar({
                 disabled={loading}
                 className={cn(
                     "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                    "bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10",
-                    "hover:bg-[#EBECF0] dark:hover:bg-white/10 shadow-sm active:scale-95",
+                    "bg-glass-surface border border-obsidian-rim",
+                    "hover:bg-glass-surface/80 shadow-sm active:scale-95",
                     "disabled:opacity-50 disabled:cursor-not-allowed"
                 )}
             >
                 <RefreshCw className={cn(
-                    "w-4 h-4 text-[#86868B]",
+                    "w-4 h-4 text-glass-muted",
                     loading && "animate-spin"
                 )} />
-                <span className="text-[#1D1D1F] dark:text-white">Refresh</span>
+                <span className="text-glass-primary">Refresh</span>
             </button>
 
             {/* Loading Indicator */}
             {loading && (
-                <div className="ml-2 w-5 h-5 border-2 border-[#7A27FF] border-t-transparent rounded-full animate-spin" />
+                <div className="ml-2 w-5 h-5 border-2 border-accent-violet border-t-transparent rounded-full animate-spin" />
             )}
         </div>
     );

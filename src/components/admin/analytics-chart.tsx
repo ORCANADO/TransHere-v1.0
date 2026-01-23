@@ -27,34 +27,37 @@ export function AnalyticsChart({ data, title }: AnalyticsChartProps) {
   }
 
   return (
-    <div className="bg-card border border-white/10 rounded-xl p-4 lg:p-6">
+    <div className="liquid-glass p-4 lg:p-6">
       {title && (
         <h3 className="text-lg font-semibold text-white mb-4">{title}</h3>
       )}
       <div className="h-[300px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-obsidian-rim)" strokeOpacity={0.3} />
             <XAxis
               dataKey="label"
-              stroke="#94A3B8"
+              stroke="var(--text-obsidian-muted)"
               fontSize={12}
               tickLine={false}
             />
             <YAxis
-              stroke="#94A3B8"
+              stroke="var(--text-obsidian-muted)"
               fontSize={12}
               tickLine={false}
               axisLine={false}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: '#0A1221',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '8px',
-                color: '#fff'
+                backgroundColor: 'var(--surface-obsidian-raised)',
+                backdropFilter: 'var(--blur-medium)',
+                WebkitBackdropFilter: 'var(--blur-medium)',
+                border: '1px solid var(--border-obsidian-rim)',
+                borderRadius: 'var(--radius-squircle)',
+                boxShadow: 'var(--shadow-ao-stack)',
+                color: 'var(--text-obsidian-primary)'
               }}
-              labelStyle={{ color: '#94A3B8' }}
+              labelStyle={{ color: 'var(--text-obsidian-muted)' }}
             />
             <Legend />
             <Line

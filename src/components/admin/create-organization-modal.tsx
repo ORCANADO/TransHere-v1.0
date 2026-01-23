@@ -78,18 +78,18 @@ export function CreateOrganizationModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white dark:bg-[#0A1221] border border-[#E5E5EA] dark:border-white/10 rounded-2xl shadow-2xl max-w-md w-full">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-thick">
+            <div className="bg-glass-surface border border-obsidian-rim rounded-2xl shadow-ao-stack max-w-md w-full">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-[#E5E5EA] dark:border-white/10">
-                    <h2 className="text-xl font-bold text-[#1D1D1F] dark:text-white">
+                <div className="flex items-center justify-between p-6 border-b border-obsidian-rim">
+                    <h2 className="text-xl font-bold text-glass-primary">
                         {createdOrg ? 'Organization Created' : 'Create Organization'}
                     </h2>
                     <button
                         onClick={handleClose}
-                        className="p-2 rounded-lg hover:bg-black/[0.04] dark:hover:bg-white/10 transition-all"
+                        className="p-2 rounded-lg hover:bg-glass-surface transition-all"
                     >
-                        <X className="w-5 h-5 text-[#86868B] dark:text-muted-foreground" />
+                        <X className="w-5 h-5 text-glass-muted" />
                     </button>
                 </div>
 
@@ -98,7 +98,7 @@ export function CreateOrganizationModal({
                     {!createdOrg ? (
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-semibold text-[#1D1D1F] dark:text-white mb-2">
+                                <label className="block text-sm font-bold text-glass-primary mb-2">
                                     Organization Name
                                 </label>
                                 <input
@@ -108,16 +108,16 @@ export function CreateOrganizationModal({
                                     placeholder="Enter organization name"
                                     maxLength={100}
                                     required
-                                    className="w-full px-4 py-2.5 bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-xl text-[#1D1D1F] dark:text-white placeholder:text-[#86868B] dark:placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#00FF85] transition-all"
+                                    className="w-full px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary placeholder:text-glass-muted focus:outline-none focus:ring-2 focus:ring-accent-emerald/20 transition-all"
                                 />
-                                <p className="text-xs text-[#86868B] dark:text-muted-foreground mt-1">
+                                <p className="text-xs text-glass-muted mt-1">
                                     {name.length}/100 characters
                                 </p>
                             </div>
 
                             {error && (
-                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                                    <p className="text-sm text-red-500">{error}</p>
+                                <div className="p-3 bg-accent-red/10 border border-accent-red/20 rounded-lg">
+                                    <p className="text-sm text-accent-red font-semibold">{error}</p>
                                 </div>
                             )}
 
@@ -125,14 +125,14 @@ export function CreateOrganizationModal({
                                 <button
                                     type="button"
                                     onClick={handleClose}
-                                    className="flex-1 px-4 py-2.5 bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-xl font-semibold text-[#1D1D1F] dark:text-white hover:bg-black/[0.04] dark:hover:bg-white/10 transition-all"
+                                    className="flex-1 px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl font-bold text-glass-primary hover:bg-glass-surface/80 transition-all"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={loading || !name.trim()}
-                                    className="flex-1 px-4 py-2.5 bg-[#00FF85] text-black rounded-xl font-semibold hover:bg-[#00FF85]/90 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-1 px-4 py-2.5 bg-accent-emerald text-black rounded-xl font-bold hover:opacity-90 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {loading ? 'Creating...' : 'Create Organization'}
                                 </button>
@@ -141,20 +141,20 @@ export function CreateOrganizationModal({
                     ) : (
                         <div className="space-y-4">
                             {/* Success Message */}
-                            <div className="p-4 bg-[#00FF85]/10 border border-[#00FF85]/20 rounded-xl">
-                                <p className="text-sm font-semibold text-[#00FF85] mb-1">
+                            <div className="p-4 bg-accent-emerald/10 border border-accent-emerald/20 rounded-xl">
+                                <p className="text-sm font-bold text-accent-emerald mb-1">
                                     Organization "{createdOrg.name}" created successfully!
                                 </p>
                             </div>
 
                             {/* Warning */}
-                            <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-start gap-3">
-                                <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                            <div className="p-4 bg-accent-gold/10 border border-accent-gold/20 rounded-xl flex items-start gap-3">
+                                <AlertTriangle className="w-5 h-5 text-accent-gold flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="text-sm font-semibold text-yellow-500 mb-1">
+                                    <p className="text-sm font-bold text-accent-gold mb-1">
                                         Save this API key now
                                     </p>
-                                    <p className="text-xs text-yellow-500/80">
+                                    <p className="text-xs text-accent-gold/80 leading-relaxed">
                                         This is the only time you'll see the full API key. Make sure to copy it before closing this dialog.
                                     </p>
                                 </div>
@@ -162,11 +162,11 @@ export function CreateOrganizationModal({
 
                             {/* API Key Display */}
                             <div>
-                                <label className="block text-sm font-semibold text-[#1D1D1F] dark:text-white mb-2">
+                                <label className="block text-sm font-bold text-glass-primary mb-2">
                                     API Key
                                 </label>
                                 <div className="flex items-center gap-2">
-                                    <code className="flex-1 px-4 py-2.5 bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-xl text-sm font-mono text-[#1D1D1F] dark:text-white break-all">
+                                    <code className="flex-1 px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl text-sm font-mono text-glass-primary break-all">
                                         {createdOrg.api_key}
                                     </code>
                                     <button
@@ -174,8 +174,8 @@ export function CreateOrganizationModal({
                                         className={cn(
                                             "p-2.5 rounded-xl transition-all",
                                             copied
-                                                ? "bg-[#00FF85]/20 text-[#00FF85]"
-                                                : "bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 hover:bg-black/[0.04] dark:hover:bg-white/10"
+                                                ? "bg-accent-emerald/20 text-accent-emerald"
+                                                : "bg-glass-surface border border-obsidian-rim hover:bg-glass-surface/80"
                                         )}
                                         title="Copy API key"
                                     >
@@ -190,7 +190,7 @@ export function CreateOrganizationModal({
 
                             <button
                                 onClick={handleClose}
-                                className="w-full px-4 py-2.5 bg-[#00FF85] text-black rounded-xl font-semibold hover:bg-[#00FF85]/90 transition-all active:scale-95"
+                                className="w-full px-4 py-2.5 bg-accent-emerald text-black rounded-xl font-bold hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-accent-emerald/20"
                             >
                                 Done
                             </button>

@@ -193,31 +193,31 @@ export function DatePicker({
         className="fixed z-[100]"
         style={{ top: position.top, left: position.left }}
       >
-        <div className="backdrop-blur-xl bg-popover/95 border border-border rounded-2xl p-5 shadow-2xl min-w-[320px] max-w-[320px]">
+        <div className="bg-glass-surface backdrop-blur-thick border border-obsidian-rim rounded-2xl p-5 shadow-ao-stack min-w-[320px] max-w-[320px]">
           {/* Header */}
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-1">
               <button
                 onClick={handlePrevMonth}
-                className="p-2 rounded-xl hover:bg-muted active:bg-muted/80 transition-all"
+                className="p-2 rounded-xl hover:bg-glass-surface active:bg-glass-surface/80 transition-all"
                 aria-label="Previous month"
               >
-                <ChevronLeft className="w-4 h-4 text-foreground" />
+                <ChevronLeft className="w-4 h-4 text-glass-primary" />
               </button>
               <button
                 onClick={() => setCurrentMonth(new Date())}
-                className="px-4 py-2 rounded-xl hover:bg-muted active:bg-muted/80 transition-all"
+                className="px-4 py-2 rounded-xl hover:bg-glass-surface active:bg-glass-surface/80 transition-all"
               >
-                <span className="text-foreground font-semibold text-sm">
+                <span className="text-glass-primary font-bold text-sm">
                   {MONTHS[currentMonth.getMonth()]} {currentMonth.getFullYear()}
                 </span>
               </button>
               <button
                 onClick={handleNextMonth}
-                className="p-2 rounded-xl hover:bg-muted active:bg-muted/80 transition-all"
+                className="p-2 rounded-xl hover:bg-glass-surface active:bg-glass-surface/80 transition-all"
                 aria-label="Next month"
               >
-                <ChevronRight className="w-4 h-4 text-foreground" />
+                <ChevronRight className="w-4 h-4 text-glass-primary" />
               </button>
             </div>
           </div>
@@ -227,7 +227,7 @@ export function DatePicker({
             {DAYS.map((day, index) => (
               <div
                 key={index}
-                className="text-center text-xs text-muted-foreground font-semibold py-2"
+                className="text-center text-xs text-glass-muted font-bold py-2 uppercase tracking-tight"
               >
                 {day}
               </div>
@@ -251,12 +251,12 @@ export function DatePicker({
                   onClick={() => !disabled && handleDateSelect(day)}
                   disabled={disabled}
                   className={cn(
-                    "aspect-square rounded-xl text-sm font-medium transition-all duration-200",
-                    "hover:bg-muted active:scale-95",
-                    disabled && "opacity-25 cursor-not-allowed",
-                    selected && "bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/20 hover:bg-primary",
-                    !selected && !disabled && "text-foreground hover:bg-muted",
-                    today && !selected && !disabled && "border-2 border-primary/40 bg-primary/5"
+                    "aspect-square rounded-xl text-sm font-bold transition-all duration-200",
+                    "hover:bg-glass-surface active:scale-95",
+                    disabled && "opacity-20 cursor-not-allowed",
+                    selected && "bg-accent-emerald text-black font-bold shadow-lg shadow-accent-emerald/20 hover:bg-accent-emerald",
+                    !selected && !disabled && "text-glass-primary hover:bg-glass-surface",
+                    today && !selected && !disabled && "border-2 border-accent-emerald/40 bg-accent-emerald/5"
                   )}
                 >
                   {day}
@@ -266,16 +266,16 @@ export function DatePicker({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-between mt-5 pt-4 border-t border-border">
+          <div className="flex items-center justify-between mt-5 pt-4 border-t border-obsidian-rim">
             <button
               onClick={handleClear}
-              className="px-4 py-2 text-sm text-[#00FF85] hover:text-[#00FF85]/90 hover:bg-[#00FF85]/10 rounded-xl transition-all font-medium active:scale-95"
+              className="px-4 py-2 text-sm text-accent-emerald hover:bg-accent-emerald/10 rounded-xl transition-all font-bold active:scale-95"
             >
               Clear
             </button>
             <button
               onClick={handleToday}
-              className="px-4 py-2 text-sm text-[#00FF85] hover:text-[#00FF85]/90 hover:bg-[#00FF85]/10 rounded-xl transition-all font-medium active:scale-95"
+              className="px-4 py-2 text-sm text-accent-emerald hover:bg-accent-emerald/10 rounded-xl transition-all font-bold active:scale-95"
             >
               Today
             </button>
@@ -291,14 +291,14 @@ export function DatePicker({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200",
-          "hover:bg-muted/50 active:bg-muted text-left",
-          isOpen && "bg-muted text-foreground ring-1 ring-border shadow-sm",
-          !isOpen && "text-muted-foreground hover:text-foreground"
+          "flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 border border-obsidian-rim",
+          "bg-glass-surface hover:bg-glass-surface/80 active:scale-95 text-left",
+          isOpen && "ring-2 ring-accent-emerald/50 shadow-ao-stack",
+          !isOpen && "text-glass-muted hover:text-glass-primary shadow-sm"
         )}
       >
-        <CalendarIcon className={cn("w-4 h-4", isOpen && "text-[#00FF85]")} />
-        <span className="text-sm font-medium">
+        <CalendarIcon className={cn("w-4 h-4", isOpen ? "text-accent-emerald" : "text-glass-muted")} />
+        <span className="text-sm font-bold">
           {value ? formatDisplayDate(parseDateLocal(value)) : placeholder}
         </span>
       </button>

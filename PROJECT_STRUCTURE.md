@@ -191,6 +191,7 @@ Phase 6.17  → Materialized View Refresh & Data Verification
 Phase 6.18  → Dashboard Data Display & Selection Fixes
 Phase 6.20  → Safari Popup Blocker Fix (Direct Link Protocol)
 Phase 6.21  → Mobile Gallery Rendering Fix (Flex-Shrink Implementation)
+Phase 6.22  → Admin Brand Purge & Liquid Glass Sync
 ```
 
 ### Active Constraints

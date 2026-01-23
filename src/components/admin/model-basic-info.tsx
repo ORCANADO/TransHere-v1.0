@@ -192,16 +192,16 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
   return (
     <div className="space-y-6">
       {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400">
+        <div className="p-4 bg-accent-red/10 border border-accent-red/20 rounded-lg text-accent-red">
           {error}
         </div>
       )}
 
       {/* Role indicator for organization users */}
       {userRole === 'organization' && (
-        <div className="p-4 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-lg text-[#D4AF37] text-sm">
+        <div className="p-4 bg-accent-gold/10 border border-accent-gold/20 rounded-lg text-accent-gold text-sm">
           <p className="font-medium">Organization Access</p>
-          <p className="text-[#D4AF37]/80 text-xs mt-1">
+          <p className="text-accent-gold/80 text-xs mt-1">
             You can edit basic model information. Content management (gallery, stories) is managed by administrators.
           </p>
         </div>
@@ -210,7 +210,7 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
       {/* Basic Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-bold text-muted-foreground mb-1 px-1">
+          <label className="block text-sm font-bold text-glass-muted mb-1 px-1">
             Name *
           </label>
           <input
@@ -218,12 +218,12 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
             value={formData.name}
             onChange={(e) => handleChange('name', e.target.value)}
             placeholder="Valentina Aguirre"
-            className="w-full px-4 py-2.5 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all"
+            className="w-full px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary placeholder:text-glass-muted focus:ring-2 focus:ring-accent-emerald/20 outline-none transition-all"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-muted-foreground mb-1 px-1">
+          <label className="block text-sm font-bold text-glass-muted mb-1 px-1">
             Slug * <span className="text-xs font-medium opacity-70">(URL-friendly name)</span>
           </label>
           <input
@@ -231,14 +231,14 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
             value={formData.slug}
             onChange={(e) => handleChange('slug', e.target.value)}
             placeholder="valentina-aguirre"
-            className="w-full px-4 py-2.5 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all"
+            className="w-full px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary placeholder:text-glass-muted focus:ring-2 focus:ring-accent-emerald/20 outline-none transition-all"
           />
         </div>
       </div>
 
       {/* Bio */}
       <div>
-        <label className="block text-sm font-bold text-muted-foreground mb-1 px-1">
+        <label className="block text-sm font-bold text-glass-muted mb-1 px-1">
           Bio (English)
         </label>
         <textarea
@@ -246,12 +246,12 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
           onChange={(e) => handleChange('bio', e.target.value)}
           placeholder="Model description in English..."
           rows={3}
-          className="w-full px-4 py-2.5 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground resize-none placeholder:text-muted-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all"
+          className="w-full px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary resize-none placeholder:text-glass-muted focus:ring-2 focus:ring-accent-emerald/20 outline-none transition-all"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-bold text-muted-foreground mb-1 px-1">
+        <label className="block text-sm font-bold text-glass-muted mb-1 px-1">
           Bio (Spanish) <span className="text-xs font-medium opacity-70">(Optional)</span>
         </label>
         <textarea
@@ -259,13 +259,13 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
           onChange={(e) => handleChange('bio_es', e.target.value)}
           placeholder="Descripción del modelo en español..."
           rows={3}
-          className="w-full px-4 py-2.5 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground resize-none placeholder:text-muted-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all"
+          className="w-full px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary resize-none placeholder:text-glass-muted focus:ring-2 focus:ring-accent-emerald/20 outline-none transition-all"
         />
       </div>
 
       {/* Social Link */}
       <div>
-        <label className="block text-sm font-bold text-muted-foreground mb-1 px-1">
+        <label className="block text-sm font-bold text-glass-muted mb-1 px-1">
           Social Link (OnlyFans/Fansly) *
         </label>
         <div className="relative">
@@ -274,14 +274,14 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
             value={formData.social_link}
             onChange={(e) => handleChange('social_link', e.target.value)}
             placeholder="https://onlyfans.com/username"
-            className="w-full px-4 py-2.5 pr-10 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all"
+            className="w-full px-4 py-2.5 pr-10 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary placeholder:text-glass-muted focus:ring-2 focus:ring-accent-emerald/20 outline-none transition-all"
           />
           {formData.social_link && (
             <a
               href={formData.social_link}
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-glass-muted hover:text-glass-primary transition-colors"
             >
               <ExternalLink className="w-4 h-4" />
             </a>
@@ -309,14 +309,14 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
       {/* Organization - Only editable by admins */}
       {userRole === 'admin' && (
         <div>
-          <label className="block text-sm font-bold text-muted-foreground mb-1 px-1">
+          <label className="block text-sm font-bold text-glass-muted mb-1 px-1">
             Organization <span className="text-xs font-medium opacity-70">(Optional)</span>
           </label>
           <select
             value={formData.organization_id || ''}
             onChange={(e) => handleChange('organization_id', e.target.value || null)}
             disabled={loadingOrgs}
-            className="w-full px-4 py-2.5 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary focus:ring-2 focus:ring-accent-emerald/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <option value="">No Organization (Unassigned)</option>
             {organizations.map((org) => (
@@ -340,12 +340,12 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
           {formData.tags.map((tag: string) => (
             <span
               key={tag}
-              className="flex items-center gap-1 px-3 py-1 bg-[#7A27FF]/20 text-[#7A27FF] rounded-full text-sm"
+              className="flex items-center gap-1 px-3 py-1 bg-accent-violet/20 text-accent-violet rounded-full text-sm font-semibold shadow-sm"
             >
               {tag}
               <button
                 onClick={() => removeTag(tag)}
-                className="hover:text-white transition-colors"
+                className="hover:text-accent-violet/80 transition-colors"
                 aria-label={`Remove tag ${tag}`}
               >
                 <X className="w-3 h-3" />
@@ -360,11 +360,11 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
             onChange={(e) => setNewTag(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
             placeholder="Add tag..."
-            className="flex-1 px-4 py-2.5 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all"
+            className="flex-1 px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary placeholder:text-glass-muted focus:ring-2 focus:ring-accent-emerald/20 outline-none transition-all"
           />
           <button
             onClick={addTag}
-            className="px-4 py-2 bg-black/[0.03] dark:bg-white/5 border border border-border dark:border-white/10 rounded-xl text-foreground hover:bg-black/[0.06] dark:hover:bg-white/10 transition-all active:scale-95"
+            className="px-4 py-2 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary hover:bg-glass-surface/80 transition-all active:scale-95"
             aria-label="Add tag"
           >
             <Plus className="w-5 h-5" />
@@ -374,7 +374,7 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
 
       {/* Toggles - iOS 26 Style */}
       <div className="flex flex-wrap gap-3">
-        <label className="group relative flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 backdrop-blur-[2px] bg-white/[0.02] border border-white/10 hover:bg-white/[0.04] hover:border-white/15 active:scale-[0.98]">
+        <label className="group relative flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 bg-glass-surface border border-obsidian-rim hover:bg-glass-surface/80 active:scale-[0.98]">
           <div className="relative">
             <input
               type="checkbox"
@@ -385,8 +385,8 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
             <div className={cn(
               "w-5 h-5 rounded-md border-2 transition-all duration-200 flex items-center justify-center",
               formData.is_verified
-                ? "bg-[#00FF85] border-[#00FF85] shadow-[0_0_12px_rgba(0,255,133,0.3)]"
-                : "bg-white/[0.05] border-white/20 group-hover:border-white/30"
+                ? "bg-accent-emerald border-accent-emerald shadow-[0_0_12px_rgba(0,255,133,0.3)]"
+                : "bg-black/5 dark:bg-white/5 border-obsidian-rim group-hover:border-accent-emerald/50"
             )}>
               {formData.is_verified && (
                 <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -395,10 +395,10 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
               )}
             </div>
           </div>
-          <span className="text-sm font-medium text-white select-none">Verified</span>
+          <span className="text-sm font-bold text-glass-primary select-none">Verified</span>
         </label>
 
-        <label className="group relative flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 backdrop-blur-[2px] bg-white/[0.02] border border-white/10 hover:bg-white/[0.04] hover:border-white/15 active:scale-[0.98]">
+        <label className="group relative flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 bg-glass-surface border border-obsidian-rim hover:bg-glass-surface/80 active:scale-[0.98]">
           <div className="relative">
             <input
               type="checkbox"
@@ -409,8 +409,8 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
             <div className={cn(
               "w-5 h-5 rounded-md border-2 transition-all duration-200 flex items-center justify-center",
               formData.is_new
-                ? "bg-[#7A27FF] border-[#7A27FF] shadow-[0_0_12px_rgba(122,39,255,0.3)]"
-                : "bg-white/[0.05] border-white/20 group-hover:border-white/30"
+                ? "bg-accent-violet border-accent-violet shadow-[0_0_12px_rgba(122,39,255,0.3)]"
+                : "bg-black/5 dark:bg-white/5 border-obsidian-rim group-hover:border-accent-violet/50"
             )}>
               {formData.is_new && (
                 <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -419,10 +419,10 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
               )}
             </div>
           </div>
-          <span className="text-sm font-medium text-white select-none">New</span>
+          <span className="text-sm font-bold text-glass-primary select-none">New</span>
         </label>
 
-        <label className="group relative flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 backdrop-blur-[2px] bg-black/[0.02] dark:bg-white/[0.02] border border-border dark:border-white/10 hover:bg-black/[0.04] dark:hover:bg-white/[0.04] hover:border-black/20 dark:hover:border-white/15 active:scale-[0.98]">
+        <label className="group relative flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 bg-glass-surface border border-obsidian-rim hover:bg-glass-surface/80 active:scale-[0.98]">
           <div className="relative">
             <input
               type="checkbox"
@@ -433,8 +433,8 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
             <div className={cn(
               "w-5 h-5 rounded-md border-2 transition-all duration-200 flex items-center justify-center",
               formData.is_pinned
-                ? "bg-[#D4AF37] border-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.3)]"
-                : "bg-black/[0.05] dark:bg-white/[0.05] border-border dark:border-white/20 group-hover:border-black/30 dark:group-hover:border-white/30"
+                ? "bg-accent-gold border-accent-gold shadow-[0_0_12px_rgba(212,175,55,0.3)]"
+                : "bg-black/5 dark:bg-white/5 border-obsidian-rim group-hover:border-accent-gold/50"
             )}>
               {formData.is_pinned && (
                 <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -443,26 +443,24 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
               )}
             </div>
           </div>
-          <span className="text-sm font-bold text-foreground select-none">Pinned to Top</span>
+          <span className="text-sm font-bold text-glass-primary select-none">Pinned to Top</span>
         </label>
       </div>
 
       {/* Save Button */}
-      <div className="flex justify-end pt-4 border-t border-white/10">
+      <div className="flex justify-end pt-4 border-t border-obsidian-rim">
         <button
           onClick={handleSubmit}
           disabled={saving || !isFormValid}
           className={cn(
-            "flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-colors",
-            saving || !isFormValid
-              ? "bg-white/10 text-muted-foreground cursor-not-allowed"
-              : "bg-[#00FF85] text-black hover:bg-[#00FF85]/90"
+            "btn-primary px-8 py-3 text-lg transition-all",
+            (saving || !isFormValid) && "opacity-50 cursor-not-allowed transform-none shadow-none"
           )}
         >
           {saving ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-6 h-6 animate-spin" />
           ) : (
-            <Save className="w-5 h-5" />
+            <Save className="w-6 h-6" />
           )}
           {isNew ? 'Create Model' : 'Save Changes'}
         </button>
@@ -470,39 +468,42 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
 
       {/* Danger Zone */}
       {!isNew && model && (
-        <div className="border border-red-500/30 rounded-lg p-4 mt-8 bg-red-500/5">
-          <h4 className="text-red-500 font-medium mb-2">Danger Zone</h4>
-          <p className="text-sm text-muted-foreground mb-4">
+        <div className="border border-accent-red/30 rounded-2xl p-6 mt-12 bg-accent-red/5 backdrop-blur-thin">
+          <h4 className="text-accent-red font-bold uppercase tracking-widest text-xs mb-3">Danger Zone</h4>
+          <p className="text-sm text-glass-muted mb-6 leading-relaxed">
             Permanently delete this model and all associated content (stories, gallery items, tracking links).
           </p>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm" disabled={deleting}>
+              <button
+                className="btn-primary bg-accent-red hover:bg-accent-red/90 text-white shadow-lg shadow-accent-red/20 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all active:scale-95"
+                disabled={deleting}
+              >
                 {deleting ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <Trash2 className="w-4 h-4 mr-2" />
+                  <Trash2 className="w-4 h-4" />
                 )}
                 Delete Model
-              </Button>
+              </button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent className="modal-content">
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete {model.name} and all their content:
-                  <ul className="list-disc list-inside mt-2 space-y-1">
+                <AlertDialogTitle className="text-accent-red">Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription className="text-glass-muted">
+                  This will permanently delete <span className="text-glass-primary font-bold">{model.name}</span> and all their content:
+                  <ul className="list-disc list-inside mt-3 space-y-1">
                     <li>Stories and story groups</li>
                     <li>Gallery items</li>
                     <li>Tracking links</li>
                     <li>Analytics data</li>
                   </ul>
-                  <p className="mt-4 font-semibold text-red-500">This action cannot be undone.</p>
+                  <p className="mt-4 font-bold text-accent-red">This action cannot be undone.</p>
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600 text-white">
+                <AlertDialogCancel className="bg-glass-surface border-obsidian-rim text-glass-primary hover:bg-glass-surface/80">Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-accent-red hover:bg-accent-red/90 text-white border-none shadow-lg shadow-accent-red/20">
                   Delete Forever
                 </AlertDialogAction>
               </AlertDialogFooter>

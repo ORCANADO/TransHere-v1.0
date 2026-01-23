@@ -40,20 +40,20 @@ export function SidebarSettings({ onAddModel }: SidebarSettingsProps) {
     if (!mounted) return null;
 
     return (
-        <div className="border-t border-border bg-black/[0.01] transition-colors">
+        <div className="border-t border-obsidian-rim bg-glass-void transition-colors">
             <Collapsible open={isOpen} onOpenChange={handleToggle}>
                 <CollapsibleTrigger asChild>
                     <button className={cn(
                         "flex items-center justify-between w-full p-4 transition-all group",
-                        "hover:bg-black/[0.04]",
+                        "hover:bg-glass-surface/50",
                         "active:scale-[0.99]"
                     )}>
                         <div className="flex items-center gap-2">
-                            <Settings className="w-4 h-4 text-muted-foreground group-hover:text-[#007AFF] dark:group-hover:text-[#7A27FF] transition-colors" />
-                            <span className="font-bold text-sm text-foreground">Settings</span>
+                            <Settings className="w-4 h-4 text-glass-muted group-hover:text-accent-violet transition-colors" />
+                            <span className="font-bold text-sm text-glass-primary">Settings</span>
                         </div>
                         <ChevronDown className={cn(
-                            "w-4 h-4 text-[#86868B] dark:text-gray-400 transition-transform duration-200",
+                            "w-4 h-4 text-glass-muted transition-transform duration-200",
                             isOpen && "rotate-180"
                         )} />
                     </button>
@@ -62,8 +62,8 @@ export function SidebarSettings({ onAddModel }: SidebarSettingsProps) {
                 <CollapsibleContent className="px-4 pb-4 space-y-4">
                     {/* Theme Selector */}
                     <div className="space-y-2">
-                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold px-1 opacity-70">Appearance</p>
-                        <ThemeToggle showLabels className="w-full bg-black/[0.04] dark:bg-white/5 border-0 dark:border dark:border-white/10" />
+                        <p className="text-[10px] uppercase tracking-widest text-glass-muted font-bold px-1 opacity-70">Appearance</p>
+                        <ThemeToggle showLabels className="w-full bg-glass-surface/50 border-obsidian-rim" />
                     </div>
 
                     {/* Add New Model Button */}
@@ -71,10 +71,10 @@ export function SidebarSettings({ onAddModel }: SidebarSettingsProps) {
                         variant="outline"
                         size="sm"
                         className={cn(
-                            "w-full justify-start gap-2 transition-all rounded-xl border-border",
-                            "bg-black/[0.04] font-bold text-xs",
-                            "hover:bg-[#007AFF]/10 hover:text-[#007AFF] dark:hover:bg-[#7A27FF]/10 dark:hover:text-[#7A27FF]",
-                            "text-foreground",
+                            "w-full justify-start gap-2 transition-all rounded-xl border-obsidian-rim",
+                            "bg-glass-surface font-bold text-xs",
+                            "hover:bg-accent-violet/10 hover:text-accent-violet",
+                            "text-glass-primary",
                             "active:scale-[0.98]"
                         )}
                         onClick={onAddModel}
@@ -84,8 +84,8 @@ export function SidebarSettings({ onAddModel }: SidebarSettingsProps) {
                     </Button>
 
                     <div className="pt-2">
-                        <p className="text-[10px] text-[#86868B] dark:text-gray-600 font-mono uppercase tracking-wider text-center">
-                            TransHere Admin v1.1
+                        <p className="text-[10px] text-glass-muted font-mono uppercase tracking-wider text-center opacity-40">
+                            Dashboard v1.1
                         </p>
                     </div>
                 </CollapsibleContent>

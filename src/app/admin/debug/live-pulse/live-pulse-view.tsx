@@ -9,7 +9,7 @@ import '@/app/admin/admin-theme.css'; // Ensure theme styles are loaded
 
 interface AnalyticsEvent {
     created_at: string;
-    event_type: string;
+    event_type: 'page_view' | 'link_click' | 'story_view' | 'bridge_view' | 'conversion';
     model_slug: string | null;
     country: string | null;
     city: string | null;
@@ -119,10 +119,12 @@ export function LivePulseView({ initialEvents, adminKey }: LivePulseViewProps) {
                                                 <span className={cn(
                                                     "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
                                                     event.event_type === 'page_view' ? "bg-blue-500/10 text-blue-500" :
-                                                        event.event_type === 'click' ? "bg-green-500/10 text-green-500" :
-                                                            "bg-gray-500/10 text-gray-500"
+                                                        event.event_type === 'link_click' ? "bg-green-500/10 text-green-500" :
+                                                            event.event_type === 'bridge_view' ? "bg-purple-500/10 text-purple-500" :
+                                                                event.event_type === 'story_view' ? "bg-orange-500/10 text-orange-500" :
+                                                                    "bg-gray-500/10 text-gray-500"
                                                 )}>
-                                                    {event.event_type}
+                                                    {event.event_type.replace('_', ' ')}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 font-medium">

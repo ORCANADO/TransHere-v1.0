@@ -39,9 +39,9 @@ function ModelComparisonTooltip(props: any) {
     );
 
     return (
-        <div className="bg-white/90 dark:bg-[#0A1221]/90 backdrop-blur-2xl rounded-2xl p-4 min-w-[200px] max-w-[300px] shadow-2xl border border-black/[0.05] dark:border-white/10">
+        <div className="bg-glass-surface backdrop-blur-thick rounded-2xl p-4 min-w-[200px] max-w-[300px] shadow-ao-stack border border-obsidian-rim">
             {/* Date Label */}
-            <p className="text-sm font-semibold text-[#1D1D1F] dark:text-white mb-3 pb-2 border-b border-black/[0.05] dark:border-white/10">
+            <p className="text-sm font-bold text-glass-primary mb-3 pb-2 border-b border-obsidian-rim">
                 {label}
             </p>
 
@@ -56,11 +56,11 @@ function ModelComparisonTooltip(props: any) {
                                     className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                                     style={{ backgroundColor: entry.color }}
                                 />
-                                <span className="text-sm text-[#86868B] dark:text-muted-foreground truncate font-medium">
+                                <span className="text-sm text-glass-muted truncate font-medium">
                                     {model?.name || entry.dataKey}
                                 </span>
                             </div>
-                            <span className="text-sm font-bold text-[#1D1D1F] dark:text-white flex-shrink-0">
+                            <span className="text-sm font-bold text-glass-primary flex-shrink-0">
                                 {(entry.value as number).toLocaleString()}
                             </span>
                         </div>
@@ -82,14 +82,14 @@ function MetricToggle({
     onMetricChange: (metric: 'views' | 'clicks') => void;
 }) {
     return (
-        <div className="flex items-center gap-1 bg-black/[0.05] dark:bg-white/5 rounded-xl p-1 border border-black/[0.05] dark:border-white/5">
+        <div className="flex items-center gap-1 bg-glass-surface rounded-xl p-1 border border-obsidian-rim shadow-sm">
             <button
                 onClick={() => onMetricChange('views')}
                 className={cn(
                     "px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200",
                     metric === 'views'
-                        ? "bg-white dark:bg-[#007AFF] text-[#007AFF] dark:text-white shadow-sm"
-                        : "text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white"
+                        ? "bg-accent-emerald text-black shadow-lg shadow-accent-emerald/20"
+                        : "text-glass-muted hover:text-glass-primary"
                 )}
             >
                 Views
@@ -99,8 +99,8 @@ function MetricToggle({
                 className={cn(
                     "px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200",
                     metric === 'clicks'
-                        ? "bg-white dark:bg-[#AF52DE] text-[#AF52DE] dark:text-white shadow-sm"
-                        : "text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white"
+                        ? "bg-accent-violet text-white shadow-lg shadow-accent-violet/20"
+                        : "text-glass-muted hover:text-glass-primary"
                 )}
             >
                 Clicks
@@ -145,7 +145,7 @@ export function ModelComparisonChart({
                 )}
                 style={{ height }}
             >
-                <p className="text-[#86868B] dark:text-muted-foreground">
+                <p className="text-glass-muted">
                     Select models to compare their performance
                 </p>
             </div>
@@ -156,7 +156,7 @@ export function ModelComparisonChart({
         <div className={cn("rounded-2xl p-4 lg:p-6", className)}>
             {/* Header with Title and Toggle */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-white">
+                <h3 className="text-lg font-bold text-glass-primary">
                     {title}
                 </h3>
                 {onMetricChange && <MetricToggle metric={metric} onMetricChange={onMetricChange} />}
@@ -172,14 +172,15 @@ export function ModelComparisonChart({
                         {/* Subtle Grid */}
                         <CartesianGrid
                             strokeDasharray="3 3"
-                            stroke="rgba(148, 163, 184, 0.1)"
+                            stroke="var(--border-obsidian-rim)"
+                            strokeOpacity={0.3}
                             vertical={false}
                         />
 
                         {/* X Axis - Minimalist */}
                         <XAxis
                             dataKey="label"
-                            stroke="#86868B"
+                            stroke="var(--text-obsidian-muted)"
                             fontSize={11}
                             tickLine={false}
                             axisLine={false}
@@ -188,7 +189,7 @@ export function ModelComparisonChart({
 
                         {/* Y Axis - Hidden axis line */}
                         <YAxis
-                            stroke="#86868B"
+                            stroke="var(--text-obsidian-muted)"
                             fontSize={11}
                             tickLine={false}
                             axisLine={false}
@@ -212,7 +213,7 @@ export function ModelComparisonChart({
                             formatter={(value: string) => {
                                 const model = models.find(m => m.slug === value);
                                 return (
-                                    <span className="text-xs font-semibold text-[#86868B] dark:text-muted-foreground mr-4">
+                                    <span className="text-xs font-semibold text-glass-muted mr-4">
                                         {model?.name || value}
                                     </span>
                                 );
@@ -242,8 +243,8 @@ export function ModelComparisonChart({
             </div>
 
             {/* Model Count Indicator */}
-            <div className="mt-4 pt-4 border-t border-black/[0.05] dark:border-white/10">
-                <p className="text-xs font-medium text-[#86868B] dark:text-muted-foreground">
+            <div className="mt-4 pt-4 border-t border-obsidian-rim">
+                <p className="text-xs font-medium text-glass-muted">
                     Comparing {models.length} model{models.length !== 1 ? 's' : ''} •
                     Showing {metric === 'views' ? 'page views' : 'clicks'} over time
                 </p>

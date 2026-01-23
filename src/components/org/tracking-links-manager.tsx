@@ -138,7 +138,7 @@ export function TrackingLinksManager({
                 </div>
                 <Button
                     onClick={() => setIsCreateDialogOpen(true)}
-                    className="bg-[#7A27FF] hover:bg-[#6a21e0] text-white shadow-lg shadow-[#7A27FF]/25 border-none"
+                    className="bg-accent-emerald hover:bg-accent-emerald/90 text-black font-bold shadow-lg shadow-accent-emerald/20 border-none rounded-xl"
                 >
                     <Plus className="w-4 h-4 mr-2" />
                     Create Link
@@ -173,12 +173,12 @@ export function TrackingLinksManager({
                                         <div className="flex flex-col gap-1">
                                             <span className="font-semibold text-foreground">{link.name}</span>
                                             <div className="flex items-center gap-2">
-                                                <code className="text-xs bg-[#7A27FF]/10 text-[#AF52DE] px-1.5 py-0.5 rounded font-mono">
+                                                <code className="text-xs bg-accent-violet/10 text-accent-violet px-1.5 py-0.5 rounded font-bold font-mono">
                                                     /{link.slug}
                                                 </code>
                                                 <button
                                                     onClick={() => handleCopy(link.slug)}
-                                                    className="p-1 hover:bg-white/10 rounded-md transition-colors text-muted-foreground hover:text-[#7A27FF]"
+                                                    className="p-1 hover:bg-glass-surface rounded-md transition-all text-glass-muted hover:text-accent-violet"
                                                     title="Copy Link"
                                                 >
                                                     {copiedSlug === link.slug ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
@@ -205,7 +205,7 @@ export function TrackingLinksManager({
                                     </TableCell>
                                     <TableCell>
                                         {link.model ? (
-                                            <Badge variant="secondary" className="bg-[#7A27FF]/5 text-[#AF52DE] border-none">
+                                            <Badge variant="secondary" className="bg-accent-violet/10 text-accent-violet border-none font-bold">
                                                 {link.model.name}
                                             </Badge>
                                         ) : (
@@ -242,10 +242,10 @@ export function TrackingLinksManager({
                         className="absolute inset-0 bg-black/60 backdrop-blur-md animate-in fade-in duration-300"
                         onClick={() => setIsCreateDialogOpen(false)}
                     />
-                    <div className="relative bg-[#0A1221] border border-white/10 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                        <div className="p-6 border-b border-white/5 flex justify-between items-center">
-                            <h3 className="text-xl font-bold text-foreground">Create Tracking Link</h3>
-                            <button onClick={() => setIsCreateDialogOpen(false)} className="text-muted-foreground hover:text-foreground">
+                    <div className="relative bg-glass-surface backdrop-blur-thick border border-obsidian-rim rounded-3xl w-full max-w-lg shadow-ao-stack overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-6 border-b border-obsidian-rim/50 flex justify-between items-center bg-glass-surface/20">
+                            <h3 className="text-xl font-bold text-glass-primary">Create Tracking Link</h3>
+                            <button onClick={() => setIsCreateDialogOpen(false)} className="text-glass-muted hover:text-glass-primary transition-all active:scale-90">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -259,7 +259,7 @@ export function TrackingLinksManager({
                                     value={formData.name}
                                     onChange={handleNameChange}
                                     required
-                                    className="bg-white/5 border-white/10 focus:border-[#7A27FF] transition-colors"
+                                    className="bg-glass-surface/50 border-obsidian-rim focus:ring-2 focus:ring-accent-violet/20 transition-all font-bold text-glass-primary placeholder:text-glass-muted/50"
                                 />
                             </div>
 
@@ -272,7 +272,7 @@ export function TrackingLinksManager({
                                         placeholder="valentina-ig"
                                         value={formData.slug}
                                         onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                                        className="bg-white/5 border-white/10 focus:border-[#7A27FF] transition-colors"
+                                        className="bg-glass-surface/50 border-obsidian-rim focus:ring-2 focus:ring-accent-violet/20 transition-all font-bold text-glass-primary placeholder:text-glass-muted/50"
                                         required
                                     />
                                 </div>
@@ -287,7 +287,7 @@ export function TrackingLinksManager({
                                     value={formData.destination_url}
                                     onChange={(e) => setFormData(prev => ({ ...prev, destination_url: e.target.value }))}
                                     required
-                                    className="bg-white/5 border-white/10 focus:border-[#7A27FF] transition-colors"
+                                    className="bg-glass-surface/50 border-obsidian-rim focus:ring-2 focus:ring-accent-violet/20 transition-all font-bold text-glass-primary placeholder:text-glass-muted/50"
                                 />
                             </div>
 
@@ -298,7 +298,7 @@ export function TrackingLinksManager({
                                         id="model"
                                         value={formData.model_id}
                                         onChange={(e) => setFormData(prev => ({ ...prev, model_id: e.target.value }))}
-                                        className="w-full h-10 px-3 rounded-md bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-[#7A27FF]/50"
+                                        className="w-full h-10 px-3 rounded-xl bg-glass-surface/50 border border-obsidian-rim text-sm font-bold text-glass-primary focus:outline-none focus:ring-2 focus:ring-accent-violet/20 transition-all"
                                     >
                                         <option value="" className="bg-[#0A1221]">None (Global)</option>
                                         {models.map(m => (
@@ -312,7 +312,7 @@ export function TrackingLinksManager({
                                         id="source"
                                         value={formData.source_id}
                                         onChange={(e) => setFormData(prev => ({ ...prev, source_id: e.target.value }))}
-                                        className="w-full h-10 px-3 rounded-md bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-[#7A27FF]/50"
+                                        className="w-full h-10 px-3 rounded-xl bg-glass-surface/50 border border-obsidian-rim text-sm font-bold text-glass-primary focus:outline-none focus:ring-2 focus:ring-accent-violet/20 transition-all"
                                     >
                                         <option value="" className="bg-[#0A1221]">None</option>
                                         {sources.map(s => (
@@ -334,7 +334,7 @@ export function TrackingLinksManager({
                                 <Button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="flex-1 bg-[#7A27FF] hover:bg-[#6a21e0] text-white"
+                                    className="flex-1 bg-accent-emerald hover:bg-accent-emerald/90 text-black font-bold rounded-xl shadow-lg shadow-accent-emerald/20"
                                 >
                                     {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Check className="w-4 h-4 mr-2" />}
                                     Create Link

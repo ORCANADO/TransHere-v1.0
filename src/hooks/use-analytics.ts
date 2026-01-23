@@ -14,12 +14,12 @@ export function useAnalytics() {
   const pathname = usePathname();
 
   const sendEvent = useCallback(async (
-    eventType: string, 
+    eventType: string,
     params?: AnalyticsParams
   ) => {
     try {
       // Use absolute URL to avoid routing issues
-      const apiUrl = typeof window !== 'undefined' 
+      const apiUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/api/analytics`
         : '/api/analytics';
 
@@ -52,12 +52,12 @@ export function useAnalytics() {
   }, [pathname]);
 
   const trackView = useCallback(async (params?: AnalyticsParams) => {
-    await sendEvent('view', params);
+    await sendEvent('page_view', params);
   }, [sendEvent]);
 
   const trackClick = useCallback(async (type: ClickType, params?: AnalyticsParams) => {
-    const eventType = type === 'social' ? 'click_social' : 'click_content';
-    await sendEvent(eventType, params);
+    // Standardize all clicks to 'link_click' for database consistency
+    await sendEvent('link_click', params);
   }, [sendEvent]);
 
   return { trackView, trackClick };

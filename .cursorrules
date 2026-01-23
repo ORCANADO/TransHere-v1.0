@@ -323,6 +323,13 @@ Do not use `useRouter().push` for external links.
 
 ### 2.21 Organization & Admin Dashboard Architecture (Nebula Integration)
 - **Shared Primitives:** All dashboards MUST use the same "Nebula" layout components for structural consistency.
+- **Brand Neutrality (Admin Only):**
+    - The Admin Dashboard MUST be brand-neutral. No "TransHere" logos or names.
+    - Use "Admin Console" or "Admin Panel" instead of brand names.
+    - Purge all promotional elements; focus on data and model management.
+- **Primary Actions (Material Flux):**
+    - High-intent buttons (Create, Save, Add) in Admin MUST use `bg-accent-emerald` with black text.
+    - Use `shadow-accent-emerald/20` for a subtle glow.
 - **Layout Structure:** Always use `DashboardContainer` with `header`, `sidebar`, and `filters` slots.
 - **Unified Sticky Block:** The `header` and `filters` must be unified within the `DashboardContainer` sticky area to prevent overlap.
 - **Header Prop Pattern:** Prefer passing header branding and theme toggles via the `header` prop of `DashboardContainer` (or `AnalyticsDashboard` wrapper) rather than rendering manual headers inside the content area.

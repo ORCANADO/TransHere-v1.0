@@ -115,22 +115,22 @@ export function SidebarModelList({
     return (
         <div className="flex flex-col h-full">
             {/* Search Bar - Sticky */}
-            <div className="sticky top-0 z-10 p-3 bg-white/80 dark:bg-[#0A1221]/80 backdrop-blur-xl border-b border-border dark:border-white/10">
+            <div className="sticky top-0 z-10 p-3 bg-glass-surface backdrop-blur-medium border-b border-obsidian-rim">
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-glass-muted" />
                     <input
                         id="model-search-input"
                         type="text"
-                        placeholder="Search models... (⌘K)"
+                        placeholder="Search models..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className={cn(
-                            "w-full pl-9 pr-3 py-2.5 rounded-xl text-sm font-medium",
-                            "bg-black/[0.03] dark:bg-white/5",
-                            "border border-border dark:border-white/10",
-                            "focus:ring-2 focus:ring-[#007AFF]/20 focus:bg-white dark:focus:bg-white/10",
-                            "placeholder:text-muted-foreground",
-                            "text-foreground",
+                            "w-full pl-9 pr-3 py-2.5 rounded-xl text-sm font-bold",
+                            "bg-glass-surface/50",
+                            "border border-obsidian-rim",
+                            "focus:ring-2 focus:ring-accent-violet/20",
+                            "placeholder:text-glass-muted/50",
+                            "text-glass-primary",
                             "transition-all outline-none"
                         )}
                     />
@@ -147,7 +147,7 @@ export function SidebarModelList({
                         <p className="text-sm text-muted-foreground">No models match your search</p>
                         <button
                             onClick={() => setSearchQuery('')}
-                            className="text-xs text-[#007AFF] mt-2 hover:underline"
+                            className="text-xs text-accent-violet mt-2 hover:underline font-bold"
                         >
                             Clear search
                         </button>
@@ -165,8 +165,8 @@ export function SidebarModelList({
                                     className={cn(
                                         "group relative flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all",
                                         isSelected
-                                            ? "bg-[#007AFF]/10 dark:bg-[#AF52DE]/10 border border-[#007AFF]/30 dark:border-[#AF52DE]/30 shadow-sm"
-                                            : "hover:bg-black/[0.03] dark:hover:bg-white/5 border border-transparent"
+                                            ? "bg-accent-violet/10 border border-accent-violet/30 shadow-sm"
+                                            : "hover:bg-glass-surface border border-transparent"
                                     )}
                                 >
                                     {/* Profile Photo (clickable for edit) */}
@@ -177,8 +177,8 @@ export function SidebarModelList({
                                         }}
                                         className={cn(
                                             "relative w-11 h-11 rounded-full overflow-hidden flex-shrink-0 z-10",
-                                            "ring-2 ring-[#E5E5EA] dark:ring-white/20",
-                                            "group-hover:ring-[#007AFF] dark:group-hover:ring-[#007AFF] transition-all",
+                                            "ring-2 ring-obsidian-rim",
+                                            "group-hover:ring-accent-violet transition-all",
                                             "shadow-sm"
                                         )}
                                         title={`Edit ${model.name}`}
@@ -191,7 +191,7 @@ export function SidebarModelList({
                                                 className="object-cover"
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#007AFF]/20 to-[#AF52DE]/20 text-xs font-semibold text-[#007AFF]">
+                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent-violet/20 to-accent-emerald/20 text-xs font-bold text-accent-violet">
                                                 {model.name.substring(0, 2).toUpperCase()}
                                             </div>
                                         )}
@@ -201,10 +201,10 @@ export function SidebarModelList({
                                     <div className="flex-1 min-w-0 flex flex-col justify-center">
                                         <div className="flex items-center gap-2">
                                             <div className={cn(
-                                                "font-semibold text-[12px] leading-tight transition-colors flex flex-col uppercase tracking-tight",
+                                                "font-bold text-[12px] leading-tight transition-colors flex flex-col uppercase tracking-tight",
                                                 isSelected
-                                                    ? "text-[#007AFF] dark:text-[#AF52DE]"
-                                                    : "text-[#1D1D1F] dark:text-gray-200"
+                                                    ? "text-accent-violet"
+                                                    : "text-glass-primary"
                                             )}>
                                                 {model.slug.split('-').map((part, i) => (
                                                     <span key={i} className={cn("block", i > 0 && "opacity-70 text-[10px]")}>
@@ -221,8 +221,8 @@ export function SidebarModelList({
                                                 }}
                                                 className={cn(
                                                     "opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-all",
-                                                    "hover:bg-[#E8E8ED] dark:hover:bg-white/10",
-                                                    "text-[#86868B] dark:text-gray-400 hover:text-[#007AFF] dark:hover:text-[#007AFF]",
+                                                    "hover:bg-glass-surface",
+                                                    "text-glass-muted hover:text-accent-violet",
                                                     "active:scale-95"
                                                 )}
                                                 title="Manage tracking links"
@@ -235,13 +235,13 @@ export function SidebarModelList({
 
                                     {/* Metrics (Views/Clicks) */}
                                     <div className="flex flex-col items-end gap-0.5 text-[10px] sm:text-xs">
-                                        <div className="flex items-center gap-1.5 font-medium text-[#007AFF] dark:text-[#007AFF]">
+                                        <div className="flex items-center gap-1.5 font-bold text-accent-violet">
                                             <span className="tabular-nums">{metrics?.[model.slug]?.views?.toLocaleString() || 0}</span>
-                                            <span className="text-[9px] opacity-60 uppercase tracking-wider font-medium">Views</span>
+                                            <span className="text-[9px] opacity-60 uppercase tracking-wider font-bold">Views</span>
                                         </div>
-                                        <div className="flex items-center gap-1.5 font-medium text-[#AF52DE] dark:text-[#AF52DE]">
+                                        <div className="flex items-center gap-1.5 font-bold text-accent-emerald">
                                             <span className="tabular-nums">{metrics?.[model.slug]?.clicks?.toLocaleString() || 0}</span>
-                                            <span className="text-[9px] opacity-60 uppercase tracking-wider font-medium">Clicks</span>
+                                            <span className="text-[9px] opacity-60 uppercase tracking-wider font-bold">Clicks</span>
                                         </div>
                                     </div>
 
@@ -255,14 +255,14 @@ export function SidebarModelList({
 
             {/* Selection Summary */}
             {selectedIds.length > 0 && (
-                <div className="sticky bottom-0 p-3 bg-white/80 dark:bg-[#0A1221]/80 backdrop-blur-xl border-t border-border dark:border-white/10">
+                <div className="sticky bottom-0 p-3 bg-glass-surface backdrop-blur-medium border-t border-obsidian-rim">
                     <div className="flex items-center justify-between text-xs px-1">
                         <span className="text-muted-foreground font-bold uppercase tracking-wider">
                             {selectedIds.length} model{selectedIds.length !== 1 ? 's' : ''} selected
                         </span>
                         <button
                             onClick={onClearSelection}
-                            className="text-[#007AFF] hover:text-[#007AFF]/80 transition-colors font-medium"
+                            className="text-accent-violet hover:opacity-80 transition-opacity font-bold"
                         >
                             Clear all
                         </button>

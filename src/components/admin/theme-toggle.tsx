@@ -42,13 +42,13 @@ export function ThemeToggle({
             <div
                 className={cn(
                     "flex items-center gap-2 rounded-xl p-1",
-                    "bg-white/5 border border-white/10",
+                    "bg-glass-surface/30 border border-obsidian-rim",
                     compact ? "h-8" : "h-10",
                     className
                 )}
             >
                 <div className={cn(
-                    "rounded-lg bg-white/10 animate-pulse",
+                    "rounded-lg bg-glass-surface animate-pulse",
                     compact ? "w-16 h-6" : "w-20 h-8"
                 )} />
             </div>
@@ -70,8 +70,8 @@ export function ThemeToggle({
                     "flex items-center gap-2 rounded-lg px-3 font-medium transition-all duration-200",
                     compact ? "py-1 text-xs" : "py-1.5 text-sm",
                     !isLightMode
-                        ? "bg-[#7A27FF] text-white shadow-lg shadow-[#7A27FF]/25"
-                        : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                        ? "bg-accent-violet text-white shadow-lg shadow-accent-violet/25"
+                        : "text-glass-muted hover:text-glass-primary hover:bg-glass-surface"
                 )}
                 aria-pressed={!isLightMode}
                 aria-label="Switch to dark mode"
@@ -87,8 +87,8 @@ export function ThemeToggle({
                     "flex items-center gap-2 rounded-lg px-3 font-medium transition-all duration-200",
                     compact ? "py-1 text-xs" : "py-1.5 text-sm",
                     isLightMode
-                        ? "bg-white text-gray-900 shadow-lg"
-                        : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                        ? "bg-white text-black shadow-lg"
+                        : "text-glass-muted hover:text-glass-primary hover:bg-glass-surface"
                 )}
                 aria-pressed={isLightMode}
                 aria-label="Switch to light mode"
@@ -128,8 +128,8 @@ export function ThemeToggleIcon({ className }: { className?: string }) {
             onClick={() => setTheme(isLightMode ? 'dark' : 'light')}
             className={cn(
                 "p-2 rounded-lg transition-all duration-200",
-                "hover:bg-white/10 active:scale-95",
-                "text-muted-foreground hover:text-foreground",
+                "hover:bg-glass-surface active:scale-95",
+                "text-glass-muted hover:text-glass-primary",
                 className
             )}
             aria-label={isLightMode ? "Switch to dark mode" : "Switch to light mode"}

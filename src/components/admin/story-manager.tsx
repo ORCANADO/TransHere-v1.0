@@ -256,7 +256,7 @@ export function StoryManager({
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-            <Film className="w-5 h-5 text-[#7A27FF]" />
+            <Film className="w-5 h-5 text-accent-violet" />
             Stories ({groups.reduce((acc, g) => acc + (g.stories?.length || 0), 0)})
           </h3>
           <p className="text-sm text-muted-foreground font-medium mt-1">
@@ -276,7 +276,7 @@ export function StoryManager({
 
           {mediaMode === 'image' ? (
             <label className="flex items-center gap-2 px-4 py-2 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-lg text-foreground cursor-pointer hover:bg-black/[0.06] dark:hover:bg-white/10 transition-all active:scale-95">
-              <ImageIcon className="w-4 h-4 text-[#007AFF]" />
+              <ImageIcon className="w-4 h-4 text-accent-violet" />
               <span className="text-sm font-medium">Add to Recent</span>
               <input
                 type="file"
@@ -298,7 +298,7 @@ export function StoryManager({
               disabled={uploading}
               className="flex items-center gap-2 px-4 py-2 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-lg text-foreground cursor-pointer hover:bg-black/[0.06] dark:hover:bg-white/10 transition-all active:scale-95 disabled:opacity-50"
             >
-              <Film className="w-4 h-4 text-[#7A27FF]" />
+              <Film className="w-4 h-4 text-accent-red" />
               <span className="text-sm font-medium">Add to Recent</span>
             </button>
           )}
@@ -309,7 +309,7 @@ export function StoryManager({
       {pinnedGroups.length > 0 && (
         <div className="space-y-3">
           <h4 className="text-sm font-bold text-foreground flex items-center gap-2 uppercase tracking-wider px-1">
-            <Pin className="w-4 h-4 text-[#D4AF37]" />
+            <Pin className="w-4 h-4 text-accent-amber" />
             Pinned Blocks
           </h4>
           {pinnedGroups.map((group) => (
@@ -386,7 +386,7 @@ export function StoryManager({
       {/* Recent Stories */}
       <div className="space-y-3">
         <h4 className="text-sm font-bold text-foreground flex items-center gap-2 uppercase tracking-wider px-1">
-          <Clock className="w-4 h-4 text-[#007AFF]" />
+          <Clock className="w-4 h-4 text-accent-violet" />
           Recent Stories
         </h4>
 
@@ -474,7 +474,7 @@ export function StoryManager({
       {uploading && (
         <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-[110]">
           <div className="bg-card border border-border dark:border-white/10 p-6 rounded-2xl text-center min-w-[300px] shadow-2xl liquid-glass-elevated">
-            <Loader2 className="w-8 h-8 animate-spin text-[#7A27FF] mx-auto mb-4" />
+            <Loader2 className="w-8 h-8 animate-spin text-accent-violet mx-auto mb-4" />
             <p className="text-foreground font-bold mb-1">Uploading...</p>
             {uploadProgress && (
               <p className="text-sm text-muted-foreground font-medium px-4">{uploadProgress}</p>
@@ -485,10 +485,10 @@ export function StoryManager({
 
       {/* Video Story Modal */}
       {showVideoModal && (
-        <div className="fixed inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
-          <div className="bg-white/95 dark:bg-[#051124] border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl space-y-6 liquid-glass-elevated">
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-thick flex items-center justify-center z-[110]">
+          <div className="bg-glass-surface border border-obsidian-rim p-6 rounded-2xl w-full max-w-sm shadow-ao-stack space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-foreground">Upload Video Story</h3>
+              <h3 className="text-xl font-bold text-glass-primary">Upload Video Story</h3>
               <button
                 onClick={() => setShowVideoModal(false)}
                 className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground transition-all"
@@ -551,7 +551,7 @@ export function StoryManager({
                 <button
                   onClick={handleVideoStoryUpload}
                   disabled={!mp4File || !webmFile || !webpFile}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#7A27FF] hover:bg-[#6620D6] text-white rounded-xl font-bold transition-all shadow-lg shadow-[#7A27FF]/20 disabled:opacity-50 active:scale-95"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-accent-violet text-white rounded-xl font-bold transition-all shadow-lg shadow-accent-violet/20 disabled:opacity-50 active:scale-95"
                 >
                   <Upload className="w-4 h-4" />
                   Upload 3-File Story

@@ -80,9 +80,9 @@ function FilterDropdown({
                 onClick={onToggle}
                 className={cn(
                     "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                    "bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10",
-                    "hover:bg-[#EBECF0] dark:hover:bg-white/10 shadow-sm active:scale-95",
-                    isOpen && "ring-2 ring-[#007AFF]/20 dark:ring-[#7A27FF]/50",
+                    "bg-glass-surface border border-obsidian-rim",
+                    "hover:bg-glass-surface/80 shadow-sm active:scale-95",
+                    isOpen && "ring-2 ring-accent-violet/50",
                     className
                 )}
             >
@@ -102,7 +102,7 @@ function FilterDropdown({
                     />
 
                     {/* Dropdown Content */}
-                    <div className="absolute top-full mt-2 z-[60] min-w-[220px] max-h-[450px] overflow-auto bg-[#F9F9FB]/95 dark:bg-[#0A1221]/95 backdrop-blur-3xl rounded-2xl border border-[#E5E5EA] dark:border-white/10 shadow-2xl">
+                    <div className="absolute top-full mt-2 z-[60] min-w-[220px] max-h-[450px] overflow-auto bg-glass-surface backdrop-blur-thick rounded-2xl border border-obsidian-rim shadow-ao-stack">
                         {children}
                     </div>
                 </>
@@ -217,8 +217,8 @@ export function DashboardFiltersBar({
             <FilterDropdown
                 trigger={
                     <>
-                        <Calendar className="w-4 h-4 text-[#86868B]" />
-                        <span className="text-[#1D1D1F] dark:text-white">
+                        <Calendar className="w-4 h-4 text-glass-muted" />
+                        <span className="text-glass-primary">
                             {TIME_PERIODS.find(p => p.value === filters.period)?.label || 'Select Period'}
                         </span>
                     </>
@@ -246,10 +246,10 @@ export function DashboardFiltersBar({
                                 }
                             }}
                             className={cn(
-                                "w-full px-4 py-2.5 text-left text-sm hover:bg-black/[0.05] dark:hover:bg-white/5 transition-colors cursor-pointer",
+                                "w-full px-4 py-2.5 text-left text-sm hover:bg-glass-surface transition-colors cursor-pointer",
                                 filters.period === period.value
-                                    ? "text-[#007AFF] dark:text-[#007AFF] font-bold"
-                                    : "text-[#1D1D1F] dark:text-white"
+                                    ? "text-accent-violet font-bold"
+                                    : "text-glass-primary"
                             )}
                         >
                             {period.label}
@@ -257,9 +257,8 @@ export function DashboardFiltersBar({
                     ))}
                 </div>
 
-                {/* Always show Custom Date Range if available in state or just below */}
-                <div className="p-3 border-t border-[#E5E5EA] dark:border-white/10 space-y-2">
-                    <p className="text-[10px] uppercase tracking-widest text-[#86868B] font-bold px-1 mb-1">Custom Range</p>
+                <div className="p-3 border-t border-obsidian-rim space-y-2">
+                    <p className="text-[10px] uppercase tracking-widest text-glass-muted font-bold px-1 mb-1">Custom Range</p>
                     <DatePicker
                         value={filters.startDate || ''}
                         onChange={(date) => {
@@ -285,8 +284,8 @@ export function DashboardFiltersBar({
             <FilterDropdown
                 trigger={
                     <>
-                        <Globe className="w-4 h-4 text-[#86868B]" />
-                        <span className="text-[#1D1D1F] dark:text-white">
+                        <Globe className="w-4 h-4 text-glass-muted" />
+                        <span className="text-glass-primary">
                             {filters.country || 'All Countries'}
                         </span>
                     </>
@@ -300,15 +299,15 @@ export function DashboardFiltersBar({
             >
                 <div className="flex flex-col max-h-[450px]">
                     {/* Search Input */}
-                    <div className="p-3 border-b border-[#E5E5EA] dark:border-white/10 sticky top-0 bg-[#F9F9FB]/90 dark:bg-[#0A1221]/90 backdrop-blur-md z-10">
+                    <div className="p-3 border-b border-obsidian-rim sticky top-0 bg-glass-surface backdrop-blur-thick z-10">
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#86868B]" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-glass-muted" />
                             <input
                                 type="text"
                                 placeholder="Search countries..."
                                 value={countrySearch}
                                 onChange={(e) => setCountrySearch(e.target.value)}
-                                className="w-full pl-9 pr-2 py-2 text-xs bg-[#EBECF0] dark:bg-white/5 border border-transparent dark:border-white/10 rounded-lg text-[#1D1D1F] dark:text-white placeholder:text-[#86868B] dark:placeholder:text-white/40 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#007AFF]/20 transition-all"
+                                className="w-full pl-9 pr-2 py-2 text-xs bg-glass-surface border border-obsidian-rim rounded-lg text-glass-primary placeholder:text-glass-muted focus:outline-none focus:ring-2 focus:ring-accent-violet/20 transition-all font-bold"
                             />
                         </div>
                     </div>
@@ -321,10 +320,10 @@ export function DashboardFiltersBar({
                                 closeDropdowns();
                             }}
                             className={cn(
-                                "w-full px-4 py-3 text-left text-sm transition-colors block font-medium",
+                                "w-full px-4 py-3 text-left text-sm transition-all block font-bold",
                                 !filters.country
-                                    ? "bg-[#007AFF]/10 dark:bg-[#007AFF]/20 text-[#007AFF] dark:text-[#007AFF]"
-                                    : "text-[#1D1D1F] dark:text-white hover:bg-black/[0.05] dark:hover:bg-white/10"
+                                    ? "bg-accent-violet/10 text-accent-violet"
+                                    : "text-glass-primary hover:bg-glass-surface"
                             )}
                         >
                             All Countries
@@ -342,10 +341,10 @@ export function DashboardFiltersBar({
                                         closeDropdowns();
                                     }}
                                     className={cn(
-                                        "w-full px-4 py-2.5 text-left text-sm transition-colors block font-medium",
+                                        "w-full px-4 py-2.5 text-left text-sm transition-all block font-bold",
                                         filters.country === country
-                                            ? "bg-[#007AFF]/10 dark:bg-[#007AFF]/20 text-[#007AFF] dark:text-[#007AFF]"
-                                            : "text-[#1D1D1F] dark:text-white hover:bg-black/[0.05] dark:hover:bg-white/10"
+                                            ? "bg-accent-violet/10 text-accent-violet"
+                                            : "text-glass-primary hover:bg-glass-surface"
                                     )}
                                 >
                                     {country}
@@ -359,8 +358,8 @@ export function DashboardFiltersBar({
             <FilterDropdown
                 trigger={
                     <>
-                        <Link2 className="w-4 h-4 text-[#86868B]" />
-                        <span className="text-[#1D1D1F] dark:text-white">
+                        <Link2 className="w-4 h-4 text-glass-muted" />
+                        <span className="text-glass-primary">
                             {filters.sources.length === 0
                                 ? 'All Sources'
                                 : filters.sources.length === 1
@@ -383,8 +382,8 @@ export function DashboardFiltersBar({
                             updateFilter('sources', []);
                         }}
                         className={cn(
-                            "w-full px-3 py-2.5 text-left text-sm hover:bg-black/[0.05] dark:hover:bg-white/5 transition-colors rounded-xl mb-1 font-medium",
-                            filters.sources.length === 0 ? "text-[#007AFF] dark:text-[#007AFF] font-bold" : "text-[#1D1D1F] dark:text-white"
+                            "w-full px-3 py-2.5 text-left text-sm hover:bg-glass-surface transition-colors rounded-xl mb-1 font-bold",
+                            filters.sources.length === 0 ? "text-accent-violet" : "text-glass-primary"
                         )}
                     >
                         All Sources
@@ -402,10 +401,10 @@ export function DashboardFiltersBar({
                                 <div
                                     onClick={() => handleSourceToggle(source.name)}
                                     className={cn(
-                                        "flex items-center gap-2 px-3 py-2.5 cursor-pointer rounded-xl transition-all font-medium",
+                                        "flex items-center gap-2 px-3 py-2.5 cursor-pointer rounded-xl transition-all font-bold",
                                         isSourceSelected(source.name)
-                                            ? "bg-[#007AFF]/10 dark:bg-[#007AFF]/20 text-[#007AFF] dark:text-[#007AFF]"
-                                            : "text-[#1D1D1F] dark:text-white/80 hover:bg-black/[0.05] dark:hover:bg-white/10"
+                                            ? "bg-accent-violet/10 text-accent-violet"
+                                            : "text-glass-primary hover:bg-glass-surface"
                                     )}
                                 >
                                     <IconComponent className="w-4 h-4" />
@@ -426,10 +425,10 @@ export function DashboardFiltersBar({
                                                     handleSubtagToggle(source.name, subtag);
                                                 }}
                                                 className={cn(
-                                                    "px-3 py-2 text-xs cursor-pointer rounded-lg transition-all flex items-center justify-between font-medium",
+                                                    "px-3 py-2 text-xs cursor-pointer rounded-lg transition-all flex items-center justify-between font-bold",
                                                     isSubtagSelected(source.name, subtag)
-                                                        ? "bg-[#007AFF]/5 dark:bg-[#7A27FF]/10 text-[#007AFF] dark:text-[#7A27FF]"
-                                                        : "text-[#86868B] dark:text-white/60 hover:text-[#1D1D1F] dark:hover:text-white"
+                                                        ? "bg-accent-violet/10 text-accent-violet"
+                                                        : "text-glass-muted hover:text-glass-primary hover:bg-glass-surface"
                                                 )}
                                             >
                                                 <span>{subtag}</span>
@@ -460,7 +459,7 @@ export function DashboardFiltersBar({
                             modelSlugs: [],
                         });
                     }}
-                    className="flex items-center gap-1 px-3 py-2 text-sm text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white transition-colors font-medium"
+                    className="flex items-center gap-1 px-3 py-2 text-sm text-glass-muted hover:text-accent-violet transition-colors font-bold"
                 >
                     <X className="w-4 h-4" />
                     Clear
@@ -469,7 +468,7 @@ export function DashboardFiltersBar({
 
             {/* Loading Indicator */}
             {isLoading && (
-                <div className="ml-2 w-5 h-5 border-2 border-[#7A27FF] border-t-transparent rounded-full animate-spin" />
+                <div className="ml-2 w-5 h-5 border-2 border-accent-violet border-t-transparent rounded-full animate-spin" />
             )}
         </div>
     );

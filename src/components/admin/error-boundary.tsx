@@ -63,7 +63,7 @@ export class AnalyticsErrorBoundary extends Component<Props, State> {
                     </p>
                     <button
                         onClick={() => this.setState({ hasError: false, error: null })}
-                        className="px-6 py-2.5 bg-[#00FF85] text-black font-bold rounded-xl hover:bg-[#00FF85]/90 transition-all active:scale-95 shadow-lg shadow-[#00FF85]/20"
+                        className="px-6 py-2.5 bg-accent-emerald text-black font-bold rounded-xl hover:bg-accent-emerald/90 transition-all active:scale-95 shadow-lg shadow-accent-emerald/20"
                     >
                         Refresh Interface
                     </button>

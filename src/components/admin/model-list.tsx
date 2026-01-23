@@ -129,7 +129,7 @@ export function ModelList({
                     </h2>
                     {/* Organization indicator */}
                     {userRole === 'organization' && organizationName && (
-                        <p className="text-sm text-[#D4AF37] flex items-center gap-1 mt-1">
+                        <p className="text-sm text-accent-amber flex items-center gap-1 mt-1 font-bold">
                             <Building2 className="w-4 h-4" />
                             {organizationName} Organization
                         </p>
@@ -145,7 +145,7 @@ export function ModelList({
                             placeholder="Search models..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="pl-10 pr-4 py-2 bg-card border border-white/10 rounded-lg text-white text-sm w-full sm:w-64 placeholder:text-muted-foreground focus:outline-none focus:border-[#00FF85]/50"
+                            className="pl-10 pr-4 py-2 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary text-sm w-full sm:w-64 placeholder:text-glass-muted focus:outline-none focus:ring-2 focus:ring-accent-emerald/20 transition-all"
                         />
                     </div>
 
@@ -153,7 +153,7 @@ export function ModelList({
                     <button
                         onClick={fetchModels}
                         disabled={loading}
-                        className="p-2 bg-card border border-white/10 rounded-lg text-white hover:border-white/20 transition-colors disabled:opacity-50"
+                        className="p-2 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary hover:bg-glass-surface/80 transition-all disabled:opacity-50 shadow-sm active:scale-95"
                         aria-label="Refresh models"
                     >
                         <RefreshCw className={cn("w-5 h-5", loading && "animate-spin")} />
@@ -163,7 +163,7 @@ export function ModelList({
                     {permissions.canCreateModel && (
                         <button
                             onClick={onAddModel}
-                            className="flex items-center gap-2 px-4 py-2 bg-[#00FF85] text-black rounded-lg font-medium hover:bg-[#00FF85]/90 transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-accent-emerald text-black rounded-xl font-bold hover:opacity-90 transition-all shadow-lg shadow-accent-emerald/20 active:scale-95"
                         >
                             <Plus className="w-5 h-5" />
                             <span className="hidden sm:inline">Add Model</span>
@@ -188,10 +188,10 @@ export function ModelList({
                     models.map((model) => (
                         <div
                             key={model.id}
-                            className="flex items-center gap-4 p-4 bg-card border border-white/10 rounded-xl hover:border-white/20 transition-colors"
+                            className="flex items-center gap-4 p-4 bg-glass-surface border border-obsidian-rim rounded-2xl hover:bg-glass-surface/80 transition-all shadow-sm"
                         >
                             {/* Thumbnail */}
-                            <div className="relative w-16 h-16 rounded-full overflow-hidden bg-white/5 flex-shrink-0 border-2 border-white/20">
+                            <div className="relative w-16 h-16 rounded-full overflow-hidden bg-glass-surface flex-shrink-0 border-2 border-obsidian-rim shadow-sm">
                                 {model.image_url ? (
                                     <Image
                                         src={getImageUrl(model.image_url)}
@@ -203,7 +203,7 @@ export function ModelList({
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center">
-                                        <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                                        <ImageIcon className="w-6 h-6 text-glass-muted" />
                                     </div>
                                 )}
                             </div>
@@ -216,12 +216,12 @@ export function ModelList({
                                         <VerifiedBadge size={16} />
                                     )}
                                     {model.is_new && (
-                                        <span className="px-2 py-0.5 bg-[#7A27FF]/20 text-[#7A27FF] text-xs rounded-full">
+                                        <span className="px-2 py-0.5 bg-accent-violet/20 text-accent-violet text-[10px] rounded-lg font-bold uppercase tracking-wider">
                                             New
                                         </span>
                                     )}
                                     {model.is_pinned && (
-                                        <Pin className="w-4 h-4 text-[#D4AF37]" fill="currentColor" />
+                                        <Pin className="w-4 h-4 text-accent-amber" fill="currentColor" />
                                     )}
                                 </div>
                                 <p className="text-sm text-muted-foreground">@{model.slug}</p>
@@ -258,15 +258,15 @@ export function ModelList({
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => onManageTrackingLinks({ id: model.id, name: model.name, slug: model.slug })}
-                                    className="p-2 bg-white/5 rounded-lg text-white hover:bg-white/10 transition-colors"
+                                    className="p-2 bg-glass-surface border border-obsidian-rim rounded-lg text-glass-primary hover:bg-glass-surface/80 transition-all active:scale-95 shadow-sm"
                                     aria-label={`Manage tracking links for ${model.name}`}
                                     title="Manage tracking links"
                                 >
-                                    <Link2 className="w-4 h-4 text-[#007AFF] dark:text-[#00FF85]" />
+                                    <Link2 className="w-4 h-4 text-accent-violet" />
                                 </button>
                                 <button
                                     onClick={() => onEditModel(model.id)}
-                                    className="p-2 bg-white/5 rounded-lg text-white hover:bg-white/10 transition-colors"
+                                    className="p-2 bg-glass-surface border border-obsidian-rim rounded-lg text-glass-primary hover:bg-glass-surface/80 transition-all active:scale-95 shadow-sm"
                                     aria-label={`Edit ${model.name}`}
                                 >
                                     <Edit className="w-4 h-4" />

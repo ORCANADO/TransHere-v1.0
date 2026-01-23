@@ -376,13 +376,13 @@ export function GalleryManager({
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <h3 className="text-lg font-semibold text-foreground">
+        <h3 className="text-lg font-bold text-glass-primary">
           Gallery Items ({items.length})
         </h3>
 
         <div className="flex gap-2 flex-wrap">
           {/* Upload Buttons */}
-          <label className="flex items-center gap-2 px-4 py-2 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-lg text-foreground cursor-pointer hover:bg-black/[0.06] dark:hover:bg-white/10 transition-colors">
+          <label className="flex items-center gap-2 px-4 py-2 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary cursor-pointer hover:bg-glass-surface/80 transition-all font-bold shadow-sm active:scale-95">
             <ImageIcon className="w-4 h-4" />
             <span className="text-sm">Add Image</span>
             <input
@@ -397,7 +397,7 @@ export function GalleryManager({
 
           <button
             onClick={() => setShowVideoModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-lg text-foreground hover:bg-black/[0.06] dark:hover:bg-white/10 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary hover:bg-glass-surface/80 transition-all font-bold shadow-sm active:scale-95"
           >
             <Film className="w-4 h-4" />
             <span className="text-sm">Add Video</span>
@@ -408,7 +408,7 @@ export function GalleryManager({
             <button
               onClick={saveOrder}
               disabled={saving}
-              className="flex items-center gap-2 px-4 py-2 bg-[#00FF85] text-black rounded-lg font-medium hover:bg-[#00FF85]/90 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-accent-emerald text-black rounded-xl font-bold hover:opacity-90 transition-all disabled:opacity-50 shadow-lg shadow-accent-emerald/20 active:scale-95"
             >
               {saving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -422,16 +422,16 @@ export function GalleryManager({
       </div>
 
       {/* Instructions */}
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-glass-muted font-bold">
         Drag items to reorder. The first item is the profile cover. The last item becomes the locked VIP teaser.
       </p>
 
       {/* Gallery Grid */}
       {items.length === 0 ? (
-        <div className="text-center py-12 border-2 border-dashed border-border dark:border-white/10 rounded-xl">
-          <ImageIcon className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">No gallery items yet</p>
-          <p className="text-sm text-muted-foreground mt-1">
+        <div className="text-center py-12 border-2 border-dashed border-obsidian-rim rounded-2xl bg-glass-surface/30">
+          <ImageIcon className="w-12 h-12 text-glass-muted mx-auto mb-3" />
+          <p className="text-glass-muted font-bold">No gallery items yet</p>
+          <p className="text-sm text-glass-muted/60 mt-1">
             Upload images or videos to get started
           </p>
         </div>
@@ -445,12 +445,12 @@ export function GalleryManager({
               onDragOver={(e) => handleDragOver(e, item.id)}
               onDragEnd={handleDragEnd}
               className={cn(
-                "relative aspect-[3/4] rounded-xl overflow-hidden border-2 transition-all cursor-grab active:cursor-grabbing",
+                "relative aspect-[3/4] rounded-2xl overflow-hidden border-2 transition-all cursor-grab active:cursor-grabbing shadow-sm",
                 draggedItem === item.id
-                  ? "border-[#7A27FF] opacity-50 scale-95"
-                  : "border-border dark:border-white/10 hover:border-black/20 dark:hover:border-white/30",
-                index === 0 && "ring-2 ring-[#00FF85]",
-                index === items.length - 1 && "ring-2 ring-[#D4AF37]"
+                  ? "border-accent-violet opacity-50 scale-95"
+                  : "border-obsidian-rim hover:border-accent-violet/30",
+                index === 0 && "ring-2 ring-accent-emerald shadow-lg shadow-accent-emerald/20",
+                index === items.length - 1 && "ring-2 ring-accent-amber shadow-lg shadow-accent-amber/20"
               )}
             >
               {/* Media */}
@@ -504,12 +504,12 @@ export function GalleryManager({
 
                 {/* Labels */}
                 {index === 0 && (
-                  <span className="absolute bottom-2 left-2 px-2 py-1 bg-[#00FF85] text-black text-xs rounded font-medium">
+                  <span className="absolute bottom-2 left-2 px-2 py-1 bg-accent-emerald text-black text-[10px] rounded-lg font-bold uppercase tracking-wider">
                     Cover
                   </span>
                 )}
                 {index === items.length - 1 && (
-                  <span className="absolute bottom-2 left-2 px-2 py-1 bg-[#D4AF37] text-black text-xs rounded font-medium">
+                  <span className="absolute bottom-2 left-2 px-2 py-1 bg-accent-amber text-black text-[10px] rounded-lg font-bold uppercase tracking-wider">
                     VIP Teaser
                   </span>
                 )}
@@ -521,12 +521,12 @@ export function GalleryManager({
 
       {/* Upload indicator */}
       {uploading && (
-        <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]">
-          <div className="bg-card border border-border dark:border-white/10 p-6 rounded-2xl text-center min-w-[300px] shadow-2xl liquid-glass-elevated">
-            <Loader2 className="w-8 h-8 animate-spin text-[#7A27FF] mx-auto mb-4" />
-            <p className="text-foreground font-bold mb-1">Uploading...</p>
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-thick flex items-center justify-center z-[100]">
+          <div className="bg-glass-surface border border-obsidian-rim p-6 rounded-2xl text-center min-w-[300px] shadow-ao-stack">
+            <Loader2 className="w-8 h-8 animate-spin text-accent-violet mx-auto mb-4" />
+            <p className="text-glass-primary font-bold mb-1">Uploading...</p>
             {uploadProgress && (
-              <p className="text-sm text-muted-foreground font-medium px-4">{uploadProgress}</p>
+              <p className="text-sm text-glass-muted font-bold px-4">{uploadProgress}</p>
             )}
           </div>
         </div>
@@ -535,10 +535,10 @@ export function GalleryManager({
 
       {/* Video Upload Modal */}
       {showVideoModal && (
-        <div className="fixed inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-white/90 dark:bg-[#051124] border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-6 liquid-glass-elevated">
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-thick flex items-center justify-center z-50 p-4">
+          <div className="bg-glass-surface border border-obsidian-rim rounded-2xl p-6 w-full max-w-md shadow-ao-stack space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-foreground">Upload Video Pair</h3>
+              <h3 className="text-xl font-bold text-glass-primary">Upload Video Pair</h3>
               <button
                 onClick={() => setShowVideoModal(false)}
                 className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all"
@@ -555,25 +555,25 @@ export function GalleryManager({
 
               {/* MP4 Input */}
               <div className="space-y-2">
-                <label htmlFor="mp4-upload" className="text-sm font-semibold text-foreground block px-1">
+                <label htmlFor="mp4-upload" className="text-sm font-bold text-glass-primary block px-1">
                   1. Main Video (MP4/MOV)
                 </label>
                 <div className={cn(
                   "border-2 border-dashed rounded-xl p-5 transition-all duration-300 cursor-pointer group/upload",
                   mp4File
-                    ? "border-[#00FF85] bg-[#00FF85]/5 dark:bg-[#00FF85]/10"
-                    : "border-border dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 hover:bg-black/[0.02] dark:hover:bg-white/5"
+                    ? "border-accent-emerald bg-accent-emerald/5"
+                    : "border-obsidian-rim hover:border-accent-violet/30 hover:bg-glass-surface/30"
                 )}>
                   <label className="flex items-center justify-center gap-3 cursor-pointer w-full h-full">
                     {mp4File ? (
                       <>
-                        <CheckCircle2 className="w-5 h-5 text-[#00FF85]" />
-                        <span className="text-sm text-foreground font-medium truncate max-w-[200px]">{mp4File.name}</span>
+                        <CheckCircle2 className="w-5 h-5 text-accent-emerald" />
+                        <span className="text-sm text-glass-primary font-bold truncate max-w-[200px]">{mp4File.name}</span>
                       </>
                     ) : (
                       <>
-                        <Upload className="w-5 h-5 text-muted-foreground group-hover/upload:text-foreground transition-colors" />
-                        <span className="text-sm text-muted-foreground group-hover/upload:text-foreground transition-colors">Select MP4 or MOV</span>
+                        <Upload className="w-5 h-5 text-glass-muted group-hover/upload:text-glass-primary transition-colors" />
+                        <span className="text-sm text-glass-muted group-hover/upload:text-glass-primary transition-colors">Select MP4 or MOV</span>
                       </>
                     )}
                     <input
@@ -589,25 +589,25 @@ export function GalleryManager({
 
               {/* WebM Input */}
               <div className="space-y-2">
-                <label htmlFor="webm-upload" className="text-sm font-semibold text-foreground block px-1">
+                <label htmlFor="webm-upload" className="text-sm font-bold text-glass-primary block px-1">
                   2. Optimized Video (WebM)
                 </label>
                 <div className={cn(
                   "border-2 border-dashed rounded-xl p-5 transition-all duration-300 cursor-pointer group/upload",
                   webmFile
-                    ? "border-[#00FF85] bg-[#00FF85]/5 dark:bg-[#00FF85]/10"
-                    : "border-border dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 hover:bg-black/[0.02] dark:hover:bg-white/5"
+                    ? "border-accent-emerald bg-accent-emerald/5"
+                    : "border-obsidian-rim hover:border-accent-violet/30 hover:bg-glass-surface/30"
                 )}>
                   <label className="flex items-center justify-center gap-3 cursor-pointer w-full h-full">
                     {webmFile ? (
                       <>
-                        <CheckCircle2 className="w-5 h-5 text-[#00FF85]" />
-                        <span className="text-sm text-foreground font-medium truncate max-w-[200px]">{webmFile.name}</span>
+                        <CheckCircle2 className="w-5 h-5 text-accent-emerald" />
+                        <span className="text-sm text-glass-primary font-bold truncate max-w-[200px]">{webmFile.name}</span>
                       </>
                     ) : (
                       <>
-                        <Upload className="w-5 h-5 text-muted-foreground group-hover/upload:text-foreground transition-colors" />
-                        <span className="text-sm text-muted-foreground group-hover/upload:text-foreground transition-colors">Select WebM</span>
+                        <Upload className="w-5 h-5 text-glass-muted group-hover/upload:text-glass-primary transition-colors" />
+                        <span className="text-sm text-glass-muted group-hover/upload:text-glass-primary transition-colors">Select WebM</span>
                       </>
                     )}
                     <input
@@ -625,7 +625,7 @@ export function GalleryManager({
                 <button
                   onClick={handleDualUpload}
                   disabled={!mp4File || !webmFile}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#7A27FF] text-white rounded-lg font-medium hover:bg-[#7A27FF]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-accent-violet text-white rounded-xl font-bold hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-accent-violet/20 active:scale-95"
                 >
                   <Upload className="w-4 h-4" />
                   Upload Video Pair
@@ -638,15 +638,15 @@ export function GalleryManager({
 
       {/* Delete Confirmation Modal */}
       {itemToDelete && (
-        <div className="fixed inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-white/90 dark:bg-[#051124] border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl space-y-6 liquid-glass-elevated">
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-thick flex items-center justify-center z-50 p-4">
+          <div className="bg-glass-surface border border-obsidian-rim rounded-2xl p-6 w-full max-w-sm shadow-ao-stack space-y-6">
             <div className="space-y-4 text-center">
               <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center mx-auto">
                 <Trash2 className="w-7 h-7 text-red-500" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-xl font-bold text-foreground">Delete Item?</h3>
-                <p className="text-sm text-muted-foreground font-medium">
+                <h3 className="text-xl font-bold text-glass-primary">Delete Item?</h3>
+                <p className="text-sm text-glass-muted font-bold">
                   This action cannot be undone. This gallery item will be permanently removed.
                 </p>
               </div>
@@ -655,13 +655,13 @@ export function GalleryManager({
             <div className="flex gap-3">
               <button
                 onClick={() => setItemToDelete(null)}
-                className="flex-1 px-4 py-2.5 bg-black/[0.03] dark:bg-white/5 hover:bg-black/[0.06] dark:hover:bg-white/10 text-foreground rounded-xl transition-all font-bold"
+                className="flex-1 px-4 py-2.5 bg-glass-surface border border-obsidian-rim hover:bg-glass-surface/80 text-glass-primary rounded-xl transition-all font-bold"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
-                className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-all font-bold shadow-lg shadow-red-500/20"
+                className="flex-1 px-4 py-2.5 bg-accent-red hover:opacity-90 text-white rounded-xl transition-all font-bold shadow-lg shadow-accent-red/20 active:scale-95"
               >
                 Delete
               </button>

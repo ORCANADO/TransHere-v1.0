@@ -1,7 +1,7 @@
 // Analytics event from database (matches actual schema)
 export interface AnalyticsEvent {
   id: string;
-  event_type: 'view' | 'click_social' | 'click_content';
+  event_type: 'page_view' | 'link_click' | 'story_view' | 'bridge_view' | 'conversion';
   model_id: string | null;
   model_slug: string | null;
   page_path: string | null;

@@ -4,6 +4,19 @@
 
 ---
 
+## [2026-01-23] - Phase 6.22: Admin Design Purge & Minimalist Navigation
+**Status:** Complete
+
+### Brand Neutrality & Aesthetic Sync:
+- [x] **Brand Purge**: Removed "TransHere" logo and branding from `AdminSidebar`, `SidebarSettings`, and main `AdminPage` header.
+- [x] **Minimalist Navigation**: Refactored `SidebarModelList` search bar with `glass-surface/50` and `obsidian-rim` borders. Removed legacy help text `(⌘K)`.
+- [x] **Tracking System Refinement**: Deep-purged all legacy blue/purple hexes from `TrackingLinkManager` (Admin & Org). 
+- [x] **Primary Button Standard**: Standardized all creation/action buttons to `bg-accent-emerald` with black text and emerald glow for maximum visibility.
+- [x] **Liquid Glass Integration**: Unified all modal backgrounds, inputs, and selection buttons with system variables (`accent-violet`, `glass-surface`, `obsidian-rim`).
+- [x] **Footer Cleanup**: Renamed "TransHere Admin v1.1" to "Dashboard v1.1" in sidebar settings.
+
+---
+
 ## [2026-01-23] - Phase 6.20: Safari Compatibility & Conversion Hardening
 **Status:** Complete
 

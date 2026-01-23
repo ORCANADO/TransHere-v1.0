@@ -557,18 +557,18 @@ export function PinnedBlocksManager({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-            <Pin className="w-5 h-5 text-[#D4AF37]" />
+          <h3 className="text-lg font-bold text-glass-primary flex items-center gap-2">
+            <Pin className="w-5 h-5 text-accent-amber" />
             Pinned Blocks ({groups.length})
           </h3>
-          <p className="text-sm text-muted-foreground font-medium">
+          <p className="text-sm text-glass-muted font-bold">
             Pinned blocks appear at the top of the model's story section
           </p>
         </div>
 
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-[#D4AF37] hover:bg-[#B8962E] text-black rounded-xl font-bold transition-all shadow-lg shadow-[#D4AF37]/20 active:scale-95"
+          className="flex items-center gap-2 px-5 py-2.5 bg-accent-amber text-black rounded-xl font-bold transition-all shadow-lg shadow-accent-amber/20 active:scale-95"
         >
           <Plus className="w-4 h-4" />
           Create Block
@@ -577,10 +577,10 @@ export function PinnedBlocksManager({
 
       {/* Blocks List */}
       {groups.length === 0 ? (
-        <div className="text-center py-12 border-2 border-dashed border-border dark:border-white/10 rounded-2xl bg-black/[0.02] dark:bg-white/5">
-          <Pin className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-20" />
-          <p className="text-muted-foreground font-bold">No pinned blocks yet</p>
-          <p className="text-sm text-muted-foreground mt-1">
+        <div className="text-center py-12 border border-obsidian-rim rounded-2xl bg-glass-surface">
+          <Pin className="w-12 h-12 text-glass-muted mx-auto mb-3 opacity-20" />
+          <p className="text-glass-muted font-bold">No pinned blocks yet</p>
+          <p className="text-sm text-glass-muted mt-1 font-bold">
             Create blocks like "Trips", "Behind the Scenes", etc.
           </p>
         </div>
@@ -593,10 +593,10 @@ export function PinnedBlocksManager({
                 onClick={saveBlockOrder}
                 disabled={savingBlockOrder}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors",
+                  "flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all active:scale-95 shadow-sm",
                   savingBlockOrder
-                    ? "bg-white/10 text-muted-foreground cursor-not-allowed"
-                    : "bg-[#00FF85] text-black hover:bg-[#00FF85]/90"
+                    ? "bg-glass-surface text-glass-muted cursor-not-allowed"
+                    : "bg-accent-emerald text-black shadow-lg shadow-accent-emerald/20"
                 )}
               >
                 {savingBlockOrder ? (
@@ -621,16 +621,16 @@ export function PinnedBlocksManager({
               onDragOver={(e) => handleBlockDragOver(e, group.id)}
               onDragEnd={handleBlockDragEnd}
               className={cn(
-                "bg-black/[0.02] dark:bg-white/5 border border-border dark:border-white/10 rounded-2xl overflow-hidden shadow-sm transition-all",
+                "bg-glass-surface border border-obsidian-rim rounded-2xl overflow-hidden shadow-sm transition-all",
                 draggedBlock === group.id && "opacity-50 scale-[0.98]"
               )}
             >
               {/* Block Header */}
-              <div className="flex items-center gap-4 p-4 border-b border-border dark:border-white/10 cursor-move hover:bg-black/[0.04] dark:hover:bg-white/[0.08] transition-colors">
-                <GripVertical className="w-5 h-5 text-muted-foreground opacity-50" />
+              <div className="flex items-center gap-4 p-4 border-b border-obsidian-rim cursor-move hover:bg-glass-surface transition-colors">
+                <GripVertical className="w-5 h-5 text-glass-muted opacity-50" />
 
                 {/* Cover */}
-                <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-black/10 dark:bg-white/10 flex-shrink-0 group/cover border border-border dark:border-white/10 shadow-inner">
+                <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-glass-surface flex-shrink-0 group/cover border border-obsidian-rim shadow-inner">
                   {group.cover_url ? (
                     <Image
                       src={getImageUrl(group.cover_url)}
@@ -681,12 +681,12 @@ export function PinnedBlocksManager({
                         type="text"
                         value={editTitle}
                         onChange={(e) => setEditTitle(e.target.value)}
-                        className="px-3 py-1.5 bg-white dark:bg-black/20 border border-border dark:border-white/10 rounded-lg text-foreground font-medium focus:ring-2 focus:ring-[#7A27FF]/20 outline-none"
+                        className="px-3 py-1.5 bg-glass-surface border border-obsidian-rim rounded-lg text-glass-primary font-bold focus:ring-2 focus:ring-accent-violet/20 outline-none"
                         autoFocus
                       />
                       <button
                         onClick={() => updateBlock(group.id, { title: editTitle })}
-                        className="p-1.5 text-emerald-600 dark:text-[#00FF85] hover:bg-emerald-50 dark:hover:bg-[#00FF85]/10 rounded-lg transition-colors"
+                        className="p-1.5 text-accent-emerald hover:bg-accent-emerald/10 rounded-lg transition-colors"
                       >
                         <Save className="w-4 h-4" />
                       </button>
@@ -698,9 +698,9 @@ export function PinnedBlocksManager({
                       </button>
                     </div>
                   ) : (
-                    <h4 className="font-bold text-foreground text-base">{group.title || 'Untitled'}</h4>
+                    <h4 className="font-bold text-glass-primary text-base">{group.title || 'Untitled'}</h4>
                   )}
-                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mt-0.5">
+                  <p className="text-xs text-glass-muted font-bold uppercase tracking-wider mt-0.5">
                     {group.stories?.length || 0} stories
                   </p>
                 </div>
@@ -802,16 +802,16 @@ export function PinnedBlocksManager({
                         onClick={() => fileInputRefs.current[group.id]?.click()}
                         disabled={uploading === group.id}
                         className={cn(
-                          "w-16 h-20 rounded-lg border-2 border-dashed flex items-center justify-center transition-colors flex-shrink-0",
+                          "w-16 h-20 rounded-lg border-2 border-dashed flex items-center justify-center transition-all flex-shrink-0 active:scale-95 shadow-sm",
                           uploading === group.id
-                            ? "border-white/10 cursor-not-allowed"
-                            : "border-white/20 hover:border-white/40 cursor-pointer"
+                            ? "border-obsidian-rim cursor-not-allowed"
+                            : "border-obsidian-rim/50 hover:border-accent-violet/50 hover:bg-accent-violet/5 cursor-pointer"
                         )}
                       >
                         {uploading === group.id ? (
-                          <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+                          <Loader2 className="w-5 h-5 text-glass-muted animate-spin" />
                         ) : (
-                          <Plus className="w-5 h-5 text-muted-foreground" />
+                          <Plus className="w-5 h-5 text-glass-muted" />
                         )}
                       </button>
                       <input
@@ -832,10 +832,10 @@ export function PinnedBlocksManager({
                           onClick={() => saveStoryOrder(group.id)}
                           disabled={savingOrder === group.id}
                           className={cn(
-                            "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                            "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all active:scale-95 shadow-sm",
                             savingOrder === group.id
-                              ? "bg-white/10 text-muted-foreground cursor-not-allowed"
-                              : "bg-[#00FF85] text-black hover:bg-[#00FF85]/90"
+                              ? "bg-glass-surface text-glass-muted cursor-not-allowed"
+                              : "bg-accent-emerald text-black shadow-lg shadow-accent-emerald/20"
                           )}
                         >
                           {savingOrder === group.id ? (
@@ -862,10 +862,10 @@ export function PinnedBlocksManager({
                       onClick={() => fileInputRefs.current[group.id]?.click()}
                       disabled={uploading === group.id}
                       className={cn(
-                        "flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors",
+                        "flex items-center gap-2 px-4 py-2 rounded-lg border border-obsidian-rim transition-all font-bold active:scale-95 shadow-sm",
                         uploading === group.id
-                          ? "border-white/10 text-muted-foreground cursor-not-allowed"
-                          : "border-white/20 text-white hover:border-white/40 hover:bg-white/5"
+                          ? "text-glass-muted cursor-not-allowed"
+                          : "bg-glass-surface text-glass-primary hover:bg-glass-surface/80"
                       )}
                     >
                       {uploading === group.id ? (
@@ -900,19 +900,19 @@ export function PinnedBlocksManager({
 
       {/* Upload Progress */}
       {uploadProgress && (
-        <div className="fixed bottom-4 right-4 bg-card border border-white/10 rounded-lg px-4 py-3 shadow-lg z-50">
-          <p className="text-sm text-white">{uploadProgress}</p>
+        <div className="fixed bottom-4 right-4 bg-glass-surface border border-obsidian-rim rounded-2xl px-4 py-3 shadow-ao-stack z-50 backdrop-blur-thick">
+          <p className="text-sm text-glass-primary font-bold">{uploadProgress}</p>
         </div>
       )}
 
       {/* Upload indicator */}
       {uploading && (
-        <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-[110]">
-          <div className="bg-card border border-border dark:border-white/10 p-6 rounded-2xl text-center min-w-[300px] shadow-2xl liquid-glass-elevated">
-            <Loader2 className="w-8 h-8 animate-spin text-[#7A27FF] mx-auto mb-4" />
-            <p className="text-foreground font-bold mb-1">Uploading...</p>
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-thick flex items-center justify-center z-[110]">
+          <div className="bg-glass-surface border border-obsidian-rim p-6 rounded-2xl text-center min-w-[300px] shadow-ao-stack scale-up-subtle">
+            <Loader2 className="w-8 h-8 animate-spin text-accent-violet mx-auto mb-4" />
+            <p className="text-glass-primary font-bold mb-1">Uploading...</p>
             {uploadProgress && (
-              <p className="text-sm text-muted-foreground font-medium px-4">{uploadProgress}</p>
+              <p className="text-sm text-glass-muted font-bold px-4">{uploadProgress}</p>
             )}
           </div>
         </div>
@@ -920,36 +920,36 @@ export function PinnedBlocksManager({
 
       {/* Video Story Modal */}
       {showVideoModal && (
-        <div className="fixed inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
-          <div className="bg-white/95 dark:bg-[#051124] border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl space-y-6 liquid-glass-elevated">
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-thick flex items-center justify-center z-[100] p-4">
+          <div className="bg-glass-surface border border-obsidian-rim rounded-2xl p-6 w-full max-w-sm shadow-ao-stack space-y-6 overflow-hidden">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-foreground">Upload Video Story</h3>
+              <h3 className="text-xl font-bold text-glass-primary">Upload Video Story</h3>
               <button
                 onClick={() => {
                   setShowVideoModal(false);
                   setTargetGroupId(null);
                 }}
-                className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-muted-foreground transition-all"
+                className="p-2 rounded-lg hover:bg-glass-surface text-glass-muted transition-all"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-4">
-              <p className="text-xs text-muted-foreground font-medium px-1">
+              <p className="text-xs text-glass-muted font-bold px-1">
                 All 3 files are required for video stories.
               </p>
 
               {/* MP4 Input */}
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-muted-foreground uppercase px-1">1. Main Video (MP4)</label>
+                <label className="text-[11px] font-bold text-glass-muted uppercase px-1">1. Main Video (MP4)</label>
                 <div className={cn(
-                  "border-2 border-dashed rounded-xl p-4 transition-all duration-300 cursor-pointer",
-                  mp4File ? "border-emerald-500 bg-emerald-500/5" : "border-border dark:border-white/10 hover:border-black/20 dark:hover:border-white/20"
+                  "border-2 border-dashed rounded-xl p-4 transition-all duration-300 cursor-pointer shadow-inner",
+                  mp4File ? "border-accent-emerald bg-accent-emerald/5" : "border-obsidian-rim hover:border-accent-violet/30"
                 )}>
                   <label className="flex items-center gap-3 cursor-pointer">
-                    {mp4File ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
-                    <span className="text-sm text-foreground font-medium truncate">{mp4File ? mp4File.name : "Select MP4"}</span>
+                    {mp4File ? <CheckCircle2 className="w-4 h-4 text-accent-emerald" /> : <Upload className="w-4 h-4 text-glass-muted" />}
+                    <span className="text-sm text-glass-primary font-bold truncate">{mp4File ? mp4File.name : "Select MP4"}</span>
                     <input type="file" accept="video/mp4" className="hidden" onChange={(e) => setMp4File(e.target.files?.[0] || null)} />
                   </label>
                 </div>
@@ -957,14 +957,14 @@ export function PinnedBlocksManager({
 
               {/* WebM Input */}
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-muted-foreground uppercase px-1">2. Optimized Video (WebM)</label>
+                <label className="text-[11px] font-bold text-glass-muted uppercase px-1">2. Optimized Video (WebM)</label>
                 <div className={cn(
-                  "border-2 border-dashed rounded-xl p-4 transition-all duration-300 cursor-pointer",
-                  webmFile ? "border-emerald-500 bg-emerald-500/5" : "border-border dark:border-white/10 hover:border-black/20 dark:hover:border-white/20"
+                  "border-2 border-dashed rounded-xl p-4 transition-all duration-300 cursor-pointer shadow-inner",
+                  webmFile ? "border-accent-emerald bg-accent-emerald/5" : "border-obsidian-rim hover:border-accent-violet/30"
                 )}>
                   <label className="flex items-center gap-3 cursor-pointer">
-                    {webmFile ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
-                    <span className="text-sm text-foreground font-medium truncate">{webmFile ? webmFile.name : "Select WebM"}</span>
+                    {webmFile ? <CheckCircle2 className="w-4 h-4 text-accent-emerald" /> : <Upload className="w-4 h-4 text-glass-muted" />}
+                    <span className="text-sm text-glass-primary font-bold truncate">{webmFile ? webmFile.name : "Select WebM"}</span>
                     <input type="file" accept="video/webm" className="hidden" onChange={(e) => setWebmFile(e.target.files?.[0] || null)} />
                   </label>
                 </div>
@@ -972,14 +972,14 @@ export function PinnedBlocksManager({
 
               {/* WebP Input */}
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-muted-foreground uppercase px-1">3. Preview Image (WebP)</label>
+                <label className="text-[11px] font-bold text-glass-muted uppercase px-1">3. Preview Image (WebP)</label>
                 <div className={cn(
-                  "border-2 border-dashed rounded-xl p-4 transition-all duration-300 cursor-pointer",
-                  webpFile ? "border-emerald-500 bg-emerald-500/5" : "border-border dark:border-white/10 hover:border-black/20 dark:hover:border-white/20"
+                  "border-2 border-dashed rounded-xl p-4 transition-all duration-300 cursor-pointer shadow-inner",
+                  webpFile ? "border-accent-emerald bg-accent-emerald/5" : "border-obsidian-rim hover:border-accent-violet/30"
                 )}>
                   <label className="flex items-center gap-3 cursor-pointer">
-                    {webpFile ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Upload className="w-4 h-4 text-muted-foreground" />}
-                    <span className="text-sm text-foreground font-medium truncate">{webpFile ? webpFile.name : "Select WebP"}</span>
+                    {webpFile ? <CheckCircle2 className="w-4 h-4 text-accent-emerald" /> : <Upload className="w-4 h-4 text-glass-muted" />}
+                    <span className="text-sm text-glass-primary font-bold truncate">{webpFile ? webpFile.name : "Select WebP"}</span>
                     <input type="file" accept="image/webp" className="hidden" onChange={(e) => setWebpFile(e.target.files?.[0] || null)} />
                   </label>
                 </div>
@@ -989,7 +989,7 @@ export function PinnedBlocksManager({
                 <button
                   onClick={handleVideoStoryUpload}
                   disabled={!mp4File || !webmFile || !webpFile}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#7A27FF] hover:bg-[#6620D6] text-white rounded-xl font-bold transition-all shadow-lg shadow-[#7A27FF]/20 disabled:opacity-50 active:scale-95"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-accent-violet text-white rounded-xl font-bold transition-all shadow-lg shadow-accent-violet/20 disabled:opacity-50 active:scale-95"
                 >
                   <Upload className="w-4 h-4" />
                   Upload 3-File Story
@@ -1002,22 +1002,22 @@ export function PinnedBlocksManager({
 
       {/* Create Block Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
-          <div className="bg-white/95 dark:bg-[#051124] border border-[#E5E5EA] dark:border-white/10 rounded-2xl p-7 w-full max-w-sm shadow-2xl space-y-6 liquid-glass-elevated">
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-thick flex items-center justify-center z-[100] p-4">
+          <div className="bg-glass-surface border border-obsidian-rim rounded-2xl p-7 w-full max-w-sm shadow-ao-stack space-y-6 overflow-hidden">
             <div className="space-y-2">
-              <h3 className="text-2xl font-bold text-foreground">New Pinned Block</h3>
-              <p className="text-sm text-muted-foreground font-medium">Create a new collection for stories.</p>
+              <h3 className="text-2xl font-bold text-glass-primary">New Pinned Block</h3>
+              <p className="text-sm text-glass-muted font-bold">Create a new collection for stories.</p>
             </div>
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-foreground px-1">Block Title</label>
+                <label className="text-sm font-bold text-glass-primary px-1">Block Title</label>
                 <input
                   type="text"
                   value={newBlockTitle}
                   onChange={(e) => setNewBlockTitle(e.target.value)}
                   placeholder='e.g. "Beach Trips"'
-                  className="w-full px-4 py-3 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all"
+                  className="w-full px-4 py-3 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary placeholder:text-glass-muted focus:ring-2 focus:ring-accent-amber/20 outline-none transition-all font-bold"
                   autoFocus
                 />
               </div>
@@ -1025,14 +1025,14 @@ export function PinnedBlocksManager({
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-3 bg-black/[0.03] dark:bg-white/5 hover:bg-black/[0.06] dark:hover:bg-white/10 text-foreground rounded-xl transition-all font-bold"
+                  className="flex-1 px-4 py-3 bg-glass-surface border border-obsidian-rim hover:bg-glass-surface/80 text-glass-primary rounded-xl transition-all font-bold active:scale-95"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={createBlock}
                   disabled={saving || !newBlockTitle.trim()}
-                  className="flex-1 px-4 py-3 bg-[#D4AF37] hover:bg-[#B8962E] text-black rounded-xl transition-all font-bold shadow-lg shadow-[#D4AF37]/20 disabled:opacity-50 active:scale-95"
+                  className="flex-1 px-4 py-3 bg-accent-amber text-black rounded-xl transition-all font-bold shadow-lg shadow-accent-amber/20 disabled:opacity-50 active:scale-95"
                 >
                   {saving ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Create Block'}
                 </button>

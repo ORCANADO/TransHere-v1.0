@@ -100,7 +100,7 @@ export function ModelEditor({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-[#7A27FF]" />
+        <Loader2 className="w-8 h-8 animate-spin text-accent-violet" />
       </div>
     );
   }
@@ -111,13 +111,13 @@ export function ModelEditor({
       <div className="flex items-center gap-4">
         <button
           onClick={onBack}
-          className="p-2 bg-card border border-white/10 rounded-lg text-white hover:border-white/20 transition-colors"
+          className="p-2 bg-glass-surface border border-obsidian-rim rounded-lg text-glass-primary hover:bg-glass-surface/80 transition-colors"
           aria-label="Back to models list"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h2 className="text-xl font-bold text-white">
+          <h2 className="text-xl font-bold text-glass-primary">
             {modelId ? `Edit: ${model?.name || 'Model'}` : 'Add New Model'}
           </h2>
           {model?.slug && (
@@ -125,7 +125,7 @@ export function ModelEditor({
           )}
           {/* Role indicator for organization users */}
           {userRole === 'organization' && (
-            <p className="text-xs text-[#D4AF37] mt-1 flex items-center gap-1">
+            <p className="text-xs text-accent-gold mt-1 flex items-center gap-1">
               <Lock className="w-3 h-3" />
               Organization Access - Basic Info Only
             </p>
@@ -134,7 +134,7 @@ export function ModelEditor({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-white/10 pb-2 overflow-x-auto scrollbar-hide">
+      <div className="flex gap-2 border-b border-obsidian-rim pb-2 overflow-x-auto scrollbar-hide">
         {availableTabs.map((tab) => (
           <button
             key={tab.id}
@@ -142,8 +142,8 @@ export function ModelEditor({
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors",
               activeTab === tab.id
-                ? "bg-[#7A27FF] text-white"
-                : "text-muted-foreground hover:text-white hover:bg-white/5"
+                ? "bg-accent-violet text-white shadow-lg shadow-accent-violet/20"
+                : "text-glass-muted hover:text-glass-primary hover:bg-glass-surface"
             )}
           >
             <tab.icon className="w-4 h-4" />
@@ -161,7 +161,7 @@ export function ModelEditor({
       </div>
 
       {/* Tab Content */}
-      <div className="bg-card border border-white/10 rounded-xl p-6">
+      <div className="liquid-glass p-6">
         {activeTab === 'basic' && (
           <ModelBasicInfo
             adminKey={adminKey}

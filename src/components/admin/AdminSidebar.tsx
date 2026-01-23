@@ -55,33 +55,24 @@ export function AdminSidebar({
             <aside className={cn(
                 "h-screen transition-all duration-300 flex flex-col overflow-hidden z-50",
                 "fixed lg:relative",
-                // iOS 26 Liquid Glass - Titanium white for light mode, dark translucent for dark
-                "bg-background",
-                "backdrop-blur-3xl",
-                "border-r border-border",
-                "shadow-[1px_0_0_rgba(0,0,0,0.02)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)]",
+                // iOS 26 Liquid Glass - Applied via root scope
+                "bg-glass-void",
+                "backdrop-blur-thick",
+                "border-r border-obsidian-rim",
+                "shadow-ao-stack",
                 isCollapsed ? "-translate-x-full lg:translate-x-0 lg:w-0" : "translate-x-0 w-[280px]"
             )}>
-                <header className="flex items-center justify-between p-4 border-b border-border">
+                <header className="flex items-center justify-between p-4 border-b border-obsidian-rim">
                     <div className="flex items-center gap-2">
-                        <div className={cn(
-                            "w-8 h-8 rounded-xl",
-                            "bg-gradient-to-br from-[#7A27FF] via-[#9D4EFF] to-[#00FF85]",
-                            "shadow-lg shadow-[#7A27FF]/20",
-                            "flex items-center justify-center",
-                            "ring-1 ring-white/20"
-                        )}>
-                            <span className="text-white font-bold text-sm drop-shadow-sm">TH</span>
-                        </div>
-                        <span className="font-bold text-sm text-foreground tracking-tight">TransHere</span>
+                        <span className="font-bold text-sm text-glass-primary tracking-tight uppercase">Admin</span>
                     </div>
                     <button
                         onClick={onToggleCollapse}
                         className={cn(
                             "p-2 rounded-xl transition-all",
-                            "hover:bg-black/[0.04] dark:hover:bg-white/10",
+                            "hover:bg-glass-surface",
                             "active:scale-95",
-                            "text-muted-foreground hover:text-foreground"
+                            "text-glass-muted hover:text-glass-primary"
                         )}
                         aria-label="Toggle sidebar"
                     >

@@ -101,18 +101,18 @@ export function EditOrganizationModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white dark:bg-[#0A1221] border border-[#E5E5EA] dark:border-white/10 rounded-2xl shadow-2xl max-w-md w-full">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-thick">
+            <div className="bg-glass-surface border border-obsidian-rim rounded-2xl shadow-ao-stack max-w-md w-full overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-[#E5E5EA] dark:border-white/10">
-                    <h2 className="text-xl font-bold text-[#1D1D1F] dark:text-white">
+                <div className="flex items-center justify-between p-6 border-b border-obsidian-rim">
+                    <h2 className="text-xl font-bold text-glass-primary">
                         {newApiKey ? 'API Key Regenerated' : 'Edit Organization'}
                     </h2>
                     <button
                         onClick={handleClose}
-                        className="p-2 rounded-lg hover:bg-black/[0.04] dark:hover:bg-white/10 transition-all"
+                        className="p-2 rounded-lg hover:bg-glass-surface transition-all"
                     >
-                        <X className="w-5 h-5 text-[#86868B] dark:text-muted-foreground" />
+                        <X className="w-5 h-5 text-glass-muted" />
                     </button>
                 </div>
 
@@ -121,7 +121,7 @@ export function EditOrganizationModal({
                     {!newApiKey ? (
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-semibold text-[#1D1D1F] dark:text-white mb-2">
+                                <label className="block text-sm font-bold text-glass-primary mb-2">
                                     Organization Name
                                 </label>
                                 <input
@@ -131,26 +131,26 @@ export function EditOrganizationModal({
                                     placeholder="Enter organization name"
                                     maxLength={100}
                                     required
-                                    className="w-full px-4 py-2.5 bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-xl text-[#1D1D1F] dark:text-white placeholder:text-[#86868B] dark:placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#00FF85] transition-all"
+                                    className="w-full px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary placeholder:text-glass-muted focus:outline-none focus:ring-2 focus:ring-accent-emerald/20 transition-all font-bold"
                                 />
-                                <p className="text-xs text-[#86868B] dark:text-muted-foreground mt-1">
+                                <p className="text-xs text-glass-muted mt-1 font-bold">
                                     {name.length}/100 characters
                                 </p>
                             </div>
 
                             <div className="pt-2">
-                                <label className="flex items-start gap-3 cursor-pointer">
+                                <label className="flex items-start gap-3 cursor-pointer group">
                                     <input
                                         type="checkbox"
                                         checked={regenerateKey}
                                         onChange={(e) => setRegenerateKey(e.target.checked)}
-                                        className="mt-1 w-4 h-4 rounded border-[#E5E5EA] dark:border-white/10 text-[#00FF85] focus:ring-[#00FF85]"
+                                        className="mt-1 w-4 h-4 rounded border-obsidian-rim text-accent-emerald focus:ring-accent-emerald bg-glass-surface"
                                     />
                                     <div>
-                                        <span className="text-sm font-semibold text-[#1D1D1F] dark:text-white">
+                                        <span className="text-sm font-bold text-glass-primary group-hover:text-accent-emerald transition-colors">
                                             Regenerate API Key
                                         </span>
-                                        <p className="text-xs text-[#86868B] dark:text-muted-foreground mt-0.5">
+                                        <p className="text-xs text-glass-muted mt-0.5 font-bold">
                                             This will invalidate the current API key
                                         </p>
                                     </div>
@@ -176,14 +176,14 @@ export function EditOrganizationModal({
                                 <button
                                     type="button"
                                     onClick={handleClose}
-                                    className="flex-1 px-4 py-2.5 bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-xl font-semibold text-[#1D1D1F] dark:text-white hover:bg-black/[0.04] dark:hover:bg-white/10 transition-all"
+                                    className="flex-1 px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl font-bold text-glass-primary hover:bg-glass-surface/80 transition-all active:scale-95"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={loading || (!name.trim() && !regenerateKey)}
-                                    className="flex-1 px-4 py-2.5 bg-[#00FF85] text-black rounded-xl font-semibold hover:bg-[#00FF85]/90 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-1 px-4 py-2.5 bg-accent-emerald text-black rounded-xl font-bold hover:opacity-90 transition-all shadow-lg shadow-accent-emerald/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {loading ? 'Saving...' : 'Save Changes'}
                                 </button>
@@ -192,8 +192,8 @@ export function EditOrganizationModal({
                     ) : (
                         <div className="space-y-4">
                             {/* Success Message */}
-                            <div className="p-4 bg-[#00FF85]/10 border border-[#00FF85]/20 rounded-xl">
-                                <p className="text-sm font-semibold text-[#00FF85]">
+                            <div className="p-4 bg-accent-emerald/10 border border-accent-emerald/20 rounded-xl">
+                                <p className="text-sm font-bold text-accent-emerald">
                                     API key regenerated successfully!
                                 </p>
                             </div>
@@ -213,20 +213,20 @@ export function EditOrganizationModal({
 
                             {/* New API Key Display */}
                             <div>
-                                <label className="block text-sm font-semibold text-[#1D1D1F] dark:text-white mb-2">
+                                <label className="block text-sm font-bold text-glass-primary mb-2">
                                     New API Key
                                 </label>
                                 <div className="flex items-center gap-2">
-                                    <code className="flex-1 px-4 py-2.5 bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 rounded-xl text-sm font-mono text-[#1D1D1F] dark:text-white break-all">
+                                    <code className="flex-1 px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl text-sm font-mono text-glass-primary break-all">
                                         {newApiKey}
                                     </code>
                                     <button
                                         onClick={handleCopyKey}
                                         className={cn(
-                                            "p-2.5 rounded-xl transition-all",
+                                            "p-2.5 rounded-xl transition-all shadow-sm active:scale-95",
                                             copied
-                                                ? "bg-[#00FF85]/20 text-[#00FF85]"
-                                                : "bg-[#F9F9FB] dark:bg-white/5 border border-[#E5E5EA] dark:border-white/10 hover:bg-black/[0.04] dark:hover:bg-white/10"
+                                                ? "bg-accent-emerald text-black shadow-lg shadow-accent-emerald/20"
+                                                : "bg-glass-surface border border-obsidian-rim text-glass-primary hover:bg-glass-surface/80"
                                         )}
                                         title="Copy API key"
                                     >
@@ -241,7 +241,7 @@ export function EditOrganizationModal({
 
                             <button
                                 onClick={handleDone}
-                                className="w-full px-4 py-2.5 bg-[#00FF85] text-black rounded-xl font-semibold hover:bg-[#00FF85]/90 transition-all active:scale-95"
+                                className="w-full px-4 py-2.5 bg-accent-emerald text-black rounded-xl font-bold hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-accent-emerald/20"
                             >
                                 Done
                             </button>

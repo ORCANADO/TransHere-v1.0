@@ -1,0 +1,460 @@
+/* ============================================
+   iOS 26 LIQUID GLASSMORPHISM - ADMIN SCOPE ONLY
+   Material Flux Design System
+   ============================================
+   
+   Color Philosophy:
+   - Obsidian Frost (Dark): Deep volcanic glass with SSS
+   - Iridescent White (Light): Warm bone white with specular highlights
+   - Refractive blur simulates light bending through glass
+   - Ambient occlusion for 3D depth perception
+   ============================================ */
+
+@layer admin-base {
+    /* ============================================
+     SECTION 1: ROOT VARIABLES
+     iOS 26 Material System Tokens
+     ============================================ */
+
+    .liquid-glass-root {
+        /* === OBSIDIAN FROST (Dark Mode) === */
+        --surface-obsidian-void: #0B0C0C;
+        --surface-obsidian-glass: #3C3F40;
+        --surface-obsidian-raised: #353839;
+        --border-obsidian-rim: #555D50;
+        --glow-obsidian-internal: #5B4965;
+        --text-obsidian-primary: #E2DFD2;
+        --text-obsidian-muted: #9E9E9E;
+
+        /* === IRIDESCENT WHITE (Light Mode) === */
+        --surface-irid-base: #F9F6EE;
+        --surface-irid-glass: rgba(255, 255, 255, 0.65);
+        --surface-irid-specular: #CED9EF;
+        --glow-irid-warm: #EFC8DF;
+        --border-irid-rim: #FFFFFF;
+        --text-irid-primary: #2E293A;
+
+        /* === REFRACTIVE BLUR STOPS === */
+        --blur-thin: blur(8px);
+        --blur-medium: blur(24px) saturate(140%);
+        --blur-thick: blur(40px) saturate(180%);
+
+        /* === AMBIENT OCCLUSION SHADOW STACK === */
+        --shadow-ao-stack:
+            0px 1px 2px rgba(0, 0, 0, 0.4),
+            0px 4px 8px -2px rgba(0, 0, 0, 0.3),
+            0px 12px 24px -4px rgba(0, 0, 0, 0.2),
+            0px 32px 64px 0px rgba(0, 0, 0, 0.2),
+            0px 0px 1px rgba(255, 255, 255, 0.1),
+            inset 0px 1px 0px rgba(255, 255, 255, 0.05);
+
+        --shadow-ao-light:
+            0px 1px 2px rgba(0, 0, 0, 0.08),
+            0px 4px 8px -2px rgba(0, 0, 0, 0.06),
+            0px 12px 24px -4px rgba(0, 0, 0, 0.04),
+            0px 32px 64px 0px rgba(0, 0, 0, 0.03),
+            0px 0px 1px rgba(255, 255, 255, 0.5),
+            inset 0px 1px 0px rgba(255, 255, 255, 0.8);
+
+        /* === MATERIAL FLUX TRACKING === */
+        --mouse-x: 50%;
+        --mouse-y: 50%;
+
+        /* === SUPER-ELLIPSE RADIUS === */
+        --radius-squircle: 24px;
+        --radius-squircle-sm: 16px;
+        --radius-squircle-lg: 32px;
+
+        /* === ACCENT COLORS (Mode-Independent) === */
+        --accent-emerald: #00FF85;
+        --accent-violet: #7A27FF;
+        --accent-gold: #D4AF37;
+        --accent-red: #FF4444;
+    }
+
+    /* ============================================
+     SECTION 2: DARK MODE (Default)
+     Obsidian Frost Palette
+     ============================================ */
+
+    .liquid-glass-root {
+        background: var(--surface-obsidian-void);
+        color: var(--text-obsidian-primary);
+    }
+
+    /* ============================================
+     SECTION 3: LIGHT MODE
+     Iridescent White Palette
+     ============================================ */
+
+    .liquid-glass-root.liquid-light {
+        background: var(--surface-irid-base);
+        color: var(--text-irid-primary);
+    }
+
+    /* ============================================
+     SECTION 4: TYPOGRAPHY
+     SF Pro Variable Font System
+     ============================================ */
+
+    .liquid-glass-root {
+        font-family: 'SF Pro Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-variation-settings: 'opsz' 24, 'wdth' 105;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    .liquid-glass-root h1,
+    .liquid-glass-root h2,
+    .liquid-glass-root h3 {
+        font-variation-settings: 'opsz' 28, 'wght' 600;
+        letter-spacing: -0.01em;
+    }
+
+    .liquid-glass-root h4,
+    .liquid-glass-root h5,
+    .liquid-glass-root h6 {
+        font-variation-settings: 'opsz' 24, 'wght' 500;
+        letter-spacing: -0.005em;
+    }
+
+    /* ============================================
+     SECTION 5: GLASS SURFACE UTILITIES
+     Core Glassmorphism Effects
+     ============================================ */
+
+    /* --- Primary Glass Surface (Dark) --- */
+    .liquid-glass-root .liquid-glass {
+        background: var(--surface-obsidian-glass);
+        backdrop-filter: var(--blur-medium);
+        -webkit-backdrop-filter: var(--blur-medium);
+        border: 1px solid var(--border-obsidian-rim);
+        box-shadow: var(--shadow-ao-stack);
+        border-radius: var(--radius-squircle);
+        position: relative;
+        isolation: isolate;
+    }
+
+    /* --- Primary Glass Surface (Light) --- */
+    .liquid-glass-root.liquid-light .liquid-glass {
+        background: var(--surface-irid-glass);
+        border: 1px solid var(--border-irid-rim);
+        box-shadow: var(--shadow-ao-light);
+    }
+
+    /* --- Elevated Glass (Cards, Modals) --- */
+    .liquid-glass-root .liquid-glass-elevated {
+        background: var(--surface-obsidian-raised);
+        backdrop-filter: var(--blur-thick);
+        -webkit-backdrop-filter: var(--blur-thick);
+        border: 1px solid var(--border-obsidian-rim);
+        box-shadow: var(--shadow-ao-stack);
+        border-radius: var(--radius-squircle);
+        position: relative;
+    }
+
+    .liquid-glass-root.liquid-light .liquid-glass-elevated {
+        background: linear-gradient(135deg,
+                rgba(255, 255, 255, 0.85) 0%,
+                rgba(255, 255, 255, 0.75) 100%);
+        border: 1px solid var(--border-irid-rim);
+        box-shadow: var(--shadow-ao-light);
+    }
+
+    /* --- Subtle Glass (Inputs, Selects) --- */
+    .liquid-glass-root .liquid-glass-subtle {
+        background: rgba(60, 63, 64, 0.5);
+        backdrop-filter: var(--blur-thin);
+        -webkit-backdrop-filter: var(--blur-thin);
+        border: 1px solid var(--border-obsidian-rim);
+        border-radius: var(--radius-squircle-sm);
+    }
+
+    .liquid-glass-root.liquid-light .liquid-glass-subtle {
+        background: rgba(255, 255, 255, 0.5);
+        border: 1px solid rgba(206, 217, 239, 0.6);
+    }
+
+    /* ============================================
+     SECTION 6: COMPONENT OVERRIDES
+     Specific Dashboard Elements
+     ============================================ */
+
+    /* --- Stat Cards --- */
+    .liquid-glass-root .stat-card {
+        background: var(--surface-obsidian-glass);
+        backdrop-filter: var(--blur-medium);
+        -webkit-backdrop-filter: var(--blur-medium);
+        border: 1px solid var(--border-obsidian-rim);
+        box-shadow: var(--shadow-ao-stack);
+        border-radius: var(--radius-squircle);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .liquid-glass-root.liquid-light .stat-card {
+        background: var(--surface-irid-glass);
+        border: 1px solid var(--border-irid-rim);
+        box-shadow: var(--shadow-ao-light);
+    }
+
+    .liquid-glass-root .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0px 2px 4px rgba(0, 0, 0, 0.5),
+            0px 8px 16px -4px rgba(0, 0, 0, 0.4),
+            0px 16px 32px -8px rgba(0, 0, 0, 0.3),
+            0px 48px 96px 0px rgba(0, 0, 0, 0.25),
+            inset 0px 1px 0px rgba(255, 255, 255, 0.1);
+    }
+
+    /* --- Form Inputs --- */
+    .liquid-glass-root input,
+    .liquid-glass-root select,
+    .liquid-glass-root textarea {
+        background: rgba(60, 63, 64, 0.6);
+        backdrop-filter: var(--blur-thin);
+        -webkit-backdrop-filter: var(--blur-thin);
+        border: 1px solid var(--border-obsidian-rim);
+        color: var(--text-obsidian-primary);
+        border-radius: var(--radius-squircle-sm);
+        transition: all 0.2s ease;
+    }
+
+    .liquid-glass-root.liquid-light input,
+    .liquid-glass-root.liquid-light select,
+    .liquid-glass-root.liquid-light textarea {
+        background: rgba(255, 255, 255, 0.6);
+        border: 1px solid rgba(206, 217, 239, 0.6);
+        color: var(--text-irid-primary);
+    }
+
+    .liquid-glass-root input::placeholder,
+    .liquid-glass-root textarea::placeholder {
+        color: var(--text-obsidian-muted);
+    }
+
+    .liquid-glass-root.liquid-light input::placeholder,
+    .liquid-glass-root.liquid-light textarea::placeholder {
+        color: rgba(46, 41, 58, 0.5);
+    }
+
+    .liquid-glass-root input:focus,
+    .liquid-glass-root select:focus,
+    .liquid-glass-root textarea:focus {
+        border-color: var(--accent-violet);
+        box-shadow: 0 0 0 3px rgba(122, 39, 255, 0.2);
+        outline: none;
+    }
+
+    /* --- Buttons --- */
+    .liquid-glass-root .btn-primary {
+        background: var(--accent-emerald);
+        color: #0B0C0C;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 255, 133, 0.3);
+        font-weight: 600;
+        border-radius: var(--radius-squircle-sm);
+        transition: all 0.2s ease;
+    }
+
+    .liquid-glass-root .btn-primary:hover {
+        background: #00FF85;
+        box-shadow: 0 6px 16px rgba(0, 255, 133, 0.4);
+        transform: translateY(-1px);
+    }
+
+    .liquid-glass-root .btn-secondary {
+        background: var(--accent-violet);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 12px rgba(122, 39, 255, 0.3);
+        border-radius: var(--radius-squircle-sm);
+    }
+
+    .liquid-glass-root .btn-secondary:hover {
+        background: #8A37FF;
+        box-shadow: 0 6px 16px rgba(122, 39, 255, 0.4);
+        transform: translateY(-1px);
+    }
+
+    /* ============================================
+     SECTION 7: CHART STYLING
+     Recharts Customization
+     ============================================ */
+
+    .liquid-glass-root .recharts-cartesian-grid-horizontal line,
+    .liquid-glass-root .recharts-cartesian-grid-vertical line {
+        stroke: var(--border-obsidian-rim);
+        stroke-opacity: 0.3;
+    }
+
+    .liquid-glass-root.liquid-light .recharts-cartesian-grid-horizontal line,
+    .liquid-glass-root.liquid-light .recharts-cartesian-grid-vertical line {
+        stroke: rgba(206, 217, 239, 0.5);
+        stroke-opacity: 0.5;
+    }
+
+    .liquid-glass-root .recharts-text {
+        fill: var(--text-obsidian-muted);
+    }
+
+    .liquid-glass-root.liquid-light .recharts-text {
+        fill: var(--text-irid-primary);
+    }
+
+    .liquid-glass-root .recharts-tooltip-wrapper .recharts-default-tooltip {
+        background: var(--surface-obsidian-raised) !important;
+        backdrop-filter: var(--blur-medium) !important;
+        -webkit-backdrop-filter: var(--blur-medium) !important;
+        border: 1px solid var(--border-obsidian-rim) !important;
+        border-radius: var(--radius-squircle) !important;
+        box-shadow: var(--shadow-ao-stack) !important;
+    }
+
+    .liquid-glass-root.liquid-light .recharts-tooltip-wrapper .recharts-default-tooltip {
+        background: var(--surface-irid-glass) !important;
+        border: 1px solid var(--border-irid-rim) !important;
+        box-shadow: var(--shadow-ao-light) !important;
+    }
+
+    /* ============================================
+     SECTION 8: MODAL & OVERLAY
+     Popup Glass Effects
+     ============================================ */
+
+    .liquid-glass-root .modal-backdrop {
+        background: rgba(11, 12, 12, 0.6);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    .liquid-glass-root.liquid-light .modal-backdrop {
+        background: rgba(249, 246, 238, 0.6);
+    }
+
+    .liquid-glass-root .modal-content {
+        background: var(--surface-obsidian-raised);
+        backdrop-filter: var(--blur-thick);
+        -webkit-backdrop-filter: var(--blur-thick);
+        border: 1px solid var(--border-obsidian-rim);
+        box-shadow: var(--shadow-ao-stack);
+        border-radius: var(--radius-squircle-lg);
+    }
+
+    .liquid-glass-root.liquid-light .modal-content {
+        background: linear-gradient(135deg,
+                rgba(255, 255, 255, 0.95) 0%,
+                rgba(255, 255, 255, 0.85) 100%);
+        border: 1px solid var(--border-irid-rim);
+        box-shadow: var(--shadow-ao-light);
+    }
+
+    /* ============================================
+     SECTION 9: SCROLLBAR STYLING
+     Custom Scrollbars
+     ============================================ */
+
+    .liquid-glass-root ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .liquid-glass-root ::-webkit-scrollbar-track {
+        background: rgba(60, 63, 64, 0.3);
+        border-radius: 4px;
+    }
+
+    .liquid-glass-root ::-webkit-scrollbar-thumb {
+        background: rgba(85, 93, 80, 0.6);
+        border-radius: 4px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+    }
+
+    .liquid-glass-root ::-webkit-scrollbar-thumb:hover {
+        background: rgba(85, 93, 80, 0.8);
+        background-clip: content-box;
+    }
+
+    .liquid-glass-root.liquid-light ::-webkit-scrollbar-track {
+        background: rgba(206, 217, 239, 0.2);
+    }
+
+    .liquid-glass-root.liquid-light ::-webkit-scrollbar-thumb {
+        background: rgba(206, 217, 239, 0.6);
+        background-clip: content-box;
+    }
+
+    .liquid-glass-root.liquid-light ::-webkit-scrollbar-thumb:hover {
+        background: rgba(206, 217, 239, 0.8);
+        background-clip: content-box;
+    }
+
+    /* Firefox scrollbar */
+    .liquid-glass-root {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(85, 93, 80, 0.6) rgba(60, 63, 64, 0.3);
+    }
+
+    .liquid-glass-root.liquid-light {
+        scrollbar-color: rgba(206, 217, 239, 0.6) rgba(206, 217, 239, 0.2);
+    }
+
+    /* ============================================
+     SECTION 10: ANIMATIONS
+     Smooth Transitions
+     ============================================ */
+
+    .liquid-glass-root * {
+        transition:
+            background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            color 0.15s ease;
+    }
+
+    /* Disable transitions for elements that shouldn't animate */
+    .liquid-glass-root .no-transition,
+    .liquid-glass-root .no-transition * {
+        transition: none !important;
+    }
+
+    /* ============================================
+     SECTION 11: UTILITY CLASSES
+     Helper Classes
+     ============================================ */
+
+    /* Text colors */
+    .liquid-glass-root .text-glass-primary {
+        color: var(--text-obsidian-primary);
+    }
+
+    .liquid-glass-root.liquid-light .text-glass-primary {
+        color: var(--text-irid-primary);
+    }
+
+    .liquid-glass-root .text-glass-muted {
+        color: var(--text-obsidian-muted);
+    }
+
+    .liquid-glass-root.liquid-light .text-glass-muted {
+        color: rgba(46, 41, 58, 0.6);
+    }
+
+    /* Background utilities */
+    .liquid-glass-root .bg-glass-void {
+        background: var(--surface-obsidian-void);
+    }
+
+    .liquid-glass-root.liquid-light .bg-glass-void {
+        background: var(--surface-irid-base);
+    }
+
+    .liquid-glass-root .bg-glass-surface {
+        background: var(--surface-obsidian-glass);
+    }
+
+    .liquid-glass-root.liquid-light .bg-glass-surface {
+        background: var(--surface-irid-glass);
+    }
+}

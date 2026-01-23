@@ -7,7 +7,7 @@ import {
   AlertTriangle,
   PanelLeft
 } from 'lucide-react';
-import './admin-theme.css';
+import '@/styles/admin-liquid.css';
 import { ThemeToggle } from '@/components/admin/theme-toggle';
 import { LivePulseIndicator } from '@/components/admin/live-pulse-indicator';
 import { useAdminTheme } from '@/hooks/use-admin-theme';
@@ -196,8 +196,8 @@ function AdminContent() {
 
   if (isAuthLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-2 border-[#7A27FF] border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-glass-void flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-accent-violet border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -206,12 +206,11 @@ function AdminContent() {
   if (editingModelId || isAddingModel) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
+        <header className="sticky top-0 z-50 bg-glass-surface/80 backdrop-blur-xl border-b border-obsidian-rim">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Shield className="w-6 h-6 text-[#00FF85]" />
-              <span className="font-bold text-foreground">TransHere Admin</span>
-              <span className="px-2 py-1 bg-[#7A27FF]/20 text-[#7A27FF] text-xs rounded-full">
+              <span className="font-bold text-glass-primary uppercase tracking-tight">Admin Console</span>
+              <span className="px-2 py-1 bg-accent-violet/20 text-accent-violet text-xs rounded-full font-bold">
                 Model Editor
               </span>
             </div>
@@ -241,7 +240,7 @@ function AdminContent() {
   if (!mounted) return null;
 
   return (
-    <div className="h-screen bg-background overflow-hidden" suppressHydrationWarning>
+    <div className="liquid-glass-root h-screen overflow-hidden" suppressHydrationWarning>
       {/* CSS Grid Layout: Sidebar + Main Content */}
       <div className={cn(
         "grid h-full transition-all duration-300",
@@ -268,34 +267,33 @@ function AdminContent() {
               onClick={handleToggleCollapse}
               className={cn(
                 "fixed left-4 top-4 lg:left-6 lg:top-6 z-[60] flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300",
-                "bg-white/80 dark:bg-[#0A1221]/80 backdrop-blur-xl",
-                "border border-[#E5E5EA] dark:border-white/10",
-                "shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)]",
-                "hover:scale-110 active:scale-95 group hover:border-[#007AFF]/30 dark:hover:border-[#7A27FF]/30",
+                "bg-glass-surface backdrop-blur-xl",
+                "border border-obsidian-rim",
+                "shadow-ao-stack",
+                "hover:scale-110 active:scale-95 group hover:border-accent-violet/30",
                 "flex"
               )}
               title="Expand Sidebar (Cmd + \)"
             >
-              <PanelLeft className="w-5 h-5 text-black/60 dark:text-white/60 group-hover:text-[#007AFF] dark:group-hover:text-[#7A27FF] transition-colors" />
-              <div className="absolute inset-0 rounded-xl bg-[#007AFF]/5 dark:bg-[#7A27FF]/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <PanelLeft className="w-5 h-5 text-glass-muted group-hover:text-accent-violet transition-colors" />
+              <div className="absolute inset-0 rounded-xl bg-accent-violet/5 opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>
           )}
 
           {/* Unified Sticky Header */}
-          <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border">
+          <div className="sticky top-0 z-40 bg-glass-surface/80 backdrop-blur-xl border-b border-obsidian-rim">
             {/* Branding Row */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-obsidian-rim/50">
               <div className="flex items-center gap-3">
-                <Shield className="w-6 h-6 text-[#00FF85]" />
-                <span className="font-bold text-foreground">TransHere Admin</span>
+                <span className="font-bold text-glass-primary uppercase tracking-tight">Admin Panel</span>
                 {adminKey && <LivePulseIndicator adminKey={adminKey} />}
                 {activeTab === 'analytics' && (
-                  <span className="px-2 py-1 bg-[#7A27FF]/20 text-[#7A27FF] text-xs rounded-full">
+                  <span className="px-2 py-1 bg-accent-violet/20 text-accent-violet text-xs rounded-full font-bold">
                     Analytics
                   </span>
                 )}
                 {activeTab === 'organizations' && (
-                  <span className="px-2 py-1 bg-[#00FF85]/20 text-[#00FF85] text-xs rounded-full">
+                  <span className="px-2 py-1 bg-accent-emerald/20 text-accent-emerald text-xs rounded-full font-bold">
                     Organizations
                   </span>
                 )}
@@ -308,15 +306,15 @@ function AdminContent() {
               <button
                 onClick={() => setActiveTab('analytics')}
                 className={cn(
-                  "px-4 py-2.5 font-semibold text-sm transition-all relative",
+                  "px-4 py-2.5 font-bold text-sm transition-all relative",
                   activeTab === 'analytics'
-                    ? "text-[#007AFF] dark:text-[#7A27FF]"
-                    : "text-[#86868B] dark:text-muted-foreground hover:text-[#1D1D1F] dark:hover:text-white"
+                    ? "text-accent-violet"
+                    : "text-glass-muted hover:text-glass-primary"
                 )}
               >
                 Analytics
                 {activeTab === 'analytics' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#007AFF] dark:bg-[#7A27FF]" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-violet" />
                 )}
               </button>
 
@@ -325,15 +323,15 @@ function AdminContent() {
                 <button
                   onClick={() => setActiveTab('organizations')}
                   className={cn(
-                    "px-4 py-2.5 font-semibold text-sm transition-all relative",
+                    "px-4 py-2.5 font-bold text-sm transition-all relative",
                     activeTab === 'organizations'
-                      ? "text-[#007AFF] dark:text-[#7A27FF]"
-                      : "text-[#86868B] dark:text-muted-foreground hover:text-[#1D1D1F] dark:hover:text-white"
+                      ? "text-accent-violet"
+                      : "text-glass-muted hover:text-glass-primary"
                   )}
                 >
                   Organizations
                   {activeTab === 'organizations' && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#007AFF] dark:bg-[#7A27FF]" />
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-violet" />
                   )}
                 </button>
               )}
@@ -374,8 +372,8 @@ function AdminContent() {
 export default function AdminPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-2 border-[#7A27FF] border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-glass-void flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-accent-violet border-t-transparent rounded-full" />
       </div>
     }>
       <AdminContent />

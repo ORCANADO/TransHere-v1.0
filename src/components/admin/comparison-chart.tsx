@@ -54,9 +54,9 @@ function CustomTooltip(props: any) {
     const isPositive = current >= previous;
 
     return (
-        <div className="bg-white/90 dark:bg-[#0A1221]/90 backdrop-blur-2xl rounded-2xl p-4 min-w-[180px] shadow-2xl border border-black/[0.05] dark:border-white/10">
+        <div className="bg-glass-surface backdrop-blur-thick rounded-2xl p-4 min-w-[180px] shadow-ao-stack border border-obsidian-rim">
             {/* Date Label */}
-            <p className="text-sm font-semibold text-[#1D1D1F] dark:text-white mb-3 pb-2 border-b border-black/[0.05] dark:border-white/10">
+            <p className="text-sm font-bold text-glass-primary mb-3 pb-2 border-b border-obsidian-rim">
                 {label}
             </p>
 
@@ -65,11 +65,11 @@ function CustomTooltip(props: any) {
                 <div className="flex items-center gap-2">
                     <div
                         className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: '#007AFF' }}
+                        style={{ backgroundColor: 'var(--accent-violet)' }}
                     />
-                    <span className="text-sm text-[#86868B] dark:text-muted-foreground">Current</span>
+                    <span className="text-sm text-glass-muted">Current</span>
                 </div>
-                <span className="text-sm font-bold text-[#1D1D1F] dark:text-white">
+                <span className="text-sm font-bold text-glass-primary">
                     {current.toLocaleString()}
                 </span>
             </div>
@@ -79,23 +79,23 @@ function CustomTooltip(props: any) {
                 <div className="flex items-center gap-2">
                     <div
                         className="w-3 h-3 rounded-full opacity-30"
-                        style={{ backgroundColor: '#86868B' }}
+                        style={{ backgroundColor: 'var(--text-obsidian-muted)' }}
                     />
-                    <span className="text-sm text-[#86868B]/70 dark:text-muted-foreground">Previous</span>
+                    <span className="text-sm text-glass-muted/70">Previous</span>
                 </div>
-                <span className="text-sm font-semibold text-[#86868B]/70 dark:text-muted-foreground">
+                <span className="text-sm font-semibold text-glass-muted/70">
                     {previous.toLocaleString()}
                 </span>
             </div>
 
             {/* Delta Calculation */}
-            <div className="pt-2 border-t border-black/[0.05] dark:border-white/10">
+            <div className="pt-2 border-t border-obsidian-rim">
                 <div className="flex items-center justify-between">
-                    <span className="text-sm text-[#86868B] dark:text-muted-foreground">Change</span>
+                    <span className="text-sm text-glass-muted">Change</span>
                     <span
                         className={cn(
                             "text-sm font-bold",
-                            isPositive ? "text-[#00C853] dark:text-[#00FF85]" : "text-red-500 dark:text-red-400"
+                            isPositive ? "text-accent-emerald" : "text-accent-red"
                         )}
                     >
                         {delta}
@@ -150,21 +150,21 @@ export function ComparisonChart({
         <div className={cn("rounded-2xl p-4 lg:p-6", className)}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 {title && (
-                    <h3 className="text-lg font-semibold text-[#1D1D1F] dark:text-white">
+                    <h3 className="text-lg font-bold text-glass-primary">
                         {title}
                     </h3>
                 )}
 
                 {/* Metric Toggle */}
                 {onMetricChange && (
-                    <div className="flex p-1 bg-white/5 dark:bg-black/20 backdrop-blur-md rounded-xl border border-white/10 self-start sm:self-auto">
+                    <div className="flex p-1 bg-glass-surface backdrop-blur-md rounded-xl border border-obsidian-rim self-start sm:self-auto">
                         <button
                             onClick={() => onMetricChange('views')}
                             className={cn(
-                                "px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200",
+                                "px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200",
                                 metric === 'views'
-                                    ? "bg-[#007AFF] text-white shadow-lg"
-                                    : "text-[#86868B] hover:text-white"
+                                    ? "bg-accent-violet text-white shadow-lg shadow-accent-violet/20"
+                                    : "text-glass-muted hover:text-glass-primary"
                             )}
                         >
                             Views
@@ -172,10 +172,10 @@ export function ComparisonChart({
                         <button
                             onClick={() => onMetricChange('clicks')}
                             className={cn(
-                                "px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200",
+                                "px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200",
                                 metric === 'clicks'
-                                    ? "bg-[#007AFF] text-white shadow-lg"
-                                    : "text-[#86868B] hover:text-white"
+                                    ? "bg-accent-violet text-white shadow-lg shadow-accent-violet/20"
+                                    : "text-glass-muted hover:text-glass-primary"
                             )}
                         >
                             Clicks
@@ -200,7 +200,7 @@ export function ComparisonChart({
                         {/* X Axis - Minimalist */}
                         <XAxis
                             dataKey="label"
-                            stroke="#86868B"
+                            stroke="var(--text-obsidian-muted)"
                             fontSize={11}
                             tickLine={false}
                             axisLine={false}
@@ -209,7 +209,7 @@ export function ComparisonChart({
 
                         {/* Y Axis - Hidden axis line */}
                         <YAxis
-                            stroke="#86868B"
+                            stroke="var(--text-obsidian-muted)"
                             fontSize={11}
                             tickLine={false}
                             axisLine={false}
@@ -232,7 +232,7 @@ export function ComparisonChart({
                                 iconType="circle"
                                 height={36}
                                 formatter={(value: string) => (
-                                    <span className="text-xs font-medium text-[#86868B] dark:text-muted-foreground mr-4">
+                                    <span className="text-xs font-bold text-glass-muted mr-4">
                                         {value === 'current' ? 'Current Period' : 'Previous Period'}
                                     </span>
                                 )}
@@ -244,12 +244,12 @@ export function ComparisonChart({
                             type="monotone"
                             dataKey="previous"
                             name="previous"
-                            stroke="#86868B"
+                            stroke="var(--text-obsidian-muted)"
                             strokeWidth={2}
-                            strokeOpacity={0.3}
+                            strokeOpacity={0.2}
                             strokeDasharray="5 5"
                             dot={false}
-                            activeDot={{ r: 4, fill: '#86868B', strokeWidth: 0 }}
+                            activeDot={{ r: 4, fill: 'var(--text-obsidian-muted)', strokeWidth: 0 }}
                         />
 
                         {/* Current Period Line - Solid, Apple Blue */}
@@ -257,10 +257,10 @@ export function ComparisonChart({
                             type="monotone"
                             dataKey="current"
                             name="current"
-                            stroke="#007AFF"
+                            stroke="var(--accent-violet)"
                             strokeWidth={3}
                             dot={false}
-                            activeDot={{ r: 6, fill: '#007AFF', stroke: '#fff', strokeWidth: 2 }}
+                            activeDot={{ r: 6, fill: 'var(--accent-violet)', stroke: '#fff', strokeWidth: 2 }}
                         />
                     </LineChart>
                 </ResponsiveContainer>
