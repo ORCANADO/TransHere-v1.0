@@ -439,3 +439,18 @@ Gold:           #D4AF37 (Verified/Premium)
 
 ### Final Layout Note:
 The editor content is now housed in a `40px` blur container with a `180%` saturation boost, creating the most premium "glass" feel in the entire application.
+
+---
+
+## 🚀 Cloudflare Deployment Fixes
+
+**Status:** ✅ Resolved
+
+### 1. Repository Cloning Error
+*   **Issue**: `fatal: No url found for submodule path 'Roo-Code'`. Git was tracking a folder as a broken submodule without configuration.
+*   **Resolution**: Removed the invalid `Roo-Code` reference from the Git index. Cloudflare can now clone the repo successfully.
+
+### 2. TypeScript Build Error (StatCard)
+*   **Issue**: `Type error: Property 'title' does not exist on type 'StatCardProps'`. The common `StatCard` component interface was refactored but the Organization Dashboard was using legacy props.
+*   **Resolution**: Updated `organization-dashboard.tsx` and related components to use the standard `label`, `accentColor`, and `subtext` props.
+*   **Design Alignment**: Refactored `ModelDetailPanel.tsx` and `OrganizationModelCard.tsx` to use the official design tokens and components, ensuring a unified "Productive Glass" look across all authenticated areas.
