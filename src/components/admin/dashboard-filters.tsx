@@ -7,6 +7,7 @@
 
 import * as React from 'react';
 import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useMaterialFlux } from '@/hooks/use-material-flux';
 import {
     Calendar,
     Globe,
@@ -80,8 +81,17 @@ function FilterDropdown({
                 onClick={onToggle}
                 className={cn(
                     "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                    "bg-glass-surface border border-obsidian-rim",
-                    "hover:bg-glass-surface/80 shadow-sm active:scale-95",
+                    // Base Glass
+                    "backdrop-blur-[var(--blur-medium)]",
+                    // Dark Mode
+                    "bg-[var(--surface-obsidian-raised)] hover:bg-[var(--surface-obsidian-glass)]",
+                    "text-[var(--text-obsidian-primary)] border border-[var(--border-obsidian-rim)]/40",
+                    "active:shadow-[inset_0_0_20px_4px_var(--glow-obsidian-internal)] active:scale-95 shadow-sm",
+                    // Light Mode
+                    "liquid-light:bg-[var(--surface-irid-glass)]",
+                    "liquid-light:text-[var(--text-irid-primary)]",
+                    "liquid-light:border-[var(--border-irid-rim)]/60",
+                    "liquid-light:active:shadow-[inset_0_0_20px_4px_var(--glow-irid-warm)]",
                     isOpen && "ring-2 ring-accent-violet/50",
                     className
                 )}
@@ -102,7 +112,19 @@ function FilterDropdown({
                     />
 
                     {/* Dropdown Content */}
-                    <div className="absolute top-full mt-2 z-[60] min-w-[220px] max-h-[450px] overflow-auto bg-glass-surface backdrop-blur-thick rounded-2xl border border-obsidian-rim shadow-ao-stack">
+                    <div className={cn(
+                        "absolute top-full mt-2 z-[60] min-w-[220px] max-h-[450px] overflow-auto rounded-2xl shadow-[var(--shadow-ao-stack)] liquid-light:shadow-[var(--shadow-ao-light)]",
+                        // Base Glass
+                        "backdrop-blur-[var(--blur-medium)] saturate-[180%]",
+                        // Dark Mode
+                        "bg-[var(--surface-obsidian-glass)]/70",
+                        "text-[var(--text-obsidian-primary)]",
+                        "border border-[var(--border-obsidian-rim)]/40",
+                        // Light Mode
+                        "liquid-light:bg-[var(--surface-irid-glass)]",
+                        "liquid-light:text-[var(--text-irid-primary)]",
+                        "liquid-light:border-[var(--border-irid-rim)]/60"
+                    )}>
                         {children}
                     </div>
                 </>
@@ -135,6 +157,7 @@ export function DashboardFiltersBar({
     availableSources,
     isLoading = false,
 }: DashboardFiltersBarProps) {
+    const fluxRef = useMaterialFlux<HTMLDivElement>();
     // Dropdown open states
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
     const [countrySearch, setCountrySearch] = useState('');
@@ -212,13 +235,19 @@ export function DashboardFiltersBar({
     }, [filters.sources]);
 
     return (
-        <div className="flex flex-wrap items-center gap-3">
+        <div
+            ref={fluxRef}
+            className="flex flex-wrap items-center gap-3 flux-border p-2 rounded-2xl"
+        >
             {/* Date Period Filter */}
             <FilterDropdown
                 trigger={
                     <>
-                        <Calendar className="w-4 h-4 text-glass-muted" />
-                        <span className="text-glass-primary">
+                        <Calendar className="w-4 h-4 text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60" />
+                        <span className={cn(
+                            "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]",
+                            "[font-variation-settings:'opsz'_24,'wdth'_105]"
+                        )}>
                             {TIME_PERIODS.find(p => p.value === filters.period)?.label || 'Select Period'}
                         </span>
                     </>
@@ -246,10 +275,12 @@ export function DashboardFiltersBar({
                                 }
                             }}
                             className={cn(
-                                "w-full px-4 py-2.5 text-left text-sm hover:bg-glass-surface transition-colors cursor-pointer",
+                                "w-full px-4 py-2.5 text-left text-sm transition-colors cursor-pointer",
+                                "[font-variation-settings:'opsz'_24,'wdth'_105]",
+                                "hover:bg-[var(--surface-obsidian-glass)]/30 liquid-light:hover:bg-[var(--surface-irid-glass)]/40",
                                 filters.period === period.value
                                     ? "text-accent-violet font-bold"
-                                    : "text-glass-primary"
+                                    : "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]"
                             )}
                         >
                             {period.label}
@@ -257,8 +288,12 @@ export function DashboardFiltersBar({
                     ))}
                 </div>
 
-                <div className="p-3 border-t border-obsidian-rim space-y-2">
-                    <p className="text-[10px] uppercase tracking-widest text-glass-muted font-bold px-1 mb-1">Custom Range</p>
+                <div className="p-3 border-t border-[var(--border-obsidian-rim)]/20 liquid-light:border-[var(--border-irid-rim)]/20 space-y-2">
+                    <p className={cn(
+                        "text-[10px] uppercase tracking-wide font-bold px-1 mb-1",
+                        "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60",
+                        "[font-variation-settings:'opsz'_18,'wdth'_110]"
+                    )}>Custom Range</p>
                     <DatePicker
                         value={filters.startDate || ''}
                         onChange={(date) => {
@@ -284,8 +319,11 @@ export function DashboardFiltersBar({
             <FilterDropdown
                 trigger={
                     <>
-                        <Globe className="w-4 h-4 text-glass-muted" />
-                        <span className="text-glass-primary">
+                        <Globe className="w-4 h-4 text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60" />
+                        <span className={cn(
+                            "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]",
+                            "[font-variation-settings:'opsz'_24,'wdth'_105]"
+                        )}>
                             {filters.country || 'All Countries'}
                         </span>
                     </>
@@ -299,15 +337,34 @@ export function DashboardFiltersBar({
             >
                 <div className="flex flex-col max-h-[450px]">
                     {/* Search Input */}
-                    <div className="p-3 border-b border-obsidian-rim sticky top-0 bg-glass-surface backdrop-blur-thick z-10">
+                    <div className={cn(
+                        "p-3 border-b sticky top-0 z-10",
+                        "border-[var(--border-obsidian-rim)]/20 liquid-light:border-[var(--border-irid-rim)]/20",
+                        "bg-[var(--surface-obsidian-glass)]/90 liquid-light:bg-[var(--surface-irid-glass)]",
+                        "backdrop-blur-[var(--blur-thick)] saturate-[180%]"
+                    )}>
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-glass-muted" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60" />
                             <input
                                 type="text"
                                 placeholder="Search countries..."
                                 value={countrySearch}
                                 onChange={(e) => setCountrySearch(e.target.value)}
-                                className="w-full pl-9 pr-2 py-2 text-xs bg-glass-surface border border-obsidian-rim rounded-lg text-glass-primary placeholder:text-glass-muted focus:outline-none focus:ring-2 focus:ring-accent-violet/20 transition-all font-bold"
+                                className={cn(
+                                    "w-full pl-9 pr-2 py-2 text-xs rounded-lg transition-all font-bold",
+                                    "backdrop-blur-[8px]",
+                                    "bg-[var(--surface-obsidian-raised)]/50",
+                                    "text-[var(--text-obsidian-primary)]",
+                                    "placeholder:text-[var(--text-obsidian-muted)]",
+                                    "border border-[var(--border-obsidian-rim)]/30",
+                                    "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
+                                    // Light mode
+                                    "liquid-light:bg-white/40",
+                                    "liquid-light:text-[var(--text-irid-primary)]",
+                                    "liquid-light:placeholder:text-[var(--text-irid-primary)]/40",
+                                    "liquid-light:border-[var(--border-irid-rim)]/40",
+                                    "liquid-light:focus:ring-[var(--glow-irid-warm)]"
+                                )}
                             />
                         </div>
                     </div>
@@ -323,7 +380,7 @@ export function DashboardFiltersBar({
                                 "w-full px-4 py-3 text-left text-sm transition-all block font-bold",
                                 !filters.country
                                     ? "bg-accent-violet/10 text-accent-violet"
-                                    : "text-glass-primary hover:bg-glass-surface"
+                                    : "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)] hover:bg-[var(--surface-obsidian-glass)]/30 liquid-light:hover:bg-[var(--surface-irid-glass)]"
                             )}
                         >
                             All Countries
@@ -344,7 +401,7 @@ export function DashboardFiltersBar({
                                         "w-full px-4 py-2.5 text-left text-sm transition-all block font-bold",
                                         filters.country === country
                                             ? "bg-accent-violet/10 text-accent-violet"
-                                            : "text-glass-primary hover:bg-glass-surface"
+                                            : "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)] hover:bg-[var(--surface-obsidian-glass)]/30 liquid-light:hover:bg-[var(--surface-irid-glass)]"
                                     )}
                                 >
                                     {country}
@@ -358,8 +415,11 @@ export function DashboardFiltersBar({
             <FilterDropdown
                 trigger={
                     <>
-                        <Link2 className="w-4 h-4 text-glass-muted" />
-                        <span className="text-glass-primary">
+                        <Link2 className="w-4 h-4 text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60" />
+                        <span className={cn(
+                            "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]",
+                            "[font-variation-settings:'opsz'_24,'wdth'_105]"
+                        )}>
                             {filters.sources.length === 0
                                 ? 'All Sources'
                                 : filters.sources.length === 1
@@ -382,8 +442,10 @@ export function DashboardFiltersBar({
                             updateFilter('sources', []);
                         }}
                         className={cn(
-                            "w-full px-3 py-2.5 text-left text-sm hover:bg-glass-surface transition-colors rounded-xl mb-1 font-bold",
-                            filters.sources.length === 0 ? "text-accent-violet" : "text-glass-primary"
+                            "w-full px-3 py-2.5 text-left text-sm transition-colors rounded-xl mb-1 font-bold",
+                            "[font-variation-settings:'opsz'_24,'wdth'_105]",
+                            "hover:bg-[var(--surface-obsidian-glass)]/30 liquid-light:hover:bg-[var(--surface-irid-glass)]/40",
+                            filters.sources.length === 0 ? "text-accent-violet" : "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]"
                         )}
                     >
                         All Sources
@@ -402,9 +464,10 @@ export function DashboardFiltersBar({
                                     onClick={() => handleSourceToggle(source.name)}
                                     className={cn(
                                         "flex items-center gap-2 px-3 py-2.5 cursor-pointer rounded-xl transition-all font-bold",
+                                        "[font-variation-settings:'opsz'_24,'wdth'_105]",
                                         isSourceSelected(source.name)
-                                            ? "bg-accent-violet/10 text-accent-violet"
-                                            : "text-glass-primary hover:bg-glass-surface"
+                                            ? "bg-accent-violet/10 text-accent-violet active:shadow-[inset_0_0_20px_4px_var(--glow-obsidian-internal)]"
+                                            : "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)] hover:bg-[var(--surface-obsidian-glass)]/30 liquid-light:hover:bg-[var(--surface-irid-glass)]/40 active:scale-[0.98]"
                                     )}
                                 >
                                     <IconComponent className="w-4 h-4" />
@@ -426,9 +489,10 @@ export function DashboardFiltersBar({
                                                 }}
                                                 className={cn(
                                                     "px-3 py-2 text-xs cursor-pointer rounded-lg transition-all flex items-center justify-between font-bold",
+                                                    "[font-variation-settings:'opsz'_18,'wdth'_110]",
                                                     isSubtagSelected(source.name, subtag)
-                                                        ? "bg-accent-violet/10 text-accent-violet"
-                                                        : "text-glass-muted hover:text-glass-primary hover:bg-glass-surface"
+                                                        ? "bg-accent-violet/10 text-accent-violet active:shadow-[inset_0_0_10px_2px_var(--glow-obsidian-internal)]"
+                                                        : "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 hover:text-[var(--text-obsidian-primary)] liquid-light:hover:text-[var(--text-irid-primary)] hover:bg-[var(--surface-obsidian-glass)]/30 liquid-light:hover:bg-[var(--surface-irid-glass)]/40 active:scale-[0.98]"
                                                 )}
                                             >
                                                 <span>{subtag}</span>
@@ -443,33 +507,44 @@ export function DashboardFiltersBar({
                         );
                     })}
                 </div>
-            </FilterDropdown>
+            </FilterDropdown >
 
 
             {/* Clear All Filters */}
-            {(filters.country || filters.sources.length > 0 || filters.modelSlugs.length > 0 || filters.period !== '7days') && (
-                <button
-                    onClick={() => {
-                        onFiltersChange({
-                            period: '7days',
-                            startDate: null,
-                            endDate: null,
-                            country: null,
-                            sources: [],
-                            modelSlugs: [],
-                        });
-                    }}
-                    className="flex items-center gap-1 px-3 py-2 text-sm text-glass-muted hover:text-accent-violet transition-colors font-bold"
-                >
-                    <X className="w-4 h-4" />
-                    Clear
-                </button>
-            )}
+            {
+                (filters.country || filters.sources.length > 0 || filters.modelSlugs.length > 0 || filters.period !== '7days') && (
+                    <button
+                        onClick={() => {
+                            onFiltersChange({
+                                period: '7days',
+                                startDate: null,
+                                endDate: null,
+                                country: null,
+                                sources: [],
+                                modelSlugs: [],
+                            });
+                        }}
+                        className={cn(
+                            "flex items-center gap-1 px-3 py-2 text-sm font-bold transition-all rounded-xl",
+                            "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60",
+                            "hover:text-accent-violet hover:bg-[var(--surface-obsidian-raised)]/30 liquid-light:hover:bg-[var(--surface-irid-glass)]/40",
+                            "active:shadow-[inset_0_0_15px_2px_var(--glow-obsidian-internal)] active:scale-95",
+                            "liquid-light:active:shadow-[inset_0_0_15px_2px_var(--glow-irid-warm)]",
+                            "[font-variation-settings:'opsz'_24,'wdth'_105]"
+                        )}
+                    >
+                        <X className="w-4 h-4" />
+                        Clear
+                    </button>
+                )
+            }
 
             {/* Loading Indicator */}
-            {isLoading && (
-                <div className="ml-2 w-5 h-5 border-2 border-accent-violet border-t-transparent rounded-full animate-spin" />
-            )}
-        </div>
+            {
+                isLoading && (
+                    <div className="ml-2 w-5 h-5 border-2 border-accent-violet border-t-transparent rounded-full animate-spin" />
+                )
+            }
+        </div >
     );
 }

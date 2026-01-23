@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Search, Link2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
+import { useMaterialFlux } from '@/hooks/use-material-flux';
 import { getImageUrl } from '@/lib/utils';
 import type { Model } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -115,9 +116,14 @@ export function SidebarModelList({
     return (
         <div className="flex flex-col h-full">
             {/* Search Bar - Sticky */}
-            <div className="sticky top-0 z-10 p-3 bg-glass-surface backdrop-blur-medium border-b border-obsidian-rim">
+            <div className={cn(
+                "sticky top-0 z-10 p-3 border-b",
+                "bg-[var(--surface-obsidian-glass)]/90 liquid-light:bg-[var(--surface-irid-glass)]",
+                "backdrop-blur-[var(--blur-medium)] saturate-[180%]",
+                "border-[var(--border-obsidian-rim)]/20 liquid-light:border-[var(--border-irid-rim)]/20"
+            )}>
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-glass-muted" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/50" />
                     <input
                         id="model-search-input"
                         type="text"
@@ -125,13 +131,15 @@ export function SidebarModelList({
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className={cn(
-                            "w-full pl-9 pr-3 py-2.5 rounded-xl text-sm font-bold",
-                            "bg-glass-surface/50",
-                            "border border-obsidian-rim",
-                            "focus:ring-2 focus:ring-accent-violet/20",
-                            "placeholder:text-glass-muted/50",
-                            "text-glass-primary",
-                            "transition-all outline-none"
+                            "w-full pl-9 pr-3 py-2.5 rounded-xl text-sm font-bold transition-all outline-none",
+                            "backdrop-blur-[8px]",
+                            "bg-[var(--surface-obsidian-raised)]/60 text-[var(--text-obsidian-primary)]",
+                            "border border-[var(--border-obsidian-rim)]/30",
+                            "placeholder:text-[var(--text-obsidian-muted)]/50",
+                            "focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
+                            // Light mode
+                            "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
+                            "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
                         )}
                     />
                 </div>
@@ -159,94 +167,15 @@ export function SidebarModelList({
                             const isPinned = pinnedIds.includes(model.id);
 
                             return (
-                                <div
+                                <ModelListItem
                                     key={model.id}
-                                    onClick={() => handleSelect(model.id, !isSelected)}
-                                    className={cn(
-                                        "group relative flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all",
-                                        isSelected
-                                            ? "bg-accent-violet/10 border border-accent-violet/30 shadow-sm"
-                                            : "hover:bg-glass-surface border border-transparent"
-                                    )}
-                                >
-                                    {/* Profile Photo (clickable for edit) */}
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onEditModel(model);
-                                        }}
-                                        className={cn(
-                                            "relative w-11 h-11 rounded-full overflow-hidden flex-shrink-0 z-10",
-                                            "ring-2 ring-obsidian-rim",
-                                            "group-hover:ring-accent-violet transition-all",
-                                            "shadow-sm"
-                                        )}
-                                        title={`Edit ${model.name}`}
-                                    >
-                                        {model.image_url ? (
-                                            <Image
-                                                src={getImageUrl(model.image_url)}
-                                                alt={model.name}
-                                                fill
-                                                className="object-cover"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent-violet/20 to-accent-emerald/20 text-xs font-bold text-accent-violet">
-                                                {model.name.substring(0, 2).toUpperCase()}
-                                            </div>
-                                        )}
-                                    </button>
-
-                                    {/* Model Info */}
-                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                        <div className="flex items-center gap-2">
-                                            <div className={cn(
-                                                "font-bold text-[12px] leading-tight transition-colors flex flex-col uppercase tracking-tight",
-                                                isSelected
-                                                    ? "text-accent-violet"
-                                                    : "text-glass-primary"
-                                            )}>
-                                                {model.slug.split('-').map((part, i) => (
-                                                    <span key={i} className={cn("block", i > 0 && "opacity-70 text-[10px]")}>
-                                                        {part}
-                                                    </span>
-                                                ))}
-                                            </div>
-
-                                            {/* Tracking Link Button - Moved next to name */}
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    onManageTrackingLinks(model);
-                                                }}
-                                                className={cn(
-                                                    "opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-all",
-                                                    "hover:bg-glass-surface",
-                                                    "text-glass-muted hover:text-accent-violet",
-                                                    "active:scale-95"
-                                                )}
-                                                title="Manage tracking links"
-                                            >
-                                                <Link2 className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-
-                                    </div>
-
-                                    {/* Metrics (Views/Clicks) */}
-                                    <div className="flex flex-col items-end gap-0.5 text-[10px] sm:text-xs">
-                                        <div className="flex items-center gap-1.5 font-bold text-accent-violet">
-                                            <span className="tabular-nums">{metrics?.[model.slug]?.views?.toLocaleString() || 0}</span>
-                                            <span className="text-[9px] opacity-60 uppercase tracking-wider font-bold">Views</span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 font-bold text-accent-emerald">
-                                            <span className="tabular-nums">{metrics?.[model.slug]?.clicks?.toLocaleString() || 0}</span>
-                                            <span className="text-[9px] opacity-60 uppercase tracking-wider font-bold">Clicks</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Visual Selection Indicator (Green glow/border handled by parent div class) */}
-                                </div>
+                                    model={model}
+                                    isSelected={isSelected}
+                                    onSelect={() => handleSelect(model.id, !isSelected)}
+                                    onEdit={onEditModel}
+                                    onManageTracking={onManageTrackingLinks}
+                                    metrics={metrics?.[model.slug]}
+                                />
                             );
                         })}
                     </div>
@@ -255,20 +184,130 @@ export function SidebarModelList({
 
             {/* Selection Summary */}
             {selectedIds.length > 0 && (
-                <div className="sticky bottom-0 p-3 bg-glass-surface backdrop-blur-medium border-t border-obsidian-rim">
+                <div className={cn(
+                    "sticky bottom-0 p-3 border-t",
+                    "bg-[var(--surface-obsidian-void)]/90 liquid-light:bg-[var(--surface-irid-base)]/90",
+                    "backdrop-blur-[var(--blur-thick)] saturate-[180%]",
+                    "border-[var(--border-obsidian-rim)]/20 liquid-light:border-[var(--border-irid-rim)]/20"
+                )}>
                     <div className="flex items-center justify-between text-xs px-1">
-                        <span className="text-muted-foreground font-bold uppercase tracking-wider">
+                        <span className={cn(
+                            "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 font-bold uppercase tracking-wider",
+                            "[font-variation-settings:'opsz'_18,'wdth'_110]"
+                        )}>
                             {selectedIds.length} model{selectedIds.length !== 1 ? 's' : ''} selected
                         </span>
                         <button
                             onClick={onClearSelection}
-                            className="text-accent-violet hover:opacity-80 transition-opacity font-bold"
+                            className="text-accent-violet hover:opacity-80 transition-opacity font-bold active:scale-90"
                         >
                             Clear all
                         </button>
                     </div>
                 </div>
             )}
+        </div>
+    );
+}
+interface ModelListItemProps {
+    model: Model;
+    isSelected: boolean;
+    onSelect: () => void;
+    onEdit: (model: Model) => void;
+    onManageTracking: (model: Model) => void;
+    metrics?: { views: number; clicks: number };
+}
+
+function ModelListItem({ model, isSelected, onSelect, onEdit, onManageTracking, metrics }: ModelListItemProps) {
+    const fluxRef = useMaterialFlux<HTMLDivElement>();
+
+    return (
+        <div
+            ref={fluxRef}
+            onClick={onSelect}
+            className={cn(
+                "group relative flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all",
+                "flux-border",
+                isSelected
+                    ? "bg-accent-violet/10 border border-accent-violet/30 shadow-sm flux-sss-active"
+                    : "hover:bg-[var(--surface-obsidian-glass)]/30 liquid-light:hover:bg-black/5 border border-transparent"
+            )}
+        >
+            {/* Profile Photo (clickable for edit) */}
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(model);
+                }}
+                className={cn(
+                    "relative w-11 h-11 rounded-full overflow-hidden flex-shrink-0 z-10",
+                    "ring-2 ring-obsidian-rim",
+                    "group-hover:ring-accent-violet transition-all",
+                    "shadow-sm"
+                )}
+                title={`Edit ${model.name}`}
+            >
+                {model.image_url ? (
+                    <Image
+                        src={getImageUrl(model.image_url)}
+                        alt={model.name}
+                        fill
+                        className="object-cover"
+                    />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent-violet/20 to-accent-emerald/20 text-xs font-bold text-accent-violet">
+                        {model.name.substring(0, 2).toUpperCase()}
+                    </div>
+                )}
+            </button>
+
+            {/* Model Info */}
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <div className="flex items-center gap-2">
+                    <div className={cn(
+                        "font-bold text-[12px] leading-tight transition-colors flex flex-col uppercase tracking-tight",
+                        "[font-variation-settings:'opsz'_24,'wdth'110]",
+                        isSelected
+                            ? "text-accent-violet"
+                            : "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]"
+                    )}>
+                        {model.slug.split('-').map((part, i) => (
+                            <span key={i} className={cn("block", i > 0 && "opacity-70 text-[10px]")}>
+                                {part}
+                            </span>
+                        ))}
+                    </div>
+
+                    {/* Tracking Link Button - Moved next to name */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onManageTracking(model);
+                        }}
+                        className={cn(
+                            "opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-all",
+                            "hover:bg-glass-surface",
+                            "text-glass-muted hover:text-accent-violet",
+                            "active:scale-95"
+                        )}
+                        title="Manage tracking links"
+                    >
+                        <Link2 className="w-3.5 h-3.5" />
+                    </button>
+                </div>
+            </div>
+
+            {/* Metrics (Views/Clicks) */}
+            <div className="flex flex-col items-end gap-0.5 text-[10px] sm:text-xs">
+                <div className="flex items-center gap-1.5 font-bold text-accent-violet">
+                    <span className="tabular-nums">{metrics?.views?.toLocaleString() || 0}</span>
+                    <span className="text-[9px] opacity-60 uppercase tracking-wider font-bold">Views</span>
+                </div>
+                <div className="flex items-center gap-1.5 font-bold text-accent-emerald">
+                    <span className="tabular-nums">{metrics?.clicks?.toLocaleString() || 0}</span>
+                    <span className="text-[9px] opacity-60 uppercase tracking-wider font-bold">Clicks</span>
+                </div>
+            </div>
         </div>
     );
 }

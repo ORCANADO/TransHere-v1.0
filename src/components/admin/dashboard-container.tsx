@@ -3,6 +3,7 @@
 import { ReactNode } from 'react';
 import { Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useMaterialFlux } from '@/hooks/use-material-flux';
 
 interface DashboardContainerProps {
   /** Left sidebar content (model list) */
@@ -27,8 +28,9 @@ export function DashboardContainer({
   sidebarOpen = false,
   onSidebarToggle,
 }: DashboardContainerProps) {
+  const fluxRef = useMaterialFlux<HTMLDivElement>();
   return (
-    <div className="h-screen bg-background overflow-hidden">
+    <div className="h-screen bg-[var(--surface-obsidian-void)] liquid-light:bg-[var(--surface-irid-base)] overflow-hidden">
       {/* Mobile Backdrop */}
       <div
         className={cn(
@@ -53,9 +55,12 @@ export function DashboardContainer({
         {/* Desktop Main Content: Scrollable */}
         <div className="h-screen overflow-y-auto">
           {/* Sticky Header & Filters Bar */}
-          <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-white/10">
+          <div
+            ref={fluxRef}
+            className="sticky top-0 z-40 bg-[var(--surface-obsidian-void)]/80 liquid-light:bg-[var(--surface-irid-base)]/80 backdrop-blur-xl border-b border-[var(--border-obsidian-rim)]/10 liquid-light:border-white/20 flux-border"
+          >
             {header && (
-              <div className="border-b border-white/5">
+              <div className="border-b border-[var(--border-obsidian-rim)]/5 liquid-light:border-white/10">
                 {header}
               </div>
             )}
@@ -77,7 +82,7 @@ export function DashboardContainer({
         {sidebar && (
           <div
             className={cn(
-              "fixed inset-y-0 left-0 w-[280px] z-50 transform transition-transform duration-300 ease-out bg-background",
+              "fixed inset-y-0 left-0 w-[280px] z-50 transform transition-transform duration-300 ease-out bg-[var(--surface-obsidian-void)] liquid-light:bg-[var(--surface-irid-base)]",
               sidebarOpen ? "translate-x-0" : "-translate-x-full"
             )}
           >
@@ -88,9 +93,9 @@ export function DashboardContainer({
         {/* Mobile Main Content */}
         <div className="h-screen overflow-y-auto">
           {/* Mobile Sticky Header & Filters */}
-          <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-white/10">
+          <div className="sticky top-0 z-40 bg-[var(--surface-obsidian-void)]/80 liquid-light:bg-[var(--surface-irid-base)]/80 backdrop-blur-xl border-b border-[var(--border-obsidian-rim)]/10 liquid-light:border-white/20">
             {header && (
-              <div className="border-b border-white/5">
+              <div className="border-b border-[var(--border-obsidian-rim)]/5 liquid-light:border-white/10">
                 {header}
               </div>
             )}
@@ -102,13 +107,13 @@ export function DashboardContainer({
               {sidebar && (
                 <button
                   onClick={onSidebarToggle}
-                  className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-200 active:scale-95"
+                  className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--surface-obsidian-glass)]/30 hover:bg-[var(--surface-obsidian-glass)]/50 border border-[var(--border-obsidian-rim)]/20 liquid-light:bg-white/30 liquid-light:hover:bg-white/50 liquid-light:border-white/40 transition-all duration-200 active:scale-95"
                   aria-label="Toggle sidebar"
                 >
                   {sidebarOpen ? (
-                    <X className="w-5 h-5 text-foreground" />
+                    <X className="w-5 h-5 text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]" />
                   ) : (
-                    <Menu className="w-5 h-5 text-foreground" />
+                    <Menu className="w-5 h-5 text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]" />
                   )}
                 </button>
               )}

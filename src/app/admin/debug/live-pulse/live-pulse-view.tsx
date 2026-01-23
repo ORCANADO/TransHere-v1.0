@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAdminTheme } from '@/hooks/use-admin-theme';
 import { Shield, RefreshCw, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import '@/app/admin/admin-theme.css'; // Ensure theme styles are loaded
+import '@/styles/admin-liquid.css'; // Ensure theme styles are loaded
 
 interface AnalyticsEvent {
     created_at: string;

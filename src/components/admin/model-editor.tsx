@@ -11,6 +11,7 @@ import {
   Lock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useMaterialFlux } from '@/hooks/use-material-flux';
 import { ModelBasicInfo } from './model-basic-info';
 import { GalleryManager } from './gallery-manager';
 import { StoryManager } from './story-manager';
@@ -41,6 +42,8 @@ export function ModelEditor({
   const [activeTab, setActiveTab] = useState<Tab>('basic');
   const [model, setModel] = useState<any>(null);
   const [loading, setLoading] = useState(!!modelId);
+
+  const fluxRef = useMaterialFlux<HTMLDivElement>();
 
   // Get permissions based on user role
   const permissions: DashboardPermissions = getPermissions(userRole);
@@ -111,13 +114,22 @@ export function ModelEditor({
       <div className="flex items-center gap-4">
         <button
           onClick={onBack}
-          className="p-2 bg-glass-surface border border-obsidian-rim rounded-lg text-glass-primary hover:bg-glass-surface/80 transition-colors"
+          className={cn(
+            "p-2 rounded-lg transition-all active:scale-95",
+            // Dark Mode
+            "bg-[var(--surface-obsidian-raised)] border border-[var(--border-obsidian-rim)]/30 text-[var(--text-obsidian-primary)] hover:bg-[var(--surface-obsidian-glass)]",
+            // Light Mode
+            "liquid-light:bg-[var(--surface-irid-glass)] liquid-light:border-[var(--border-irid-rim)] liquid-light:text-[var(--text-irid-primary)] liquid-light:hover:bg-black/5"
+          )}
           aria-label="Back to models list"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h2 className="text-xl font-bold text-glass-primary">
+          <h2 className={cn(
+            "text-xl font-bold text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]",
+            "[font-variation-settings:'opsz'_28,'wght'_600]"
+          )}>
             {modelId ? `Edit: ${model?.name || 'Model'}` : 'Add New Model'}
           </h2>
           {model?.slug && (
@@ -125,7 +137,10 @@ export function ModelEditor({
           )}
           {/* Role indicator for organization users */}
           {userRole === 'organization' && (
-            <p className="text-xs text-accent-gold mt-1 flex items-center gap-1">
+            <p className={cn(
+              "text-xs text-accent-gold mt-1 flex items-center gap-1 font-bold",
+              "[font-variation-settings:'opsz'_18,'wdth'_110]"
+            )}>
               <Lock className="w-3 h-3" />
               Organization Access - Basic Info Only
             </p>
@@ -134,16 +149,17 @@ export function ModelEditor({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-obsidian-rim pb-2 overflow-x-auto scrollbar-hide">
+      <div className="flex gap-2 border-b border-[var(--border-obsidian-rim)]/20 liquid-light:border-white/30 pb-2 overflow-x-auto scrollbar-hide">
         {availableTabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors",
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all",
+              "[font-variation-settings:'opsz'_24,'wdth'_105]",
               activeTab === tab.id
-                ? "bg-accent-violet text-white shadow-lg shadow-accent-violet/20"
-                : "text-glass-muted hover:text-glass-primary hover:bg-glass-surface"
+                ? "bg-accent-violet text-white shadow-lg shadow-accent-violet/20 active:shadow-[inset_0_0_20px_4px_rgba(255,255,255,0.2)]"
+                : "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 hover:text-[var(--text-obsidian-primary)] liquid-light:hover:text-[var(--text-irid-primary)] hover:bg-[var(--surface-obsidian-glass)]/30 liquid-light:hover:bg-[var(--surface-irid-glass)]/40"
             )}
           >
             <tab.icon className="w-4 h-4" />
@@ -161,7 +177,18 @@ export function ModelEditor({
       </div>
 
       {/* Tab Content */}
-      <div className="liquid-glass p-6">
+      <div
+        ref={fluxRef}
+        className={cn(
+          "rounded-[var(--radius-squircle-sm)] p-6 shadow-[var(--shadow-ao-stack)] liquid-light:shadow-[var(--shadow-ao-light)] flux-border overflow-hidden",
+          // Base Glass
+          "backdrop-blur-[var(--blur-medium)] saturate-[140%]",
+          // Dark Mode
+          "bg-[var(--surface-obsidian-glass)]/60 border border-[var(--border-obsidian-rim)]/30",
+          // Light Mode
+          "liquid-light:bg-[var(--surface-irid-glass)] liquid-light:border-[var(--border-irid-rim)]/40"
+        )}
+      >
         {activeTab === 'basic' && (
           <ModelBasicInfo
             adminKey={adminKey}

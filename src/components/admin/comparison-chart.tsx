@@ -6,6 +6,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useMaterialFlux } from '@/hooks/use-material-flux';
 import {
     ResponsiveContainer,
     LineChart,
@@ -54,9 +55,9 @@ function CustomTooltip(props: any) {
     const isPositive = current >= previous;
 
     return (
-        <div className="bg-glass-surface backdrop-blur-thick rounded-2xl p-4 min-w-[180px] shadow-ao-stack border border-obsidian-rim">
+        <div className="bg-[var(--surface-obsidian-raised)]/95 liquid-light:bg-[var(--surface-irid-glass)] backdrop-blur-[40px] saturate-[180%] rounded-2xl p-4 min-w-[180px] shadow-[var(--shadow-ao-stack)] liquid-light:shadow-[var(--shadow-ao-light)] border border-[var(--border-obsidian-rim)]/40 liquid-light:border-white/60">
             {/* Date Label */}
-            <p className="text-sm font-bold text-glass-primary mb-3 pb-2 border-b border-obsidian-rim">
+            <p className="text-sm font-bold text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)] mb-3 pb-2 border-b border-[var(--border-obsidian-rim)]/20 liquid-light:border-white/30">
                 {label}
             </p>
 
@@ -67,9 +68,9 @@ function CustomTooltip(props: any) {
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: 'var(--accent-violet)' }}
                     />
-                    <span className="text-sm text-glass-muted">Current</span>
+                    <span className="text-sm text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60">Current</span>
                 </div>
-                <span className="text-sm font-bold text-glass-primary">
+                <span className="text-sm font-bold text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]">
                     {current.toLocaleString()}
                 </span>
             </div>
@@ -81,17 +82,17 @@ function CustomTooltip(props: any) {
                         className="w-3 h-3 rounded-full opacity-30"
                         style={{ backgroundColor: 'var(--text-obsidian-muted)' }}
                     />
-                    <span className="text-sm text-glass-muted/70">Previous</span>
+                    <span className="text-sm text-[var(--text-obsidian-muted)]/70 liquid-light:text-[var(--text-irid-primary)]/50">Previous</span>
                 </div>
-                <span className="text-sm font-semibold text-glass-muted/70">
+                <span className="text-sm font-semibold text-[var(--text-obsidian-muted)]/70 liquid-light:text-[var(--text-irid-primary)]/50">
                     {previous.toLocaleString()}
                 </span>
             </div>
 
             {/* Delta Calculation */}
-            <div className="pt-2 border-t border-obsidian-rim">
+            <div className="pt-2 border-t border-[var(--border-obsidian-rim)]/20 liquid-light:border-white/30">
                 <div className="flex items-center justify-between">
-                    <span className="text-sm text-glass-muted">Change</span>
+                    <span className="text-sm text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60">Change</span>
                     <span
                         className={cn(
                             "text-sm font-bold",
@@ -124,6 +125,7 @@ export function ComparisonChart({
     showLegend = true,
     className,
 }: ComparisonChartProps) {
+    const fluxRef = useMaterialFlux<HTMLDivElement>();
     // Memoize formatted data for performance
     const chartData = useMemo(() => {
         return data.map(point => ({
@@ -147,24 +149,27 @@ export function ComparisonChart({
     }
 
     return (
-        <div className={cn("rounded-2xl p-4 lg:p-6", className)}>
+        <div
+            ref={fluxRef}
+            className={cn("rounded-2xl p-4 lg:p-6 flux-border", className)}
+        >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 {title && (
-                    <h3 className="text-lg font-bold text-glass-primary">
+                    <h3 className="text-lg font-bold text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]">
                         {title}
                     </h3>
                 )}
 
                 {/* Metric Toggle */}
                 {onMetricChange && (
-                    <div className="flex p-1 bg-glass-surface backdrop-blur-md rounded-xl border border-obsidian-rim self-start sm:self-auto">
+                    <div className="flex p-1 bg-[var(--surface-obsidian-glass)]/40 liquid-light:bg-[var(--surface-irid-glass)] backdrop-blur-md rounded-xl border border-[var(--border-obsidian-rim)]/30 liquid-light:border-white/60 self-start sm:self-auto">
                         <button
                             onClick={() => onMetricChange('views')}
                             className={cn(
                                 "px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200",
                                 metric === 'views'
                                     ? "bg-accent-violet text-white shadow-lg shadow-accent-violet/20"
-                                    : "text-glass-muted hover:text-glass-primary"
+                                    : "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 hover:text-[var(--text-obsidian-primary)] liquid-light:hover:text-[var(--text-irid-primary)]"
                             )}
                         >
                             Views
@@ -175,7 +180,7 @@ export function ComparisonChart({
                                 "px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200",
                                 metric === 'clicks'
                                     ? "bg-accent-violet text-white shadow-lg shadow-accent-violet/20"
-                                    : "text-glass-muted hover:text-glass-primary"
+                                    : "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 hover:text-[var(--text-obsidian-primary)] liquid-light:hover:text-[var(--text-irid-primary)]"
                             )}
                         >
                             Clicks
@@ -232,7 +237,7 @@ export function ComparisonChart({
                                 iconType="circle"
                                 height={36}
                                 formatter={(value: string) => (
-                                    <span className="text-xs font-bold text-glass-muted mr-4">
+                                    <span className="text-xs font-bold text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 mr-4">
                                         {value === 'current' ? 'Current Period' : 'Previous Period'}
                                     </span>
                                 )}

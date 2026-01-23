@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Search, Settings as SettingsIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useMaterialFlux } from '@/hooks/use-material-flux';
 import Image from 'next/image';
 import { getImageUrl } from '@/lib/utils';
 
@@ -38,8 +39,7 @@ export function AdminSidebar({
     onManageTrackingLinks,
 }: AdminSidebarProps) {
     const [searchQuery, setSearchQuery] = useState('');
-
-    // ... (rest of memo stays)
+    const fluxRef = useMaterialFlux<HTMLElement>();
 
     return (
         <>
@@ -52,27 +52,40 @@ export function AdminSidebar({
                 onClick={onToggleCollapse}
             />
 
-            <aside className={cn(
-                "h-screen transition-all duration-300 flex flex-col overflow-hidden z-50",
-                "fixed lg:relative",
-                // iOS 26 Liquid Glass - Applied via root scope
-                "bg-glass-void",
-                "backdrop-blur-thick",
-                "border-r border-obsidian-rim",
-                "shadow-ao-stack",
-                isCollapsed ? "-translate-x-full lg:translate-x-0 lg:w-0" : "translate-x-0 w-[280px]"
-            )}>
-                <header className="flex items-center justify-between p-4 border-b border-obsidian-rim">
+            <aside
+                ref={fluxRef}
+                className={cn(
+                    "h-screen transition-all duration-300 flex flex-col overflow-hidden z-50",
+                    "fixed lg:relative",
+                    // Thick Glass Physics
+                    "backdrop-blur-[40px] saturate-[180%]",
+                    // Obsidian Surface (Dark)
+                    "bg-[var(--surface-obsidian-glass)]/80",
+                    // AO Shadow Stack
+                    "shadow-[var(--shadow-ao-stack)]",
+                    // Super-Ellipse Border
+                    "rounded-[var(--radius-squircle)]",
+                    // Rim Highlight
+                    "border-r border-[var(--border-obsidian-rim)]/30",
+                    // Light Mode Override
+                    "liquid-light:bg-[var(--surface-irid-glass)]",
+                    "liquid-light:border-white/60",
+                    // Material Flux
+                    "flux-border",
+                    isCollapsed ? "-translate-x-full lg:translate-x-0 lg:w-0" : "translate-x-0 w-[280px]"
+                )}>
+                <header className="flex items-center justify-between p-4 border-b border-[var(--border-obsidian-rim)]/20">
                     <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-glass-primary tracking-tight uppercase">Admin</span>
+                        <span className="font-bold text-sm text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)] tracking-tight uppercase">Admin</span>
                     </div>
                     <button
                         onClick={onToggleCollapse}
                         className={cn(
                             "p-2 rounded-xl transition-all",
-                            "hover:bg-glass-surface",
+                            "hover:bg-[var(--surface-obsidian-glass)]/40",
                             "active:scale-95",
-                            "text-glass-muted hover:text-glass-primary"
+                            "text-[var(--text-obsidian-muted)] hover:text-[var(--text-obsidian-primary)]",
+                            "liquid-light:text-[var(--text-irid-primary)]/60 liquid-light:hover:text-[var(--text-irid-primary)]"
                         )}
                         aria-label="Toggle sidebar"
                     >

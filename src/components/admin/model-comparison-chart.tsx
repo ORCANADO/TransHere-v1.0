@@ -6,6 +6,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useMaterialFlux } from '@/hooks/use-material-flux';
 import {
     ResponsiveContainer,
     LineChart,
@@ -128,6 +129,7 @@ export function ModelComparisonChart({
     height = 350,
     className,
 }: ModelComparisonChartProps) {
+    const fluxRef = useMaterialFlux<HTMLDivElement>();
     // Memoize chart data
     const chartData = useMemo(() => {
         return data.map(point => ({
@@ -153,7 +155,10 @@ export function ModelComparisonChart({
     }
 
     return (
-        <div className={cn("rounded-2xl p-4 lg:p-6", className)}>
+        <div
+            ref={fluxRef}
+            className={cn("rounded-2xl p-4 lg:p-6 flux-border", className)}
+        >
             {/* Header with Title and Toggle */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <h3 className="text-lg font-bold text-glass-primary">

@@ -6,6 +6,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useMaterialFlux } from '@/hooks/use-material-flux';
 import { Eye, MousePointer, Percent, RefreshCw, TrendingUp, Users, Instagram, Twitter, Heart, Cloud, Link2, BarChart3 } from 'lucide-react';
 import { StatCard } from './stat-card';
 import { ComparisonChart } from './comparison-chart';
@@ -111,6 +112,7 @@ export function AnalyticsDashboard({
   // State
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const fluxRef = useMaterialFlux<HTMLDivElement>();
   const [error, setError] = useState<string | null>(null);
 
   // Unified filter state
@@ -523,9 +525,13 @@ export function AnalyticsDashboard({
       {loading && !data && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-glass-surface border border-obsidian-rim rounded-2xl p-6 animate-pulse shadow-sm">
-              <div className="h-4 bg-glass-surface rounded w-20 mb-2" />
-              <div className="h-8 bg-glass-surface rounded w-24" />
+            <div key={i} className={cn(
+              "rounded-2xl p-6 animate-pulse shadow-[var(--shadow-ao-stack)] liquid-light:shadow-[var(--shadow-ao-light)]",
+              "bg-[var(--surface-obsidian-glass)]/40 border border-[var(--border-obsidian-rim)]/20",
+              "liquid-light:bg-[var(--surface-irid-glass)] liquid-light:border-white/40"
+            )}>
+              <div className="h-4 bg-white/5 rounded w-20 mb-2" />
+              <div className="h-8 bg-white/5 rounded w-24" />
             </div>
           ))}
         </div>
@@ -536,18 +542,28 @@ export function AnalyticsDashboard({
         <div className="relative">
           {/* Data Freshness Indicator */}
           {lastRefresh && (
-            <div className="mb-4 flex items-center gap-2 text-sm text-glass-muted">
+            <div className="mb-4 flex items-center gap-2 text-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-accent-emerald animate-pulse" />
-              <span className="font-bold">Data as of:</span>
-              <span className="font-bold text-glass-primary">
+              <span className={cn(
+                "font-bold text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/40",
+                "[font-variation-settings:'opsz'_18,'wdth'_110]"
+              )}>Data as of:</span>
+              <span className={cn(
+                "font-bold text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]",
+                "[font-variation-settings:'opsz'_18,'wdth'_110]"
+              )}>
                 {new Date(lastRefresh!).toLocaleString()}
               </span>
             </div>
           )}
           {/* Refresh Overlay Spinner */}
           {loading && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/5 backdrop-blur-subtle transition-all duration-300 rounded-2xl overflow-hidden">
-              <div className="bg-glass-surface border border-obsidian-rim p-5 rounded-3xl shadow-ao-stack scale-up-subtle">
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/10 backdrop-blur-[4px] transition-all duration-300 rounded-2xl overflow-hidden">
+              <div className={cn(
+                "p-5 rounded-3xl shadow-[var(--shadow-ao-stack)] liquid-light:shadow-[var(--shadow-ao-light)] scale-up-subtle",
+                "bg-[var(--surface-obsidian-raised)] border border-[var(--border-obsidian-rim)]/40",
+                "liquid-light:bg-[var(--surface-irid-glass)] liquid-light:border-white"
+              )}>
                 <RefreshCw className="w-8 h-8 text-accent-violet animate-spin" />
               </div>
             </div>
@@ -555,12 +571,23 @@ export function AnalyticsDashboard({
 
           {/* Empty State: No data for filters */}
           {data.overview.totalVisits === 0 && (
-            <div className="col-span-full p-12 text-center bg-glass-surface border border-obsidian-rim rounded-2xl shadow-ao-stack">
+            <div className={cn(
+              "col-span-full p-12 text-center rounded-2xl shadow-[var(--shadow-ao-stack)] liquid-light:shadow-[var(--shadow-ao-light)]",
+              "bg-[var(--surface-obsidian-glass)]/40 border border-[var(--border-obsidian-rim)]/20",
+              "liquid-light:bg-[var(--surface-irid-glass)] liquid-light:border-white/40"
+            )}>
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent-violet/10 flex items-center justify-center">
                 <BarChart3 className="w-8 h-8 text-accent-violet" />
               </div>
-              <h3 className="text-xl font-bold text-glass-primary mb-2">No Analytics Data</h3>
-              <p className="text-glass-muted font-bold max-w-md mx-auto">
+              <h3 className={cn(
+                "text-xl font-bold text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)] mb-2",
+                "[font-variation-settings:'opsz'_28,'wght'_600]"
+              )}>No Analytics Data</h3>
+              <p className={cn(
+                "font-bold max-w-md mx-auto",
+                "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60",
+                "[font-variation-settings:'opsz'_18,'wdth'_110]"
+              )}>
                 No events found for the selected filters. Try expanding the date range or clearing filters.
               </p>
             </div>
@@ -568,7 +595,7 @@ export function AnalyticsDashboard({
 
           {/* Show content when data exists and has values */}
           {data.overview.totalVisits > 0 && (
-            <div className="space-y-6">
+            <div ref={fluxRef} className="space-y-6 flux-border">
               {/* Overview Stats */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatCard
@@ -605,7 +632,11 @@ export function AnalyticsDashboard({
                   onMetricChange={mode === 'org' ? undefined : setComparisonMetric}
                   title={`Comparing ${currentModelSlugs.length} Models`}
                   height={350}
-                  className="bg-glass-surface border border-obsidian-rim rounded-2xl p-4 lg:p-6 shadow-ao-stack"
+                  className={cn(
+                    "rounded-2xl p-4 lg:p-6 shadow-[var(--shadow-ao-stack)] liquid-light:shadow-[var(--shadow-ao-light)]",
+                    "bg-[var(--surface-obsidian-glass)]/60 border border-[var(--border-obsidian-rim)]/30",
+                    "liquid-light:bg-[var(--surface-irid-glass)] liquid-light:border-white/60"
+                  )}
                 />
               ) : (
                 /* Standard Comparison Chart - Current vs Previous */
@@ -615,7 +646,11 @@ export function AnalyticsDashboard({
                   onMetricChange={mode === 'org' ? undefined : setComparisonMetric}
                   title={`Traffic Over Time (${comparisonMetric === 'views' ? 'Page Views' : 'Clicks'})`}
                   height={300}
-                  className="bg-glass-surface border border-obsidian-rim rounded-2xl p-4 lg:p-6 shadow-ao-stack"
+                  className={cn(
+                    "rounded-2xl p-4 lg:p-6 shadow-[var(--shadow-ao-stack)] liquid-light:shadow-[var(--shadow-ao-light)]",
+                    "bg-[var(--surface-obsidian-glass)]/60 border border-[var(--border-obsidian-rim)]/30",
+                    "liquid-light:bg-[var(--surface-irid-glass)] liquid-light:border-white/60"
+                  )}
                 />
               )}
 

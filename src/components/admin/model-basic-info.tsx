@@ -210,7 +210,11 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
       {/* Basic Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-bold text-glass-muted mb-1 px-1">
+          <label className={cn(
+            "block text-sm font-bold mb-1 px-1",
+            "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60",
+            "[font-variation-settings:'opsz'_18,'wdth'_110]"
+          )}>
             Name *
           </label>
           <input
@@ -218,12 +222,25 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
             value={formData.name}
             onChange={(e) => handleChange('name', e.target.value)}
             placeholder="Valentina Aguirre"
-            className="w-full px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary placeholder:text-glass-muted focus:ring-2 focus:ring-accent-emerald/20 outline-none transition-all"
+            className={cn(
+              "w-full px-4 py-2.5 rounded-xl transition-all font-bold",
+              "backdrop-blur-[8px]",
+              "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
+              "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
+              "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
+              // Light mode
+              "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
+              "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
+            )}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-glass-muted mb-1 px-1">
+          <label className={cn(
+            "block text-sm font-bold mb-1 px-1",
+            "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60",
+            "[font-variation-settings:'opsz'_18,'wdth'_110]"
+          )}>
             Slug * <span className="text-xs font-medium opacity-70">(URL-friendly name)</span>
           </label>
           <input
@@ -231,14 +248,27 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
             value={formData.slug}
             onChange={(e) => handleChange('slug', e.target.value)}
             placeholder="valentina-aguirre"
-            className="w-full px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary placeholder:text-glass-muted focus:ring-2 focus:ring-accent-emerald/20 outline-none transition-all"
+            className={cn(
+              "w-full px-4 py-2.5 rounded-xl transition-all font-bold",
+              "backdrop-blur-[8px]",
+              "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
+              "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
+              "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
+              // Light mode
+              "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
+              "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
+            )}
           />
         </div>
       </div>
 
       {/* Bio */}
       <div>
-        <label className="block text-sm font-bold text-glass-muted mb-1 px-1">
+        <label className={cn(
+          "block text-sm font-bold mb-1 px-1",
+          "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60",
+          "[font-variation-settings:'opsz'_18,'wdth'_110]"
+        )}>
           Bio (English)
         </label>
         <textarea
@@ -246,12 +276,26 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
           onChange={(e) => handleChange('bio', e.target.value)}
           placeholder="Model description in English..."
           rows={3}
-          className="w-full px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary resize-none placeholder:text-glass-muted focus:ring-2 focus:ring-accent-emerald/20 outline-none transition-all"
+          className={cn(
+            "w-full px-4 py-2.5 rounded-xl transition-all font-bold",
+            "backdrop-blur-[8px]",
+            "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
+            "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
+            "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
+            "resize-none",
+            // Light mode
+            "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
+            "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
+          )}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-bold text-glass-muted mb-1 px-1">
+        <label className={cn(
+          "block text-sm font-bold mb-1 px-1",
+          "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60",
+          "[font-variation-settings:'opsz'_18,'wdth'_110]"
+        )}>
           Bio (Spanish) <span className="text-xs font-medium opacity-70">(Optional)</span>
         </label>
         <textarea
@@ -259,7 +303,17 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
           onChange={(e) => handleChange('bio_es', e.target.value)}
           placeholder="Descripción del modelo en español..."
           rows={3}
-          className="w-full px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary resize-none placeholder:text-glass-muted focus:ring-2 focus:ring-accent-emerald/20 outline-none transition-all"
+          className={cn(
+            "w-full px-4 py-2.5 rounded-xl transition-all font-bold",
+            "backdrop-blur-[8px]",
+            "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
+            "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
+            "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
+            "resize-none",
+            // Light mode
+            "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
+            "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
+          )}
         />
       </div>
 
@@ -274,14 +328,23 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
             value={formData.social_link}
             onChange={(e) => handleChange('social_link', e.target.value)}
             placeholder="https://onlyfans.com/username"
-            className="w-full px-4 py-2.5 pr-10 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary placeholder:text-glass-muted focus:ring-2 focus:ring-accent-emerald/20 outline-none transition-all"
+            className={cn(
+              "w-full px-4 py-2.5 pr-10 rounded-xl transition-all font-bold",
+              "backdrop-blur-[8px]",
+              "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
+              "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
+              "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
+              // Light mode
+              "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
+              "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
+            )}
           />
           {formData.social_link && (
             <a
               href={formData.social_link}
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-glass-muted hover:text-glass-primary transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 hover:text-accent-violet transition-colors"
             >
               <ExternalLink className="w-4 h-4" />
             </a>
@@ -291,7 +354,11 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
 
       {/* Profile Image URL */}
       <div>
-        <label className="block text-sm font-bold text-muted-foreground mb-1 px-1">
+        <label className={cn(
+          "block text-sm font-bold mb-1 px-1",
+          "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60",
+          "[font-variation-settings:'opsz'_18,'wdth'_110]"
+        )}>
           Profile Image URL *
         </label>
         <input
@@ -299,9 +366,18 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
           value={formData.image_url}
           onChange={(e) => handleChange('image_url', e.target.value)}
           placeholder="valentina-aguirre/profile.webp"
-          className="w-full px-4 py-2.5 bg-black/[0.03] dark:bg-white/5 border border-border dark:border-white/10 rounded-xl text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-[#00FF85]/20 outline-none transition-all"
+          className={cn(
+            "w-full px-4 py-2.5 rounded-xl transition-all font-bold",
+            "backdrop-blur-[8px]",
+            "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
+            "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
+            "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
+            // Light mode
+            "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
+            "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
+          )}
         />
-        <p className="text-xs text-muted-foreground mt-1">
+        <p className="text-xs text-[var(--text-obsidian-muted)]/60 liquid-light:text-[var(--text-irid-primary)]/40 mt-1 font-bold">
           Path in R2 bucket (e.g., model-slug/profile.webp)
         </p>
       </div>
@@ -309,23 +385,38 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
       {/* Organization - Only editable by admins */}
       {userRole === 'admin' && (
         <div>
-          <label className="block text-sm font-bold text-glass-muted mb-1 px-1">
+          <label className={cn(
+            "block text-sm font-bold mb-1 px-1",
+            "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60",
+            "[font-variation-settings:'opsz'_18,'wdth'_110]"
+          )}>
             Organization <span className="text-xs font-medium opacity-70">(Optional)</span>
           </label>
           <select
             value={formData.organization_id || ''}
             onChange={(e) => handleChange('organization_id', e.target.value || null)}
             disabled={loadingOrgs}
-            className="w-full px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary focus:ring-2 focus:ring-accent-emerald/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className={cn(
+              "w-full px-4 py-2.5 rounded-xl transition-all font-bold",
+              "backdrop-blur-[var(--blur-medium)] saturate-[180%]",
+              "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
+              "text-[var(--text-obsidian-primary)]",
+              "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
+              "disabled:opacity-50 disabled:cursor-not-allowed",
+              // Light mode
+              "liquid-light:bg-[var(--surface-irid-glass)]",
+              "liquid-light:text-[var(--text-irid-primary)]",
+              "liquid-light:border-[var(--border-irid-rim)]/60 liquid-light:focus:ring-[var(--glow-irid-warm)]"
+            )}
           >
-            <option value="">No Organization (Unassigned)</option>
+            <option value="" className="bg-[var(--surface-obsidian-void)] text-[var(--text-obsidian-primary)]">No Organization (Unassigned)</option>
             {organizations.map((org) => (
-              <option key={org.id} value={org.id}>
+              <option key={org.id} value={org.id} className="bg-[var(--surface-obsidian-void)] text-[var(--text-obsidian-primary)]">
                 {org.name}
               </option>
             ))}
           </select>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-[var(--text-obsidian-muted)]/60 liquid-light:text-[var(--text-irid-primary)]/40 mt-1 font-bold">
             Assign this model to an organization for dashboard access
           </p>
         </div>
@@ -360,11 +451,24 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
             onChange={(e) => setNewTag(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
             placeholder="Add tag..."
-            className="flex-1 px-4 py-2.5 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary placeholder:text-glass-muted focus:ring-2 focus:ring-accent-emerald/20 outline-none transition-all"
+            className={cn(
+              "flex-1 px-4 py-2.5 rounded-xl transition-all font-bold",
+              "backdrop-blur-[8px]",
+              "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
+              "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
+              "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
+              // Light mode
+              "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
+              "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
+            )}
           />
           <button
             onClick={addTag}
-            className="px-4 py-2 bg-glass-surface border border-obsidian-rim rounded-xl text-glass-primary hover:bg-glass-surface/80 transition-all active:scale-95"
+            className={cn(
+              "px-4 py-2 rounded-xl transition-all font-bold active:scale-95",
+              "bg-[var(--surface-obsidian-raised)]/80 border border-[var(--border-obsidian-rim)]/40 text-[var(--text-obsidian-primary)]",
+              "liquid-light:bg-[var(--surface-irid-glass)] liquid-light:text-[var(--text-irid-primary)] liquid-light:border-[var(--border-irid-rim)]/60"
+            )}
             aria-label="Add tag"
           >
             <Plus className="w-5 h-5" />
@@ -448,12 +552,15 @@ export function ModelBasicInfo({ adminKey, model, isNew, onSaved, onDeleted, use
       </div>
 
       {/* Save Button */}
-      <div className="flex justify-end pt-4 border-t border-obsidian-rim">
+      <div className="flex justify-end pt-4 border-t border-[var(--border-obsidian-rim)]/20 liquid-light:border-[var(--border-irid-rim)]/20">
         <button
           onClick={handleSubmit}
           disabled={saving || !isFormValid}
           className={cn(
-            "btn-primary px-8 py-3 text-lg transition-all",
+            "flex items-center justify-center gap-2 px-8 py-3 rounded-2xl font-bold transition-all text-lg",
+            "bg-accent-emerald text-black shadow-lg shadow-accent-emerald/20",
+            "hover:opacity-90 active:scale-95 active:shadow-[inset_0_0_20px_4px_var(--glow-obsidian-internal)]",
+            "liquid-light:active:shadow-[inset_0_0_20px_4px_var(--glow-irid-warm)]",
             (saving || !isFormValid) && "opacity-50 cursor-not-allowed transform-none shadow-none"
           )}
         >

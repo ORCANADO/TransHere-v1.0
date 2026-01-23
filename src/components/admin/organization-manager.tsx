@@ -5,6 +5,7 @@ import { Plus, Copy, Check, ExternalLink, Pencil, Trash2, Shield } from 'lucide-
 import { CreateOrganizationModal } from './create-organization-modal';
 import { EditOrganizationModal } from './edit-organization-modal';
 import { cn } from '@/lib/utils';
+import { useMaterialFlux } from '@/hooks/use-material-flux';
 
 interface Organization {
     id: string;
@@ -31,6 +32,7 @@ export function OrganizationManager({ adminKey }: OrganizationManagerProps) {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
     const [copiedKey, setCopiedKey] = useState<string | null>(null);
+    const fluxRef = useMaterialFlux<HTMLDivElement>();
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
     // Fetch organizations
@@ -158,7 +160,10 @@ export function OrganizationManager({ adminKey }: OrganizationManagerProps) {
             )}
 
             {!loading && organizations.length > 0 && (
-                <div className="bg-glass-surface border border-obsidian-rim rounded-2xl overflow-hidden shadow-ao-stack">
+                <div
+                    ref={fluxRef}
+                    className="bg-glass-surface border border-obsidian-rim rounded-2xl overflow-hidden shadow-ao-stack flux-border"
+                >
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-glass-surface border-b border-obsidian-rim">

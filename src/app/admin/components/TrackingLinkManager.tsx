@@ -13,6 +13,7 @@ import {
     Link2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useMaterialFlux } from '@/hooks/use-material-flux';
 import type {
     TrackingLinkWithDetails,
     TrackingSource,
@@ -323,34 +324,42 @@ export function TrackingLinkManager({
 
     if (!isOpen) return null;
 
+    const fluxRef = useMaterialFlux<HTMLDivElement>();
+
     // Render the component
     return (
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+                className="fixed inset-0 bg-black/60 backdrop-blur-[8px] z-[100]"
                 onClick={onClose}
             />
 
             {/* Modal */}
             <div className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[700px] md:max-h-[80vh] z-[101] flex flex-col">
-                <div className={cn(
-                    "flex flex-col h-full rounded-2xl overflow-hidden",
-                    "bg-glass-surface backdrop-blur-thick",
-                    "border border-obsidian-rim",
-                    "shadow-ao-stack"
-                )}>
+                <div
+                    ref={fluxRef}
+                    className={cn(
+                        "flex flex-col h-full rounded-2xl overflow-hidden",
+                        // Elevated Glass Treatment
+                        "bg-[var(--surface-obsidian-raised)]/95 liquid-light:bg-[var(--surface-irid-glass)]",
+                        "backdrop-blur-[40px] saturate-[180%]",
+                        "border border-[var(--border-obsidian-rim)]/40 liquid-light:border-white/60",
+                        "shadow-[var(--shadow-ao-stack)] liquid-light:shadow-[var(--shadow-ao-light)]",
+                        // Material Flux
+                        "flux-border-elevated"
+                    )}>
                     {/* Header */}
-                    <div className="flex items-center justify-between px-6 py-5 border-b border-obsidian-rim bg-glass-surface/20">
+                    <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--border-obsidian-rim)]/20 liquid-light:border-white/30 bg-[var(--surface-obsidian-glass)]/20 liquid-light:bg-[var(--surface-irid-glass)]/20">
                         <div>
-                            <h2 className="text-xl font-bold text-glass-primary">
+                            <h2 className="text-xl font-bold text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]">
                                 Tracking Links
                             </h2>
-                            <p className="text-sm text-glass-muted font-bold">{modelName}</p>
+                            <p className="text-sm text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 font-bold">{modelName}</p>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 rounded-xl hover:bg-glass-surface text-glass-muted hover:text-glass-primary transition-all active:scale-90"
+                            className="p-2 rounded-xl hover:bg-[var(--surface-obsidian-glass)]/40 liquid-light:hover:bg-[var(--surface-irid-glass)] text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 hover:text-[var(--text-obsidian-primary)] liquid-light:hover:text-[var(--text-irid-primary)] transition-all active:scale-90"
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -415,8 +424,10 @@ export function TrackingLinkManager({
                                             <div
                                                 key={link.id}
                                                 className={cn(
-                                                    "grid grid-cols-12 gap-2 px-3 py-3 rounded-lg",
-                                                    "bg-white/5 hover:bg-white/10 transition-colors",
+                                                    "grid grid-cols-12 gap-2 px-3 py-3 rounded-lg transition-all",
+                                                    "bg-[var(--surface-obsidian-glass)]/30 hover:bg-[var(--surface-obsidian-glass)]/50",
+                                                    "liquid-light:bg-[var(--surface-irid-glass)] liquid-light:hover:bg-[var(--surface-irid-glass)]/80",
+                                                    "border border-[var(--border-obsidian-rim)]/10 liquid-light:border-white/20",
                                                     "items-center"
                                                 )}
                                             >
@@ -428,12 +439,18 @@ export function TrackingLinkManager({
                                                 </div>
 
                                                 {/* Source */}
-                                                <div className="col-span-2 text-[#1D1D1F] dark:text-foreground/80 text-sm truncate font-medium">
+                                                <div className={cn(
+                                                    "col-span-2 text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)] text-sm truncate font-medium",
+                                                    "[font-variation-settings:'opsz'_24,'wdth'_105]"
+                                                )}>
                                                     {link.source_name || '—'}
                                                 </div>
 
                                                 {/* Subtag */}
-                                                <div className="col-span-2 text-[#86868B] dark:text-muted-foreground text-sm truncate">
+                                                <div className={cn(
+                                                    "col-span-2 text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 text-sm truncate",
+                                                    "[font-variation-settings:'opsz'_24,'wdth'_105]"
+                                                )}>
                                                     {link.subtag_name || '—'}
                                                 </div>
 
@@ -447,7 +464,7 @@ export function TrackingLinkManager({
                                                             className="text-primary text-sm hover:underline flex items-center gap-1 truncate"
                                                         >
                                                             <ExternalLink className="w-3 h-3 flex-shrink-0" />
-                                                            <span className="truncate">
+                                                            <span className="truncate font-medium">
                                                                 {(() => {
                                                                     try {
                                                                         const url = link.preview_url.startsWith('http') ? link.preview_url : `https://${link.preview_url}`;
@@ -459,7 +476,7 @@ export function TrackingLinkManager({
                                                             </span>
                                                         </a>
                                                     ) : (
-                                                        <span className="text-[#86868B]/30 dark:text-muted-foreground/30 text-sm">—</span>
+                                                        <span className="text-[var(--text-obsidian-muted)]/30 liquid-light:text-[var(--text-irid-primary)]/20 text-sm">—</span>
                                                     )}
                                                 </div>
 
@@ -527,15 +544,22 @@ export function TrackingLinkManager({
                                     >
                                         ← Back
                                     </button>
-                                    <h3 className="text-xl font-bold text-glass-primary">
+                                    <h3 className={cn(
+                                        "text-xl font-bold text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]",
+                                        "[font-variation-settings:'opsz'_24,'wdth'_110]"
+                                    )}>
                                         {viewMode === 'create' ? 'Create New Link' : 'Edit Link'}
                                     </h3>
                                 </div>
 
                                 {/* Source Selection */}
                                 <div>
-                                    <label className="block text-sm font-medium text-[#1D1D1F] dark:text-white/80 mb-2">
-                                        Traffic Source <span className="text-red-500">*</span>
+                                    <label className={cn(
+                                        "block text-sm font-medium mb-2",
+                                        "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]",
+                                        "[font-variation-settings:'opsz'_24,'wdth'_110]"
+                                    )}>
+                                        Traffic Source <span className="text-accent-red liquid-light:text-red-600 font-bold">*</span>
                                     </label>
 
                                     {showCustomSourceInput ? (
@@ -550,8 +574,8 @@ export function TrackingLinkManager({
                                                 placeholder="Enter custom source name..."
                                                 className={cn(
                                                     "flex-1 px-4 py-3 rounded-xl",
-                                                    "bg-glass-surface border border-obsidian-rim",
-                                                    "text-glass-primary placeholder:text-glass-muted/50",
+                                                    "bg-[var(--surface-obsidian-glass)]/40 liquid-light:bg-[var(--surface-irid-glass)] border border-[var(--border-obsidian-rim)]/30 liquid-light:border-white/60",
+                                                    "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)] placeholder:text-[var(--text-obsidian-muted)]/50 liquid-light:placeholder:text-[var(--text-irid-primary)]/40",
                                                     "focus:outline-none focus:ring-2 focus:ring-accent-violet/20 transition-all font-bold"
                                                 )}
                                             />
@@ -572,7 +596,11 @@ export function TrackingLinkManager({
                                                     setShowCustomSourceInput(false);
                                                     setFormState(prev => ({ ...prev, customSourceName: '' }));
                                                 }}
-                                                className="px-4 py-3 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
+                                                className={cn(
+                                                    "px-4 py-3 rounded-xl transition-all font-bold text-sm",
+                                                    "bg-[var(--surface-obsidian-glass)]/40 hover:bg-[var(--surface-obsidian-glass)]/60 text-[var(--text-obsidian-primary)]",
+                                                    "liquid-light:bg-[var(--surface-irid-glass)] liquid-light:text-[var(--text-irid-primary)] liquid-light:hover:bg-black/5"
+                                                )}
                                             >
                                                 Cancel
                                             </button>
@@ -591,7 +619,7 @@ export function TrackingLinkManager({
                                                         "px-4 py-3 rounded-xl text-sm transition-all font-bold",
                                                         formState.sourceId === source.id
                                                             ? "bg-accent-violet text-white shadow-lg shadow-accent-violet/20"
-                                                            : "bg-glass-surface border border-obsidian-rim text-glass-primary hover:bg-glass-surface/80"
+                                                            : "bg-[var(--surface-obsidian-glass)]/40 liquid-light:bg-[var(--surface-irid-glass)] border border-[var(--border-obsidian-rim)]/30 liquid-light:border-white/60 text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)] hover:bg-[var(--surface-obsidian-glass)]/60 liquid-light:hover:bg-[var(--surface-irid-glass)]"
                                                     )}
                                                 >
                                                     {source.name}
@@ -607,8 +635,8 @@ export function TrackingLinkManager({
                                                 onClick={() => setShowCustomSourceInput(true)}
                                                 className={cn(
                                                     "px-4 py-3 rounded-xl text-sm font-bold",
-                                                    "bg-glass-surface/30 border border-dashed border-obsidian-rim",
-                                                    "text-glass-muted hover:text-glass-primary hover:border-accent-violet/50",
+                                                    "bg-[var(--surface-obsidian-glass)]/30 liquid-light:bg-[var(--surface-irid-glass)]/50 border border-dashed border-[var(--border-obsidian-rim)]/30 liquid-light:border-white/60",
+                                                    "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 hover:text-[var(--text-obsidian-primary)] liquid-light:hover:text-[var(--text-irid-primary)] hover:border-accent-violet/50",
                                                     "transition-all flex items-center justify-center gap-1"
                                                 )}
                                             >
@@ -622,14 +650,22 @@ export function TrackingLinkManager({
                                 {/* Subtag Selection (if source is selected) */}
                                 {formState.sourceId && (
                                     <div>
-                                        <label className="block text-sm font-medium text-[#1D1D1F] dark:text-white/80 mb-2">
+                                        <label className={cn(
+                                            "block text-sm font-medium mb-2",
+                                            "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]",
+                                            "[font-variation-settings:'opsz'_24,'wdth'_110]"
+                                        )}>
                                             Subtag (Optional)
                                         </label>
 
                                         {/* Explanation Text */}
-                                        <div className="mb-4 p-4 rounded-2xl bg-accent-violet/5 border border-accent-violet/10 text-xs text-glass-muted">
-                                            <p className="font-bold text-accent-violet mb-1">About Subtags</p>
-                                            <p className="leading-relaxed font-bold">Subtags are designed to track campaigns, multiple accounts in the same traffic source (e.g., separate IG accounts), specific posts, or different placements (like Bio vs. Story). Use them for granular attribution.</p>
+                                        <div className="mb-4 p-4 rounded-2xl bg-accent-violet/5 border border-accent-violet/10">
+                                            <p className="font-bold text-accent-violet mb-1 text-xs">About Subtags</p>
+                                            <p className={cn(
+                                                "leading-relaxed font-bold text-xs",
+                                                "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/70",
+                                                "[font-variation-settings:'opsz'_18,'wdth'_110]"
+                                            )}>Subtags are designed to track campaigns, multiple accounts in the same traffic source (e.g., separate IG accounts), specific posts, or different placements (like Bio vs. Story). Use them for granular attribution.</p>
                                         </div>
 
                                         {showCustomSubtagInput ? (
@@ -643,10 +679,14 @@ export function TrackingLinkManager({
                                                     }))}
                                                     placeholder="Enter subtag name..."
                                                     className={cn(
-                                                        "flex-1 px-4 py-3 rounded-xl",
-                                                        "bg-glass-surface border border-obsidian-rim",
-                                                        "text-glass-primary placeholder:text-glass-muted/50",
-                                                        "focus:outline-none focus:ring-2 focus:ring-accent-violet/20 transition-all font-bold"
+                                                        "flex-1 px-4 py-3 rounded-xl transition-all font-bold",
+                                                        "backdrop-blur-[8px]",
+                                                        "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
+                                                        "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
+                                                        "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
+                                                        // Light mode
+                                                        "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
+                                                        "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
                                                     )}
                                                 />
                                                 <button
@@ -665,7 +705,11 @@ export function TrackingLinkManager({
                                                         setShowCustomSubtagInput(false);
                                                         setFormState(prev => ({ ...prev, customSubtagName: '' }));
                                                     }}
-                                                    className="px-4 py-3 rounded-xl bg-muted text-foreground hover:bg-muted/80 transition-colors"
+                                                    className={cn(
+                                                        "px-4 py-3 rounded-xl transition-all font-bold text-sm",
+                                                        "bg-[var(--surface-obsidian-glass)]/20 hover:bg-[var(--surface-obsidian-glass)]/40 text-[var(--text-obsidian-muted)]",
+                                                        "liquid-light:bg-[var(--surface-irid-glass)]/40 liquid-light:text-[var(--text-irid-primary)]/60 liquid-light:hover:bg-black/5"
+                                                    )}
                                                 >
                                                     Cancel
                                                 </button>
@@ -676,9 +720,9 @@ export function TrackingLinkManager({
                                                     onClick={() => setFormState(prev => ({ ...prev, subtagId: '' }))}
                                                     className={cn(
                                                         "px-4 py-2 rounded-xl text-sm transition-all font-bold",
-                                                        !formState.subtagId
-                                                            ? "bg-accent-emerald text-black shadow-lg shadow-accent-emerald/20"
-                                                            : "bg-glass-surface border border-obsidian-rim text-glass-primary hover:bg-glass-surface/80"
+                                                        formState.subtagId === ''
+                                                            ? "bg-accent-emerald text-black shadow-lg shadow-accent-emerald/20 active:shadow-[inset_0_0_20px_4px_var(--glow-obsidian-internal)]"
+                                                            : "bg-[var(--surface-obsidian-glass)]/40 liquid-light:bg-[var(--surface-irid-glass)] border border-[var(--border-obsidian-rim)]/30 liquid-light:border-white/60 text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)] hover:bg-[var(--surface-obsidian-glass)]/60 liquid-light:hover:bg-black/5"
                                                     )}
                                                 >
                                                     None
@@ -700,13 +744,13 @@ export function TrackingLinkManager({
                                                 <button
                                                     onClick={() => setShowCustomSubtagInput(true)}
                                                     className={cn(
-                                                        "px-3 py-2 rounded-lg text-sm",
-                                                        "bg-secondary border border-dashed border-muted-foreground/30",
-                                                        "text-muted-foreground hover:text-foreground hover:border-muted-foreground/60",
-                                                        "transition-colors flex items-center justify-center gap-1"
+                                                        "px-4 py-2 rounded-xl text-sm font-bold transition-all",
+                                                        "bg-transparent border border-dashed border-[var(--border-obsidian-rim)]/30 liquid-light:border-[var(--border-irid-rim)]/40",
+                                                        "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/60 hover:text-[var(--text-obsidian-primary)] liquid-light:hover:text-[var(--text-irid-primary)] hover:border-accent-violet/50",
+                                                        "flex items-center justify-center gap-1"
                                                     )}
                                                 >
-                                                    <Plus className="w-3 h-3" />
+                                                    <Plus className="w-4 h-4" />
                                                     Add New
                                                 </button>
                                             </div>
@@ -716,10 +760,18 @@ export function TrackingLinkManager({
 
                                 {/* Preview URL */}
                                 <div>
-                                    <label className="block text-sm text-muted-foreground mb-2">
+                                    <label className={cn(
+                                        "block text-sm mb-1",
+                                        "text-[var(--text-obsidian-primary)] liquid-light:text-[var(--text-irid-primary)]",
+                                        "[font-variation-settings:'opsz'_24,'wdth'_110]"
+                                    )}>
                                         Preview URL (Optional)
                                     </label>
-                                    <p className="text-xs text-muted-foreground/60 mb-2">
+                                    <p className={cn(
+                                        "text-xs mb-3 font-bold",
+                                        "text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/50",
+                                        "[font-variation-settings:'opsz'_18,'wdth'_110]"
+                                    )}>
                                         Where is this tracking link placed? (e.g., Instagram post URL)
                                     </p>
                                     <div className="relative">
@@ -733,10 +785,14 @@ export function TrackingLinkManager({
                                             }))}
                                             placeholder="https://instagram.com/p/..."
                                             className={cn(
-                                                "w-full pl-11 pr-4 py-3 rounded-xl",
-                                                "bg-glass-surface border border-obsidian-rim",
-                                                "text-glass-primary placeholder:text-glass-muted/50",
-                                                "focus:outline-none focus:ring-2 focus:ring-accent-violet/20 transition-all font-bold"
+                                                "w-full pl-11 pr-4 py-3 rounded-xl transition-all font-bold",
+                                                "backdrop-blur-[8px]",
+                                                "bg-[var(--surface-obsidian-raised)]/50 border border-[var(--border-obsidian-rim)]/30",
+                                                "text-[var(--text-obsidian-primary)] placeholder:text-[var(--text-obsidian-muted)]",
+                                                "focus:outline-none focus:ring-2 focus:ring-[var(--glow-obsidian-internal)]",
+                                                // Light mode
+                                                "liquid-light:bg-white/40 liquid-light:text-[var(--text-irid-primary)]",
+                                                "liquid-light:border-[var(--border-irid-rim)]/40 liquid-light:focus:ring-[var(--glow-irid-warm)]"
                                             )}
                                         />
                                     </div>
@@ -744,9 +800,9 @@ export function TrackingLinkManager({
 
                                 {/* Generated URL Preview */}
                                 {viewMode === 'edit' && editingLink && (
-                                    <div className="p-4 rounded-xl bg-card border border-border">
-                                        <p className="text-xs text-muted-foreground mb-1">Tracking URL</p>
-                                        <code className="text-primary text-sm break-all">
+                                    <div className="p-4 rounded-xl bg-[var(--surface-obsidian-glass)]/20 liquid-light:bg-black/5 border border-[var(--border-obsidian-rim)]/20 liquid-light:border-black/10">
+                                        <p className="text-[10px] uppercase tracking-widest text-[var(--text-obsidian-muted)] liquid-light:text-[var(--text-irid-primary)]/50 mb-1 font-bold">Tracking URL</p>
+                                        <code className="text-accent-violet text-sm break-all font-mono font-bold">
                                             {baseUrl}/model/{modelSlug}/{editingLink.slug}
                                         </code>
                                     </div>

@@ -457,4 +457,74 @@
     .liquid-glass-root.liquid-light .bg-glass-surface {
         background: var(--surface-irid-glass);
     }
+
+    /* ============================================
+     SECTION 12: MATERIAL FLUX EFFECTS
+     Interactive Mouse-Tracking Refraction
+     ============================================ */
+
+    /* Material Flux Border Effect */
+    .liquid-glass-root .flux-border {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .liquid-glass-root .flux-border::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+                rgba(255, 255, 255, 0.4) 0%,
+                rgba(255, 255, 255, 0.1) 25%,
+                transparent 50%);
+        -webkit-mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+        mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .liquid-glass-root .flux-border:hover::before {
+        opacity: 1;
+    }
+
+    /* Light Mode Flux Border - Softer gradient */
+    .liquid-glass-root.liquid-light .flux-border::before {
+        background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+                rgba(122, 39, 255, 0.3) 0%,
+                rgba(122, 39, 255, 0.1) 25%,
+                transparent 50%);
+    }
+
+    /* Subsurface Scattering Active State */
+    .liquid-glass-root .flux-sss-active {
+        box-shadow: inset 0 0 20px 4px var(--glow-obsidian-internal) !important;
+    }
+
+    .liquid-glass-root.liquid-light .flux-sss-active {
+        box-shadow: inset 0 0 20px 4px var(--glow-irid-warm) !important;
+    }
+
+    /* Enhanced Flux for Elevated Surfaces */
+    .liquid-glass-root .flux-border-elevated::before {
+        background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+                rgba(122, 39, 255, 0.6) 0%,
+                rgba(122, 39, 255, 0.2) 25%,
+                transparent 50%);
+    }
+
+    .liquid-glass-root.liquid-light .flux-border-elevated::before {
+        background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+                rgba(122, 39, 255, 0.4) 0%,
+                rgba(122, 39, 255, 0.15) 25%,
+                transparent 50%);
+    }
 }
