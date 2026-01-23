@@ -1,3 +1,4 @@
+import { hasDebugBypass } from '@/lib/bot-detection';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { organizationMiddleware } from './middleware-org';
@@ -37,10 +38,11 @@ export default async function middleware(request: NextRequest): Promise<NextResp
   const crawlerPattern = /facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|telegram|snapchat|tiktok|bytespider|prerender|lighthouse|gtmetrix|pingdom/i;
 
   // Default to not a crawler
-  let isCrawler = false;
+  const debugBypass = hasDebugBypass(request.url);
+  let isCrawler = debugBypass ? false : crawlerPattern.test(userAgent);
 
   // Test User-Agent against pattern
-  if (crawlerPattern.test(userAgent)) {
+  if (!debugBypass && crawlerPattern.test(userAgent)) {
     isCrawler = true;
   }
 
@@ -54,7 +56,7 @@ export default async function middleware(request: NextRequest): Promise<NextResp
 
   // Set custom header for downstream Server Components to detect crawlers
   if (isCrawler) {
-    response.headers.set('x-is-crawler', '1');
+    response.headers.set('x-is-crawler', 'true');
   }
 
   // Security headers (applied to all responses)

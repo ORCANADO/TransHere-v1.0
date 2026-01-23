@@ -141,7 +141,10 @@ Do not use `useRouter().push` for external links.
         - **Materialized Views:** For high-volume analytics (>10k events), ALWAYS query materialized views (`analytics_daily_stats` or `analytics_hourly_stats`) instead of raw event logs to ensure sub-second performance.
         - **Today/Last Hour Granularity:** Use `analytics_hourly_stats` for timeframes requiring hourly resolution.
         - **Dashboard Synchronization:** Derive ALL breakdowns (Sources, Countries, Models) from the exact same filtered dataset in a single-pass aggregation in the API. NEVER perform independent summary queries that could lead to data drift or mismatched totals.
+        - **Bucket Consistency:** When querying time-bucketed data (Materialized Views), truncate filter start times to the bucket boundary (e.g., set minutes to 0 for hourly views) to prevent data loss.
+        - **Real-Time Pulse:** Use `/api/admin/live-pulse` for raw session counts (60s window). This query MUST include `.lte(now())` to exclude future-dated mock data.
         - **Analytics Mapping:** When filtering by source name, the API must map human-readable names (e.g., "Instagram") to their underlying tracking link UUIDs using a `sourceMap`.
+        - **Debug Bypass:** Telemetry ingestion respects `?th_debug=human` parameter if `ALLOW_DEBUG_TRACKING=true`. This bypasses BOT DETECTION and ensures events are recorded from developer browsers.
         - **Parameter Robustness:** API routes must support both singular and plural parameter names for filters (e.g., `country` and `countries`) to accommodate different frontend calling patterns.
         - Use `page_view` and `link_click` as consistent event types.
         - **Materialized View Refresh:** 

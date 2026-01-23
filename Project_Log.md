@@ -4,6 +4,22 @@
 
 ---
 
+## [2026-01-23] - Phase 6.19: Live Pulse & Monitoring Infrastructure
+**Status:** Complete
+
+### Real-Time Monitoring:
+- [x] **Live Pulse Indicator**: Implemented a pulsing real-time session counter in the Admin Dashboard header (60s window).
+- [x] **Diagnostic Page**: Created a "Live Pulse" debug tool (`/admin/debug/live-pulse`) for deep inspection of raw ingestion events.
+- [x] **Bucket-Aware Filtering**: Fixed "Last Hour" dashboard discrepancy by implementing hour-truncated filtering for materialized views.
+- [x] **Stale Data Prevention**: Optimized queries to exclude future-dated mock events using `.lte(now)`.
+
+### Developer Experience & Debugging:
+- [x] **Secure Debug Bypass**: Added `?th_debug=human` parameter (guarded by `ALLOW_DEBUG_TRACKING`) to verify telemetry without being blocked by bot detection.
+- [x] **Deployment Lifecycle Fixes**: Implemented conditional `after()` usage and automated `siteUrl` detection for reliable local-to-production telemetry.
+- [x] **Next.js 15 Parity**: Migrated `searchParams` to async/Promise pattern to resolve compilation warnings.
+
+---
+
 ## [2026-01-23] - Phase 6.18: Dashboard Data Display & Selection Fixes
 **Status:** Complete
 

@@ -13,12 +13,13 @@ export interface TelemetryData {
 export function captureTelemetry(
     slug: string,
     modelId: string | null,
-    headersList: Headers
+    headersList: Headers,
+    debugBypass: boolean = false
 ): TelemetryData {
     return {
         slug,
         modelId,
-        isCrawler: headersList.get('x-is-crawler') === 'true',
+        isCrawler: debugBypass ? false : headersList.get('x-is-crawler') === 'true',
         userAgent: headersList.get('user-agent') || 'unknown',
         ip: headersList.get('cf-connecting-ip') ||
             headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
@@ -34,14 +35,25 @@ export function captureTelemetry(
     }
 }
 
+const IS_DEV = process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'preview';
+
 export async function logBridgeView(
     telemetry: TelemetryData,
     siteUrl: string
 ): Promise<void> {
     // BOT FILTERING: Skip analytics for crawlers
     if (telemetry.isCrawler) {
-        console.log(`[StealthLogger] Skipped crawler: ${telemetry.userAgent.substring(0, 50)}...`)
-        return
+        if (IS_DEV) console.log(`[StealthLogger:DEV] Skipped crawler: ${telemetry.userAgent.substring(0, 50)}...`);
+        return;
+    }
+
+    if (IS_DEV) {
+        console.log('[StealthLogger:DEV] Initiating telemetry send...');
+        console.log('[StealthLogger:DEV] Payload:', JSON.stringify({
+            eventType: 'bridge_view',
+            modelSlug: telemetry.slug,
+            country: telemetry.country,
+        }, null, 2));
     }
 
     try {
@@ -60,15 +72,18 @@ export async function logBridgeView(
                 referrer: telemetry.referrer,
                 timestamp: telemetry.timestamp,
             }),
-        })
+        });
 
         if (!response.ok) {
-            console.error(`[StealthLogger] Failed: HTTP ${response.status}`)
+            console.error(`[StealthLogger] Failed: HTTP ${response.status}`);
+            if (IS_DEV) {
+                const errorBody = await response.text();
+                console.error('[StealthLogger:DEV] Error body:', errorBody);
+            }
         } else {
-            console.log(`[StealthLogger] Logged bridge_view for /${telemetry.slug}`)
+            if (IS_DEV) console.log(`[StealthLogger:DEV] ✅ Success for /${telemetry.slug}`);
         }
     } catch (error) {
-        // Silently fail - analytics should never break the page
-        console.error('[StealthLogger] Error:', error)
+        console.error('[StealthLogger] Network error:', error);
     }
 }

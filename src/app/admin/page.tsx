@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import './admin-theme.css';
 import { ThemeToggle } from '@/components/admin/theme-toggle';
+import { LivePulseIndicator } from '@/components/admin/live-pulse-indicator';
 import { useAdminTheme } from '@/hooks/use-admin-theme';
 import { useModelSelection } from '@/hooks/use-model-selection';
 import { cn } from '@/lib/utils';
@@ -287,6 +288,7 @@ function AdminContent() {
               <div className="flex items-center gap-3">
                 <Shield className="w-6 h-6 text-[#00FF85]" />
                 <span className="font-bold text-foreground">TransHere Admin</span>
+                {adminKey && <LivePulseIndicator adminKey={adminKey} />}
                 {activeTab === 'analytics' && (
                   <span className="px-2 py-1 bg-[#7A27FF]/20 text-[#7A27FF] text-xs rounded-full">
                     Analytics

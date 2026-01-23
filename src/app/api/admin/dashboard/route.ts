@@ -56,10 +56,13 @@ function parseQueryParams(request: NextRequest) {
 
   switch (period) {
     case 'hour':
-      // Last 1 hour with full ISO granularity
-      startDate = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
+      // Last 1 hour with full ISO granularity, truncated to start of hour
+      // to avoid missing the current hourly bucket in materialized views
+      const hourStart = new Date(now);
+      hourStart.setMinutes(0, 0, 0);
+      startDate = new Date(hourStart.getTime() - 60 * 60 * 1000).toISOString();
       endDate = now.toISOString();
-      prevStartDate = new Date(now.getTime() - 120 * 60 * 1000).toISOString();
+      prevStartDate = new Date(hourStart.getTime() - 120 * 60 * 1000).toISOString();
       prevEndDate = startDate;
       break;
     case 'today':

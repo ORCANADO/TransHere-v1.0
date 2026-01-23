@@ -6,11 +6,13 @@ import { getProfileBySlug } from '@/lib/supabase/queries'
 import BridgeProtector from '@/components/features/bridge-protector'
 import PreconnectHints from '@/components/features/preconnect-hints'
 import { captureTelemetry, logBridgeView } from '@/lib/stealth-logger'
+import { DEBUG_BYPASS_PARAM, DEBUG_BYPASS_VALUE } from '@/lib/bot-detection'
 
 export const runtime = 'edge';
 
 interface PageProps {
     params: Promise<{ slug: string }>
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -46,9 +48,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
 }
 
-export default async function BridgePage({ params }: PageProps) {
+export default async function BridgePage({ params, searchParams }: PageProps) {
     // Next.js 15: params must be awaited
     const { slug } = await params
+    const query = await searchParams
 
     // Fetch profile data
     const profile = await getProfileBySlug(slug)
@@ -61,20 +64,29 @@ export default async function BridgePage({ params }: PageProps) {
     // === STEALTH TELEMETRY ===
     // Headers must be captured BEFORE after() - context is gone inside callback
     const headersList = await headers()
-    const telemetry = captureTelemetry(slug, profile.id || null, headersList)
+
+    // Check for debug bypass
+    const debugBypass = query[DEBUG_BYPASS_PARAM] === DEBUG_BYPASS_VALUE
+
+    const telemetry = captureTelemetry(slug, profile.id || null, headersList, debugBypass)
 
     // THE GHOST LINK: Server-side Base64 encoding
     const destinationUrl = profile.social_link || 'https://onlyfans.com'
     const encodedDestination = Buffer.from(destinationUrl).toString('base64')
 
     // === NON-BLOCKING ANALYTICS ===
-    // Fires AFTER response is sent to user
-    after(async () => {
-        await logBridgeView(
-            telemetry,
-            process.env.NEXT_PUBLIC_SITE_URL || 'https://transhere.vip'
-        )
-    })
+    const host = headersList.get('host') || 'localhost:3000';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`;
+
+    // IMPORTANT: `after()` does not execute reliably in Edge runtime on localhost.
+    if (process.env.NODE_ENV === 'development') {
+        await logBridgeView(telemetry, siteUrl);
+    } else {
+        after(async () => {
+            await logBridgeView(telemetry, siteUrl);
+        });
+    }
 
     // Render the Airlock UI with PreconnectHints
     return (

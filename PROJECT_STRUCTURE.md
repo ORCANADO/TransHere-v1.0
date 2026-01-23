@@ -33,7 +33,11 @@ version_1.0/
 │   │   ├── [slug]/                 # Bridge page (dynamic)
 │   │   ├── actions/                # Server actions
 │   │   ├── admin/                  # Admin dashboard
+│   │   │   ├── debug/              # Diagnostic tools
+│   │   │   │   └── live-pulse/     # Real-time event inspector
 │   │   ├── api/                    # API routes
+│   │   │   ├── admin/
+│   │   │   │   └── live-pulse/     # Real-time session counter API
 │   │   ├── go/                     # Tracking redirects
 │   │   ├── model/                  # Model profile pages
 │   │   ├── org/                    # Organization dashboard
@@ -42,6 +46,7 @@ version_1.0/
 │   │   └── page.tsx                # Home page
 │   ├── components/                 # React components
 │   │   ├── admin/                  # Admin components
+│   │   │   └── live-pulse-indicator.tsx # Real-time session UI
 │   │   ├── features/               # Feature components
 │   │   ├── layout/                 # Layout components
 │   │   ├── org/                    # Org dashboard components
@@ -93,9 +98,10 @@ version_1.0/
 ### Key Logic Flows
 1. **Tracking System:** `/go/[trackingSlug]` → cached link lookup → attribution logging → redirect
 2. **Ghost Links:** Server-side URL encoding (Base64 + `TH_` prefix) → client-side decoding for bot protection
-3. **Analytics:** Non-blocking logging via Next.js `after()`, materialized views for high-volume queries
-4. **Stories:** 7-day decay filter, chain snapshot navigation, story-level view tracking
-5. **Visual Memory:** localStorage-based viewed state with cross-tab sync via custom events
+3. **Analytics:** Non-blocking logging via Next.js `after()`, materialized views for high-volume queries, and real-time "Live Pulse" monitoring (60s window).
+4. **Debug Bypass:** Secure human-simulation via `?th_debug=human` (bypasses bot detection for verification).
+5. **Stories:** 7-day decay filter, chain snapshot navigation, story-level view tracking
+6. **Visual Memory:** localStorage-based viewed state with cross-tab sync via custom events
 
 ### Authentication Boundaries
 - **Public:** No auth required for model/story viewing
@@ -183,6 +189,7 @@ Phase 6.15  → Enhanced Dashboard API & Sidebar Integration
 Phase 6.16  → Dual Analytics System Implementation
 Phase 6.17  → Materialized View Refresh & Data Verification
 Phase 6.18  → Dashboard Data Display & Selection Fixes
+Phase 6.19  → Live Pulse & Monitoring Infrastructure (Real-Time Ingestion Visibility)
 ```
 
 ### Active Constraints
