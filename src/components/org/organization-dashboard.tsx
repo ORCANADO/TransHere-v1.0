@@ -352,24 +352,24 @@ export function OrganizationDashboard({
                             {/* Overview Stats */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <StatCard
-                                    title="Total Views"
+                                    label="Total Views"
                                     value={data.stats.totalViews}
-                                    icon={<Eye className="w-5 h-5 text-[#00FF85]" />}
-                                    change={data.stats.visitsChange}
-                                    valueClassName="text-[#00FF85]"
+                                    icon={<Eye className="w-5 h-5" />}
+                                    accentColor="emerald"
+                                    subtext={data.stats.visitsChange ? `${data.stats.visitsChange > 0 ? '+' : ''}${data.stats.visitsChange}% trend` : undefined}
                                 />
                                 <StatCard
-                                    title="Total Clicks"
+                                    label="Total Clicks"
                                     value={data.stats.totalClicks}
-                                    icon={<MousePointer className="w-5 h-5 text-[#7A27FF]" />}
-                                    change={data.stats.clicksChange}
-                                    valueClassName="text-[#7A27FF]"
+                                    icon={<MousePointer className="w-5 h-5" />}
+                                    accentColor="violet"
+                                    subtext={data.stats.clicksChange ? `${data.stats.clicksChange > 0 ? '+' : ''}${data.stats.clicksChange}% trend` : undefined}
                                 />
                                 <StatCard
-                                    title="Conversion Rate"
+                                    label="Conversion Rate"
                                     value={`${data.stats.ctr.toFixed(2)}%`}
                                     icon={<Percent className="w-5 h-5 text-[#D4AF37]" />}
-                                    valueClassName="text-[#D4AF37]"
+                                    accentColor="default"
                                 />
                             </div>
 
