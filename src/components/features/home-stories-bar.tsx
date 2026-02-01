@@ -64,6 +64,10 @@ export function HomeStoriesBar({ models, isCrawler }: HomeStoriesBarProps) {
       return [];
     }
 
+    // 7-day decay: only show stories from the last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
     return models
       .map((model) => {
         // Find the specific recent (unpinned) group with stories
@@ -76,8 +80,25 @@ export function HomeStoriesBar({ models, isCrawler }: HomeStoriesBarProps) {
           return null;
         }
 
-        // Get the most recent story for the preview
-        const sortedStories = [...(recentGroup.stories || [])].sort((a, b) => {
+        // Filter out stories older than 7 days
+        const freshStories = (recentGroup.stories || []).filter((story) => {
+          const storyDate = new Date(story.posted_date || story.created_at);
+          return storyDate >= sevenDaysAgo;
+        });
+
+        // If no fresh stories remain after decay filter, skip this group
+        if (freshStories.length === 0) {
+          return null;
+        }
+
+        // Replace stories with only the fresh ones
+        const filteredGroup: StoryGroup = {
+          ...recentGroup,
+          stories: freshStories,
+        };
+
+        // Get the most recent story for the preview (from filtered stories only)
+        const sortedStories = [...freshStories].sort((a, b) => {
           const dateA = new Date(a.posted_date || a.created_at);
           const dateB = new Date(b.posted_date || b.created_at);
           return dateB.getTime() - dateA.getTime(); // Newest first
@@ -95,16 +116,16 @@ export function HomeStoriesBar({ models, isCrawler }: HomeStoriesBarProps) {
         // 2. Fall back to group's cover_url (which is poster for videos)
         // 3. Fall back to model's profile image (last resort)
         const displayGroup: StoryGroup = {
-          ...recentGroup,
+          ...filteredGroup,
           title: model.name, // Show model name, not "Recent"
-          cover_url: latestStoryMedia || recentGroup.cover_url || model.image_url || '',
+          cover_url: latestStoryMedia || filteredGroup.cover_url || model.image_url || '',
         };
 
         // Check if this story group has unseen stories (Visual Memory)
         // Groups with unseen stories should appear first
-        const hasUnseen = hasUnseenStories(recentGroup.stories || []);
+        const hasUnseen = hasUnseenStories(freshStories);
 
-        return { model, recentGroup, displayGroup, latestStoryDate, hasUnseen };
+        return { model, recentGroup: filteredGroup, displayGroup, latestStoryDate, hasUnseen };
       })
       .filter((item): item is { model: Model; recentGroup: StoryGroup; displayGroup: StoryGroup; latestStoryDate: Date; hasUnseen: boolean } => item !== null)
       // Instagram-style sorting: Groups with unseen stories first, then fully viewed. Within each group, sort by newest first
@@ -365,7 +386,7 @@ export function HomeStoriesBar({ models, isCrawler }: HomeStoriesBarProps) {
   return (
     <>
       {/* Horizontal Scrollable Container - fully transparent, no background bar */}
-      <div className="w-full overflow-x-auto scrollbar-hide bg-transparent backdrop-blur-none relative h-24">
+      <div className="w-full overflow-x-auto scrollbar-hide bg-transparent backdrop-blur-none relative">
         <div className="flex gap-3 py-4 px-1">
           {modelsWithRecentGroups.map(({ model, recentGroup, displayGroup }, index) => (
             <div
