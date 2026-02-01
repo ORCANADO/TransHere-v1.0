@@ -3,7 +3,7 @@ export const runtime = 'edge';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
-const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
+const ADMIN_KEY = process.env.ADMIN_KEY;
 
 interface AnalyticsQueryParams {
   startDate?: string;

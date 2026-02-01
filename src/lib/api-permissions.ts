@@ -38,8 +38,7 @@ export async function checkAdminPermission(
     // Check against global admin keys
     const globalAdminKeys = [
         process.env.ADMIN_SECRET_KEY,
-        process.env.ADMIN_KEY,
-        'admin123' // Hardcoded fallback for dev convenience if needed
+        process.env.ADMIN_KEY
     ].filter(Boolean);
 
     if (globalAdminKeys.includes(effectiveKey)) {

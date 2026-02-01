@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 export const runtime = "edge";
 
-const ADMIN_KEY = process.env.ADMIN_KEY || "admin123";
+const ADMIN_KEY = process.env.ADMIN_KEY;
 
 // Initialize S3Client for Cloudflare R2 (only for presigned URLs)
 function getS3Client() {

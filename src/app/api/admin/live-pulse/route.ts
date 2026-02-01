@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export const runtime = 'edge';
 
-const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
+const ADMIN_KEY = process.env.ADMIN_KEY;
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);

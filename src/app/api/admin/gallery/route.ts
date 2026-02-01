@@ -4,7 +4,7 @@ import { checkContentManagementPermission, createErrorResponse } from '@/lib/api
 
 export const runtime = "edge";
 
-const ADMIN_KEY = process.env.ADMIN_KEY || "admin123";
+const ADMIN_KEY = process.env.ADMIN_KEY;
 
 export async function POST(request: NextRequest) {
   try {

@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 export const runtime = 'edge';
 
 // Admin key for authentication (matches frontend)
-const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
+const ADMIN_KEY = process.env.ADMIN_KEY;
 
 // Max retries for database insertions
 const MAX_RETRIES = 3;

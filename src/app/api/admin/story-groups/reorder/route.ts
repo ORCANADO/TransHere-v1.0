@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const url = new URL(request.url);
   const adminKey = url.searchParams.get('key');
   
-  const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
+  const ADMIN_KEY = process.env.ADMIN_KEY;
   if (adminKey !== ADMIN_KEY) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
