@@ -215,7 +215,7 @@ export default async function ModelPage({ params }: PageProps) {
     : `${dict.buttons.chat} ${model.name}`;
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden overflow-y-auto">
+    <div className="min-h-screen bg-background overflow-x-hidden overflow-y-auto scrollbar-hidden">
       {/* Track View Event */}
       <ModelViewTracker modelId={model.id} modelSlug={slug} />
 
