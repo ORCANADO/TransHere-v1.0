@@ -113,12 +113,16 @@ export async function POST(request: NextRequest) {
       }
     } else {
       // Original logic: Check if a matching story group already exists
-      const { data: existingGroup } = await supabaseAdmin
+      // Use .limit(1) instead of .maybeSingle() to handle models with multiple groups
+      const { data: existingGroups } = await supabaseAdmin
         .from("story_groups")
         .select("id")
         .eq("model_id", model_id)
-        .eq("is_pinned", is_pinned)
-        .maybeSingle();
+        .eq("is_pinned", is_pinned || false)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      const existingGroup = existingGroups?.[0] || null;
 
       if (existingGroup) {
         groupId = existingGroup.id;
@@ -166,7 +170,6 @@ export async function POST(request: NextRequest) {
         media_url,
         media_type: media_type || "image",
         duration: duration || 5,
-        poster_url: poster_url,
         posted_date: new Date().toISOString(),
       })
       .select("id")
@@ -187,8 +190,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Admin stories API error:", error);
+    const message = error instanceof Error ? error.message : "Internal Server Error";
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: "Internal Server Error", details: message },
       { status: 500 }
     );
   }
