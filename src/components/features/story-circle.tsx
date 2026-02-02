@@ -47,7 +47,7 @@ export function StoryCircle({ group, onClick, index }: StoryCircleProps) {
                 fill
                 className="w-full h-full object-cover rounded-full"
                 sizes="72px"
-                priority={index !== undefined && index < 2}
+                priority={false}
                 placeholder="empty"
                 quality={50}
               />

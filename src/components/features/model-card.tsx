@@ -76,7 +76,7 @@ export function ModelCard({ name, image, tags, slug, priority, isOnline, is_veri
             sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 225px"
             priority={priority}
             placeholder="empty"
-            quality={65}
+            quality={55}
           />
           {/* Vignette overlay for unviewed profiles - dark edges to signal "unseen" */}
           <div 
