@@ -47,9 +47,9 @@ export function StoryCircle({ group, onClick, index }: StoryCircleProps) {
                 fill
                 className="w-full h-full object-cover rounded-full"
                 sizes="72px"
-                priority={index !== undefined && index < 5}
+                priority={index !== undefined && index < 2}
                 placeholder="empty"
-                quality={60}
+                quality={50}
               />
             ) : (
               // Fallback gradient: Cyber Violet to Electric Emerald with glass effect

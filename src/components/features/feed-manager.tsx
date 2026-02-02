@@ -49,41 +49,21 @@ export function FeedManager({ models, userCity, language, buttons }: FeedManager
   }, [models]);
 
   // Step 2: Filter based on feed type
+  // NOTE: For 'near' and 'new' feeds, render during SSR (isOnline defaults to false).
+  // The useEffect above will enrich with random isOnline and trigger a re-render.
+  // Only 'favorites' must wait for localStorage (isMounted).
   const filteredModels = useMemo(() => {
-    // Always wait for hydration to avoid mismatch during feed switches
-    if (!isMounted) {
-      // Return empty array during SSR/initial render to prevent hydration mismatch
-      // This ensures client and server render the same thing initially
-      return [];
-    }
-
     if (feed === 'favorites') {
-      // Filter by favorites from localStorage (using slug)
-      const filtered = enrichedModels.filter((m) => 
-        favorites.includes(m.slug || m.id)
-      );
-      // Shuffle favorites
-      return shuffleArray(filtered);
+      if (!isMounted) return [];
+      return shuffleArray(enrichedModels.filter(m => favorites.includes(m.slug || m.id)));
     }
 
     if (feed === 'new') {
-      // Filter by is_new === true, then shuffle
-      return shuffleArray(
-        enrichedModels.filter((m) => m.is_new === true)
-      );
-    } else {
-      // Default: "Near" - Use Online Priority Shuffle
-      // Separate into online and offline groups
-      const onlineModels = enrichedModels.filter((m) => m.isOnline === true);
-      const offlineModels = enrichedModels.filter((m) => m.isOnline === false);
-
-      // Shuffle each group independently
-      const shuffledOnline = shuffleArray(onlineModels);
-      const shuffledOffline = shuffleArray(offlineModels);
-
-      // Combine with online models first
-      return [...shuffledOnline, ...shuffledOffline];
+      return enrichedModels.filter(m => m.is_new === true);
     }
+
+    // 'near' feed — render immediately, shuffle happens via useEffect enrichment
+    return enrichedModels;
   }, [feed, enrichedModels, favorites, isMounted]);
 
   return <ModelFeed models={filteredModels} feedType={(feed as 'near' | 'new' | 'favorites') || 'near'} buttons={buttons} language={language} />;

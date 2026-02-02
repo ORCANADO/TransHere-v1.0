@@ -23,7 +23,7 @@ export default function cloudflareImageLoader({ src, width, quality }: ImageLoad
   // Build Cloudflare Image Resizing URL
   // format=auto lets Cloudflare serve AVIF/WebP based on browser support
   // fit=cover maintains aspect ratio and crops to fill
-  const params = `width=${width},quality=${q},format=auto,fit=cover`;
+  const params = `width=${width},quality=${q},format=auto,fit=cover,onerror=redirect`;
 
   // In development, fall back to the raw URL (no Cloudflare CDN available locally)
   if (process.env.NODE_ENV === 'development') {
