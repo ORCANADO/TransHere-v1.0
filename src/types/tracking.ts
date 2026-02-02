@@ -100,7 +100,7 @@ export interface CachedTrackingLink {
 /**
  * Analytics event types matching database constraint
  */
-export type AnalyticsEventType = 'page_view' | 'link_click' | 'conversion' | 'story_view';
+export type AnalyticsEventType = 'page_view' | 'link_click' | 'conversion' | 'story_view' | 'bridge_view';
 
 /**
  * Payload for logging analytics events
