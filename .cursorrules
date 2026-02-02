@@ -88,7 +88,37 @@ Client Components for filtering.
 - **Nuqs Integration:** ALWAYS ensure `<NuqsAdapter>` wraps children in `src/app/layout.tsx`.
 - **Async Headers:** `headers()` and `cookies()` are async functions in Next.js 15. Await them before use.
 - **Edge Runtime:** ALL API routes interacting with AWS SDK or R2 (`src/app/api/...`) MUST export `const runtime = 'edge'` to function on Cloudflare Pages.
-- **Image Optimization:** Next.js Image component is configured with AVIF/WebP formats and 1-year cache TTL. Use `next/dynamic` for heavy components (modals, below-the-fold content) to reduce initial bundle size.
+- **Image Optimization:** Next.js Image component uses Cloudflare Image Resizing (custom loader). Use `next/dynamic` for heavy components (modals, below-the-fold content) to reduce initial bundle size.
+
+### 2.8.1 Cloudflare Image Resizing (Performance Critical)
+- **Custom Loader:** `src/lib/cloudflare-image-loader.ts` replaces Next.js `/_next/image` proxy (which doesn't resize on Cloudflare Pages).
+- **URL Format:** `/cdn-cgi/image/width=X,quality=Y,format=auto,fit=cover,onerror=redirect/<SOURCE_URL>`
+- **Config:** `next.config.ts` uses `loader: 'custom'` with optimized breakpoints:
+  - `deviceSizes: [375, 450, 640, 828, 1080, 1920]`
+  - `imageSizes: [72, 96, 128, 256, 384]`
+- **Fallback:** `onerror=redirect` ensures graceful fallback if resizing fails.
+- **Dev Mode:** Loader returns raw URL in development (no Cloudflare CDN locally).
+- **Cache Rules (Cloudflare Dashboard):** `/cdn-cgi/image/*` → Edge TTL 30 days, Browser TTL 7 days.
+
+### 2.8.2 Image Priority & Quality Rules (Lighthouse Critical)
+- **LCP Image:** Only the first 2 model cards in the feed get `priority={true}`. ALL other images must be `priority={false}`.
+- **Story Circles:** NEVER use `priority={true}` — they compete with LCP model card images for bandwidth.
+- **Quality Settings:**
+  - Model cards: `quality={55}` (at ~170px mobile width, 55 is visually identical to 75 but saves ~30%).
+  - Story circles: `quality={50}` (at 72px display, indistinguishable from higher quality).
+  - Model profile gallery: `quality={75}` (larger display, needs higher fidelity).
+- **Rule:** Fewer priority images = faster LCP. The LCP element (first model card) should be the ONLY priority image competing for bandwidth.
+
+### 2.8.3 Progressive Rendering Pattern (Feed Performance)
+- **Pattern:** Use IntersectionObserver to progressively render cards below the fold.
+- **Implementation:** `ModelFeed` renders only 6 cards initially (3 rows on mobile 2-col grid), then loads 6 more when a sentinel `<div>` enters the viewport (300px rootMargin).
+- **Why:** Prevents loading 10+ images at once when only 4-6 are visible. Saved ~400-900 KiB on initial page load.
+- **Reset:** `visibleCount` resets to `INITIAL_CARDS` when `models` array changes (e.g., feed switch).
+
+### 2.8.4 SSR Rendering Rules (Hydration & Performance)
+- **FeedManager:** MUST render models during SSR for 'near' and 'new' feeds (with `isOnline: false` default). Only 'favorites' feed waits for localStorage mount (`isMounted`).
+- **Why:** Returning empty array during SSR kills LCP and causes massive CLS. The `isOnline` status is enriched after hydration via `useEffect`.
+- **CSS Dark Mode Default:** `:root` in `globals.css` MUST use dark-mode values (not light). This prevents a white flash (FOUC) before `next-themes` applies the `.dark` class. The app uses `forcedTheme="dark"`.
 
 ### 2.8 Server Actions & Mutations
 - **Security:** ALL database writes must happen in `src/app/actions/` files marked with `"use server"`.

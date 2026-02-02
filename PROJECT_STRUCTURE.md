@@ -63,6 +63,7 @@ version_1.0/
 │   │   ├── supabase/               # Supabase client
 │   │   ├── api-permissions.ts
 │   │   ├── bot-detection.ts
+│   │   ├── cloudflare-image-loader.ts # Custom image loader for CF Image Resizing
 │   │   ├── i18n.ts
 │   │   ├── organization-auth.ts
 │   │   ├── r2-utils.ts
@@ -192,6 +193,7 @@ Phase 6.18  → Dashboard Data Display & Selection Fixes
 Phase 6.20  → Safari Popup Blocker Fix (Direct Link Protocol)
 Phase 6.21  → Mobile Gallery Rendering Fix (Flex-Shrink Implementation)
 Phase 6.22  → Admin Brand Purge & Liquid Glass Sync
+Phase 7.0   → Lighthouse Performance Optimization (Model Profile: 71→89, Home: 53→94)
 ```
 
 ### Active Constraints
@@ -202,7 +204,8 @@ Phase 6.22  → Admin Brand Purge & Liquid Glass Sync
 
 ### Key Config Files
 - `.cursorrules` → AI assistant rules & project constitution
-- `next.config.ts` → Edge runtime, R2 domains, image optimization
+- `next.config.ts` → Edge runtime, Cloudflare Image Resizing loader, optimized breakpoints
+- `src/lib/cloudflare-image-loader.ts` → Custom image loader for `/cdn-cgi/image/` resizing
 - `src/middleware.ts` → Geolocation, crawler detection, security headers
 - `src/lib/i18n.ts` → Lightweight English/Spanish dictionary
 
@@ -213,6 +216,19 @@ Phase 6.22  → Admin Brand Purge & Liquid Glass Sync
 - `analytics_daily_stats` / `analytics_hourly_stats` → Materialized views
 - `story_groups` + `stories` → Instagram-style story system
 
+### Performance Architecture (Phase 7.0)
+
+| Component | Optimization | Impact |
+|-----------|-------------|--------|
+| `cloudflare-image-loader.ts` | Custom `/cdn-cgi/image/` loader with `format=auto,onerror=redirect` | Replaces broken `/_next/image` on CF Pages |
+| `model-feed.tsx` | Progressive rendering: 6 initial cards + IntersectionObserver | Saves 400-900 KiB on initial load |
+| `model-card.tsx` | `quality={55}`, `priority` only for first 2 cards | ~30% smaller images, faster LCP |
+| `story-circle.tsx` | `priority={false}`, `quality={50}` | No bandwidth competition with LCP |
+| `feed-manager.tsx` | SSR renders models (not empty array) for 'near'/'new' feeds | Eliminates CLS, enables fast LCP |
+| `globals.css` | `:root` uses dark-mode values (not light) | Eliminates white flash (FOUC) |
+| `next.config.ts` | Custom loader + optimized `deviceSizes`/`imageSizes` breakpoints | Right-sized images for all viewports |
+| Cloudflare Cache Rule | `/cdn-cgi/image/*` → Edge TTL 30d, Browser TTL 7d | Cached image delivery |
+
 ### High-Dependency Files (Cross-Reference)
 
 | File | Dependents | See Also |
@@ -220,6 +236,7 @@ Phase 6.22  → Admin Brand Purge & Liquid Glass Sync
 | `src/lib/supabase/service.ts` | 8+ API routes, org-auth, r2-utils | `organization-auth.ts`, `api-permissions.ts` |
 | `src/middleware.ts` | All non-static routes | `middleware-org.ts`, `bot-detection.ts` |
 | `src/lib/organization-auth.ts` | Org dashboard, org API routes | `supabase/service.ts`, `types/organization.ts` |
+| `src/lib/cloudflare-image-loader.ts` | All Next.js Image components | `next.config.ts`, `utils.ts` (getImageUrl) |
 
 **See Also Notes:**
 - **Supabase Service Client:** Required by any operation bypassing RLS. If modifying auth flow, check all consumers.

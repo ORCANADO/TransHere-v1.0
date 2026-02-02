@@ -4,6 +4,51 @@
 
 ---
 
+## [2026-02-02] - Phase 7.0: Lighthouse Performance Optimization
+**Status:** Complete
+
+### Model Profile Page (`/model/[slug]`) — Score: 71 → 89
+- [x] **Cloudflare Image Resizing:** Implemented custom Next.js image loader (`src/lib/cloudflare-image-loader.ts`) using `/cdn-cgi/image/` endpoint with `format=auto,fit=cover,onerror=redirect` parameters.
+- [x] **next.config.ts:** Configured `loader: 'custom'` with optimized breakpoints — `deviceSizes: [375, 450, 640, 828, 1080, 1920]`, `imageSizes: [72, 96, 128, 256, 384]`.
+- [x] **Image Quality:** Tuned quality per component for optimal size/fidelity balance at actual display sizes.
+- [x] **R2 Preconnect:** Added `<link rel="preconnect">` to R2 storage domain in `layout.tsx` for early DNS resolution.
+
+### Home Page (`/`) — Score: 53 → 82 (Round 1)
+- [x] **Light-Mode Flash Fix (FOUC):** Changed `:root` CSS variables in `globals.css` from light-mode defaults to dark-mode values. Since app uses `forcedTheme="dark"`, `:root` must match dark theme to prevent white flash before JS loads.
+- [x] **Admin CSS Purge:** Removed admin CSS tokens (`--admin-bg-primary`, `--admin-text-primary`, etc.) from `:root` in `globals.css` — admin styles isolated to admin routes only.
+- [x] **FeedManager SSR Fix:** Fixed critical issue where `FeedManager` returned empty array (`[]`) during SSR for all feeds. Now renders models during SSR for 'near' and 'new' feeds with `isOnline: false` default. Only 'favorites' waits for localStorage mount. This eliminated massive CLS and enabled LCP.
+- [x] **Image Priority Reduction:** Reduced priority images from 6 to 2 model cards, removed priority from all story circles (`priority={false}`).
+- [x] **Image Quality Optimization:** Model cards `quality={65}`, story circles `quality={50}`.
+- [x] **Cloudflare Image Loader:** Added `onerror=redirect` fallback parameter.
+
+### Home Page (`/`) — Score: 82 → 94 (Round 2)
+- [x] **Progressive Image Loading:** Converted `model-feed.tsx` to progressive rendering with IntersectionObserver. Only 6 cards render initially (3 rows on mobile 2-col grid), 6 more load on scroll with 300px rootMargin. Saved ~400-900 KiB on initial load.
+- [x] **Quality Fine-Tuning:** Model cards `quality={65}` → `quality={55}` (imperceptible at ~170px mobile width, saves ~15% per image).
+- [x] **Story Circle Priority:** Removed all priority from story circles to eliminate bandwidth competition with LCP model card image.
+
+### Cloudflare Cache Rules (Dashboard Configuration)
+- [x] **Cache Rule:** Custom filter `URI Path starts with /cdn-cgi/image/` → Edge TTL: 2,592,000s (30 days), Browser TTL: 604,800s (7 days).
+- [x] **Purpose:** Ensures resized images are cached at edge and browser level, reducing origin requests.
+
+### Files Modified
+| File | Change |
+|------|--------|
+| `src/lib/cloudflare-image-loader.ts` | New: Custom Cloudflare Image Resizing loader |
+| `next.config.ts` | Custom image loader config + optimized breakpoints |
+| `src/app/globals.css` | `:root` dark-mode defaults, removed admin CSS tokens |
+| `src/components/features/feed-manager.tsx` | SSR rendering fix (render models, not empty array) |
+| `src/components/features/model-feed.tsx` | Progressive rendering with IntersectionObserver (6 initial cards) |
+| `src/components/features/model-card.tsx` | `quality={55}`, priority only for first 2 cards |
+| `src/components/features/story-circle.tsx` | `priority={false}`, `quality={50}` |
+
+### Performance Results
+| Page | Before | After | Improvement |
+|------|--------|-------|-------------|
+| Home (`/`) | 53 | 94 | +41 points |
+| Model Profile (`/model/[slug]`) | 71 | 89 | +18 points |
+
+---
+
 ## [2026-01-23] - Phase 6.22: Admin Design Purge & Minimalist Navigation
 **Status:** Complete
 
