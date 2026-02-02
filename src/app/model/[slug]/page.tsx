@@ -1,9 +1,10 @@
 import { StatusIndicator } from "@/components/ui/status-indicator";
 import { Button } from "@/components/ui/button";
+import dynamic from "next/dynamic";
+import Image from "next/image";
 import { ProfileHeaderClient } from "@/components/layout/profile-header-client";
 import { ModelViewTracker } from "@/components/features/model-view-tracker";
 import { StoriesContainer } from "@/components/features/stories-container";
-import { ProfileGallery } from "@/components/features/profile-gallery";
 import { createClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
 import { DICTIONARY, getLanguage } from "@/lib/i18n";
@@ -12,6 +13,12 @@ import { BridgeProtector } from '@/components/features/bridge-protector';
 import Link from "next/link";
 import type { GalleryItem } from "@/types";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { getImageUrl } from "@/lib/utils";
+
+// Lazy load ProfileGallery - client component for interactive carousel
+const ProfileGallery = dynamic(() => import("@/components/features/profile-gallery").then(mod => ({ default: mod.ProfileGallery })), {
+  loading: () => null, // LCP image is server-rendered below, so no loading placeholder needed
+});
 
 // Edge runtime required for Cloudflare Pages
 export const runtime = 'edge';
@@ -185,6 +192,10 @@ export default async function ModelPage({ params }: PageProps) {
       }]
       : [];
 
+  // Compute the LCP image URL for server-rendered hero (first image in gallery)
+  const firstImageItem = galleryItems.find(item => item.media_type === 'image');
+  const lcpImageUrl = firstImageItem ? getImageUrl(firstImageItem.media_url) : null;
+
   // Select bio based on user's language
   const displayBio = (lang === 'es' && model.bio_es)
     ? model.bio_es
@@ -320,17 +331,36 @@ export default async function ModelPage({ params }: PageProps) {
         <div className="order-1 lg:order-2 lg:col-span-6 lg:h-screen lg:overflow-y-auto scrollbar-hide pt-10 lg:pt-4 relative">
           {/* Dark obsidian gradient fade below header - Mobile only */}
           <div className="absolute top-8 left-0 right-0 h-16 pointer-events-none z-10 lg:hidden" style={{
-            background: 'linear-gradient(to bottom, rgba(5, 10, 20, 1) 0%, rgba(5, 10, 20, 0.9) 20%, rgba(5, 10, 20, 0.6) 40%, rgba(5, 10, 20, 0.3) 60%, rgba(5, 10, 20, 0.15) 80%, rgba(5, 10, 20, 0) 100%)'
+            background: 'linear-gradient(to bottom, rgba(5, 10, 20, 1) 0%, rgba(5, 10, 20, 0.9) 20%, rgba(5, 10, 20, 0.6) 40%, rgba(5, 10, 20, 0.3) 60%, rgba(5, 10, 20, 0) 100%)'
           }} />
-          <ProfileGallery
-            items={galleryItems}
-            modelName={model.name}
-            encodedDestination={encodedDestination}
-            isCrawler={isCrawler}
-            modelId={model.id}
-            modelSlug={slug}
-            isVerified={model.is_verified || false}
-          />
+          {/* Server-rendered LCP hero image — in initial HTML for fast LCP.
+              Sits behind the client ProfileGallery which covers it once hydrated. */}
+          <div className="relative">
+            {lcpImageUrl && (
+              <div className="absolute inset-0 w-full aspect-[3/4] lg:rounded-xl overflow-hidden bg-card z-0">
+                <Image
+                  src={lcpImageUrl}
+                  alt={`Model ${model.name} profile photo`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 450px"
+                  priority
+                  quality={75}
+                />
+              </div>
+            )}
+            <div className="relative z-[1]">
+              <ProfileGallery
+                items={galleryItems}
+                modelName={model.name}
+                encodedDestination={encodedDestination}
+                isCrawler={isCrawler}
+                modelId={model.id}
+                modelSlug={slug}
+                isVerified={model.is_verified || false}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
