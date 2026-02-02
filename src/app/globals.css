@@ -82,30 +82,28 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 98%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    /* Dark mode as default — eliminates white flash on page load
+       (app uses forcedTheme="dark", light mode is never active) */
+    --background: 222 47% 4%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 7%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 4%;
+    --popover-foreground: 210 40% 98%;
     --primary: 152 100% 50%;
     --primary-foreground: 0 0% 0%;
     --secondary: 267 100% 58%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
     --accent: 45 93% 53%;
     --accent-foreground: 0 0% 0%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
     --ring: 152 100% 50%;
     --radius: 0.75rem;
-
-    /* Admin Solar Spectrum Light Tokens */
-    --admin-bg-primary: oklch(97% 0.005 250);
-    --admin-text-primary: oklch(15% 0.01 250);
 
     /* Brand base colors */
     --emerald: #00FF85;
@@ -113,6 +111,7 @@
     --violet: #7A27FF;
   }
 
+  /* Redundant with :root but kept for next-themes .dark class compatibility */
   .dark,
   [data-theme="dark"] {
     --background: 222 47% 4%;

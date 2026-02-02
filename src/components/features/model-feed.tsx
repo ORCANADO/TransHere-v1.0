@@ -35,7 +35,7 @@ export function ModelFeed({ models, feedType, buttons, language }: ModelFeedProp
             image={model.image_url}
             tags={translatedTags}
             slug={model.slug || model.id}
-            priority={index < 6}
+            priority={index < 2}
             isOnline={model.isOnline}
             is_verified={model.is_verified}
             is_new={model.is_new}
