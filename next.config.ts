@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
     // 1-year cache TTL to align with R2 aggressive caching strategy
     minimumCacheTTL: 31536000,
+    // Optimized breakpoints matching actual display sizes
+    deviceSizes: [375, 450, 640, 828, 1080, 1920],
+    imageSizes: [72, 96, 128, 256, 384],
     remotePatterns: [
       {
         protocol: "https",

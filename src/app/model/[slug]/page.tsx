@@ -1,11 +1,9 @@
 import { StatusIndicator } from "@/components/ui/status-indicator";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import dynamic from "next/dynamic";
 import { ProfileHeaderClient } from "@/components/layout/profile-header-client";
 import { ModelViewTracker } from "@/components/features/model-view-tracker";
-import { ChatButton } from "@/components/features/chat-button";
 import { StoriesContainer } from "@/components/features/stories-container";
+import { ProfileGallery } from "@/components/features/profile-gallery";
 import { createClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
 import { DICTIONARY, getLanguage } from "@/lib/i18n";
@@ -14,11 +12,6 @@ import { BridgeProtector } from '@/components/features/bridge-protector';
 import Link from "next/link";
 import type { GalleryItem } from "@/types";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
-
-// Lazy load ProfileGallery - below the fold content
-const ProfileGallery = dynamic(() => import("@/components/features/profile-gallery").then(mod => ({ default: mod.ProfileGallery })), {
-  loading: () => <p className="text-center text-muted-foreground p-8">Loading Gallery...</p>
-});
 
 // Edge runtime required for Cloudflare Pages
 export const runtime = 'edge';
@@ -103,11 +96,8 @@ export default async function ModelPage({ params }: PageProps) {
     .order('is_pinned', { ascending: false })
     .order('created_at', { ascending: false });
 
-  // Log story_groups data for verification
-  console.log('[Stories Debug] Model:', model.name);
-  console.log('[Stories Debug] Story Groups:', JSON.stringify(storyGroups, null, 2));
   if (storyError) {
-    console.error('[Stories Debug] Error fetching stories:', storyError);
+    console.error('[Stories] Error fetching stories:', storyError.message);
   }
 
   // 7-Day Decay Rule: Filter stories based on age
@@ -215,7 +205,7 @@ export default async function ModelPage({ params }: PageProps) {
     : `${dict.buttons.chat} ${model.name}`;
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden overflow-y-auto scrollbar-hidden">
+    <main className="min-h-screen bg-background overflow-x-hidden overflow-y-auto scrollbar-hidden">
       {/* Track View Event */}
       <ModelViewTracker modelId={model.id} modelSlug={slug} />
 
@@ -356,7 +346,7 @@ export default async function ModelPage({ params }: PageProps) {
           variant="fixed"
         />
       </div>
-    </div>
+    </main>
   );
 }
 

@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ChevronLeft, Share2, Check } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 // Lazy load the actual header to avoid SSR issues
 export function ProfileHeaderClient() {
@@ -46,11 +49,6 @@ function ProfileHeaderInner() {
       }
     }
   };
-
-  // Dynamic imports for icons to reduce initial bundle
-  const { ChevronLeft, Share2, Check } = require('lucide-react');
-  const Link = require('next/link').default;
-  const { Button } = require('@/components/ui/button');
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent pointer-events-none lg:hidden">

@@ -263,9 +263,9 @@ export function ProfileGallery({
             <div className="rounded-full bg-black/60 backdrop-blur-[13px] p-4 mb-4 border-2 border-[#D4AF37]/40 shadow-[0_0_20px_rgba(212,175,55,0.3)]">
               <Lock className="h-7 w-7 text-[#D4AF37]" strokeWidth={1.5} />
             </div>
-            <h3 className="text-2xl font-sans font-semibold text-white mb-5">
+            <p className="text-2xl font-sans font-semibold text-white mb-5">
               {isCrawler ? "Premium Content" : "Want to see more?"}
-            </h3>
+            </p>
 
             {decodedUrl ? (
               <a
@@ -303,6 +303,7 @@ export function ProfileGallery({
               className="object-cover scale-105 transition-all duration-500 group-hover:scale-110"
               sizes="(max-width: 1024px) 100vw, 450px"
               priority={false}
+              quality={65}
             />
             {teaserContent}
           </div>
@@ -325,6 +326,7 @@ export function ProfileGallery({
             className="object-cover"
             sizes="(max-width: 1024px) 100vw, 450px"
             priority={index === 0}
+            quality={index === 0 ? 75 : 65}
           />
         </div>
       );
@@ -338,11 +340,15 @@ export function ProfileGallery({
       {/* Mobile Carousel */}
       <div ref={containerRef} className="relative w-full aspect-[3/4] group overflow-hidden lg:hidden">
         <div ref={scrollContainerRef} className="flex w-full h-full overflow-x-auto overflow-y-hidden scrollbar-hide overscroll-x-contain snap-x snap-mandatory">
-          {allSlides.map((slide, index) => (
-            <div key={slide.key} className="flex-shrink-0 w-full h-full snap-center bg-card">
-              {renderMedia(slide, index)}
-            </div>
-          ))}
+          {allSlides.map((slide, index) => {
+            // Only render media for visible + adjacent slides to avoid loading all images
+            const isNearby = Math.abs(index - current) <= 1;
+            return (
+              <div key={slide.key} className="flex-shrink-0 w-full h-full snap-center bg-card">
+                {isNearby ? renderMedia(slide, index) : null}
+              </div>
+            );
+          })}
         </div>
 
         <div className="hidden md:block lg:hidden absolute inset-0 pointer-events-none z-50">
@@ -361,9 +367,16 @@ export function ProfileGallery({
         <div className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none z-40" style={{ background: 'linear-gradient(to top, #050A14 0%, #050A14 15%, rgba(5, 10, 20, 0.85) 30%, rgba(5, 10, 20, 0.60) 50%, rgba(5, 10, 20, 0.30) 70%, rgba(5, 10, 20, 0.10) 85%, transparent 100%)' }} />
 
         {allSlides.length > 1 && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-50">
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-0 z-50">
             {allSlides.map((_, index) => (
-              <button key={index} onClick={() => scrollToSlide(index)} className={cn("h-1.5 rounded-full transition-all duration-300", current === index ? "w-8 bg-white" : "w-2 bg-white/40")} />
+              <button
+                key={index}
+                onClick={() => scrollToSlide(index)}
+                aria-label={`Go to slide ${index + 1} of ${allSlides.length}`}
+                className="flex items-center justify-center min-h-[44px] min-w-[44px]"
+              >
+                <span className={cn("h-1.5 rounded-full transition-all duration-300", current === index ? "w-8 bg-white" : "w-2 bg-white/40")} />
+              </button>
             ))}
           </div>
         )}

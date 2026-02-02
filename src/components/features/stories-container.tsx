@@ -217,9 +217,9 @@ export function StoriesContainer({ groups, encodedDestination, isCrawler, modelN
 
       {/* Desktop: Vertical list - Glass panel */}
       <div className="hidden lg:block lg:p-4 bg-background/30 backdrop-blur-xl rounded-2xl border border-white/10 mt-4">
-        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4 text-center">
+        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4 text-center">
           Stories
-        </h3>
+        </h2>
         <div className="flex flex-col gap-4">
           {groups.map((group) => (
             <StoryCircle

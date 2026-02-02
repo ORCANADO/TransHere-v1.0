@@ -36,6 +36,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://pub-7a8adad1ccfc4f0db171158b6cf5c030.r2.dev" />
+        <link rel="dns-prefetch" href="https://pub-7a8adad1ccfc4f0db171158b6cf5c030.r2.dev" />
+      </head>
       <body className={`${montserrat.variable} ${playfair.variable} font-sans antialiased bg-background text-foreground`}>
         <ThemeProvider
           attribute="class"
