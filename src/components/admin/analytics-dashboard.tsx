@@ -360,7 +360,8 @@ export function AnalyticsDashboard({
             availableCountries={data?.availableCountries || []}
             availableSources={data?.availableSources?.map(s => ({
               name: s.name,
-              icon: 'Link2'
+              icon: 'Link2',
+              subtags: s.subtags || []
             })) || []}
             loading={loading}
           />
@@ -509,7 +510,8 @@ export function AnalyticsDashboard({
             availableCountries={data?.availableCountries || []}
             availableSources={data?.availableSources?.map(s => ({
               name: s.name,
-              icon: 'Link2'
+              icon: 'Link2',
+              subtags: s.subtags || []
             })) || []}
             loading={loading}
           />

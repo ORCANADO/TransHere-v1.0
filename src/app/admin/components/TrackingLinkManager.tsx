@@ -670,33 +670,83 @@ export function TrackingLinkManager({
                                         Subtag Selection
                                     </label>
 
-                                    <div className="flex flex-wrap gap-2 mb-4">
-                                        <button
-                                            onClick={() => setFormState(prev => ({ ...prev, subtagId: '' }))}
-                                            className={cn(
-                                                "px-4 py-2 rounded-xl text-xs font-bold border transition-all",
-                                                !formState.subtagId
-                                                    ? "bg-[#00FF85]/20 border-[#00FF85] text-[#00FF85]"
-                                                    : "bg-[#3C3F40]/40 border-[#555D50] text-[#9E9E9E] hover:text-[#E2DFD2]"
-                                            )}
-                                        >
-                                            None
-                                        </button>
-                                        {getSubtagsForSource(formState.sourceId).map(st => (
+                                    {showCustomSubtagInput ? (
+                                        <div className="flex gap-2 mb-4">
+                                            <input
+                                                type="text"
+                                                value={formState.customSubtagName}
+                                                onChange={(e) => setFormState(prev => ({ ...prev, customSubtagName: e.target.value }))}
+                                                placeholder="Enter subtag name (e.g., 'Bio Link', 'Campaign A')..."
+                                                className={cn(
+                                                    "flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
+                                                    "bg-[#3C3F40]/60 border border-[#555D50] text-[#E2DFD2]",
+                                                    "data-[theme=light]:bg-white/70 data-[theme=light]:border-[#CED9EF]/60 data-[theme=light]:text-[#2E293A]",
+                                                    "focus:ring-2 focus:ring-[#7A27FF]/40 outline-none"
+                                                )}
+                                                data-theme={isLightMode ? 'light' : 'dark'}
+                                            />
                                             <button
-                                                key={st.id}
-                                                onClick={() => setFormState(prev => ({ ...prev, subtagId: st.id }))}
+                                                onClick={handleCreateSubtag}
+                                                disabled={isSaving}
+                                                className="px-4 py-2 rounded-xl bg-[#00FF85] text-black font-bold text-sm hover:opacity-90 active:scale-95 disabled:opacity-50"
+                                            >
+                                                Add
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setShowCustomSubtagInput(false);
+                                                    setFormState(prev => ({ ...prev, customSubtagName: '' }));
+                                                }}
+                                                className={cn(
+                                                    "px-4 py-2 rounded-xl font-bold text-sm",
+                                                    "bg-[#5B4965]/30 text-[#E2DFD2] hover:bg-[#5B4965]/50"
+                                                )}
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-wrap gap-2 mb-4">
+                                            <button
+                                                onClick={() => setFormState(prev => ({ ...prev, subtagId: '' }))}
                                                 className={cn(
                                                     "px-4 py-2 rounded-xl text-xs font-bold border transition-all",
-                                                    formState.subtagId === st.id
-                                                        ? "bg-[#5B4965]/50 border-[#5B4965] text-[#E2DFD2]"
+                                                    !formState.subtagId
+                                                        ? "bg-[#00FF85]/20 border-[#00FF85] text-[#00FF85]"
                                                         : "bg-[#3C3F40]/40 border-[#555D50] text-[#9E9E9E] hover:text-[#E2DFD2]"
                                                 )}
                                             >
-                                                {st.name}
+                                                None
                                             </button>
-                                        ))}
-                                    </div>
+                                            {getSubtagsForSource(formState.sourceId).map(st => (
+                                                <button
+                                                    key={st.id}
+                                                    onClick={() => setFormState(prev => ({ ...prev, subtagId: st.id }))}
+                                                    className={cn(
+                                                        "px-4 py-2 rounded-xl text-xs font-bold border transition-all",
+                                                        formState.subtagId === st.id
+                                                            ? "bg-[#5B4965]/50 border-[#5B4965] text-[#E2DFD2]"
+                                                            : "bg-[#3C3F40]/40 border-[#555D50] text-[#9E9E9E] hover:text-[#E2DFD2]"
+                                                    )}
+                                                >
+                                                    {st.name}
+                                                </button>
+                                            ))}
+                                            <button
+                                                onClick={() => setShowCustomSubtagInput(true)}
+                                                className={cn(
+                                                    "px-3 py-2 rounded-xl text-xs font-bold border-2 border-dashed transition-all",
+                                                    "border-[#555D50] text-[#9E9E9E] hover:border-[#00FF85] hover:text-[#00FF85]",
+                                                    "data-[theme=light]:border-[#CED9EF] data-[theme=light]:text-[#6B6B7B]",
+                                                    "flex items-center justify-center gap-1"
+                                                )}
+                                                data-theme={isLightMode ? 'light' : 'dark'}
+                                            >
+                                                <Plus className="w-3 h-3" />
+                                                Add New
+                                            </button>
+                                        </div>
+                                    )}
 
                                     {/* Task 7.7: Subtag Section */}
                                     <div className={cn(

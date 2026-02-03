@@ -120,13 +120,21 @@ function parseQueryParams(request: NextRequest) {
   }
 
   // Handle both JSON string and comma-separated sources
+  // Also extract subtag filters from SourceFilter objects
   let sources: string[] = [];
+  let subtagFilters: Map<string, string[]> = new Map(); // source name -> subtag names
   const rawSources = url.searchParams.get('sources');
   if (rawSources) {
     if (rawSources.startsWith('[') && rawSources.endsWith(']')) {
       try {
         const parsed = JSON.parse(rawSources);
         sources = parsed.map((s: any) => typeof s === 'string' ? s : s.source);
+        // Extract subtag filters from SourceFilter objects
+        parsed.forEach((s: any) => {
+          if (typeof s !== 'string' && s.subtags && s.subtags.length > 0) {
+            subtagFilters.set(s.source.toLowerCase(), s.subtags);
+          }
+        });
       } catch (e) {
         sources = rawSources.split(',').filter(Boolean);
       }
@@ -157,6 +165,7 @@ function parseQueryParams(request: NextRequest) {
     prevEndDate,
     models,
     sources,
+    subtagFilters,
     countries
   };
 }
@@ -680,6 +689,7 @@ export async function GET(
       prevEndDate,
       models,
       sources: sourceNames,
+      subtagFilters,
       countries
     } = queryParams;
 
@@ -687,10 +697,11 @@ export async function GET(
     // SOURCE FILTER RESOLUTION (CASE-INSENSITIVE)
     // ============================================
 
-    // 1. Fetch source mapping and link mapping
-    const [{ data: linksData }, { data: allSourcesData }] = await Promise.all([
-      supabase.from('tracking_links').select('id, source_id'),
-      supabase.from('tracking_sources').select('id, name, slug')
+    // 1. Fetch source mapping, link mapping, and subtags
+    const [{ data: linksData }, { data: allSourcesData }, { data: allSubtagsData }] = await Promise.all([
+      supabase.from('tracking_links').select('id, source_id, subtag_id'),
+      supabase.from('tracking_sources').select('id, name, slug'),
+      supabase.from('tracking_subtags').select('id, name, slug, source_id')
     ]);
 
     // Build case-insensitive lookup maps
@@ -729,6 +740,14 @@ export async function GET(
 
     sourceMap.set('organic', 'Organic');
 
+    // Build subtag lookup: subtag name (lowercase) -> subtag ID
+    const subtagNameToId = new Map<string, string>();
+    const subtagIdToSourceId = new Map<string, string>();
+    (allSubtagsData || []).forEach((st: any) => {
+      subtagNameToId.set(`${st.source_id}:${st.name.toLowerCase()}`, st.id);
+      subtagIdToSourceId.set(st.id, st.source_id);
+    });
+
     // 2. Resolve source filter names to tracking_link IDs
     let sourceFilterIds: string[] | undefined = undefined;
     if (sourceNames.length > 0) {
@@ -759,6 +778,30 @@ export async function GET(
             if (mapName.includes(nameLower) || nameLower.includes(mapName)) {
               linkIds = ids;
               break;
+            }
+          }
+        }
+
+        // Check if subtag filters exist for this source
+        const subtagNames = subtagFilters.get(nameLower);
+        if (subtagNames && subtagNames.length > 0 && linkIds && linkIds.length > 0) {
+          // Resolve subtag names to IDs for this source
+          const sourceId = sourceNameToId.get(nameLower) || sourceSlugToId.get(nameLower);
+          if (sourceId) {
+            const subtagIds = new Set<string>();
+            subtagNames.forEach(stName => {
+              const key = `${sourceId}:${stName.toLowerCase()}`;
+              const stId = subtagNameToId.get(key);
+              if (stId) subtagIds.add(stId);
+            });
+
+            // Filter link IDs to only those with matching subtags
+            if (subtagIds.size > 0) {
+              const filteredLinks = (linksData || []).filter((link: any) =>
+                link.source_id === sourceId && link.subtag_id && subtagIds.has(link.subtag_id)
+              ).map((link: any) => link.id);
+              sourceFilterIds!.push(...filteredLinks);
+              return; // Skip adding all linkIds for this source
             }
           }
         }
@@ -863,7 +906,27 @@ export async function GET(
 
     const availableCountries = [...new Set(allCountriesData?.map((e: any) => e.country).filter(Boolean))].sort() as string[];
 
-    const availableSources = AVAILABLE_SOURCES as any;
+    // Build available sources with subtag data
+    const availableSources = AVAILABLE_SOURCES.map(src => {
+      const sourceId = sourceNameToId.get(src.name.toLowerCase());
+      const subtags = sourceId
+        ? (allSubtagsData || [])
+            .filter((st: any) => st.source_id === sourceId)
+            .map((st: any) => ({ id: st.id, name: st.name, slug: st.slug }))
+        : [];
+      return { ...src, subtags };
+    }) as any;
+
+    // Also add any dynamic sources (custom ones not in AVAILABLE_SOURCES)
+    const staticNames = new Set(AVAILABLE_SOURCES.map(s => s.name.toLowerCase()));
+    (allSourcesData || []).forEach((s: any) => {
+      if (!staticNames.has(s.name.toLowerCase())) {
+        const subtags = (allSubtagsData || [])
+          .filter((st: any) => st.source_id === s.id)
+          .map((st: any) => ({ id: st.id, name: st.name, slug: st.slug }));
+        availableSources.push({ name: s.name, value: s.slug, icon: 'Link2', subtags });
+      }
+    });
 
     const availableModels: AggregatedModelFilterOption[] = (modelsData || []).map(model => ({
       id: model.id,

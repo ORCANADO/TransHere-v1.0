@@ -6,7 +6,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
     Calendar,
@@ -27,9 +27,16 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { useAdminTheme } from '@/hooks/use-admin-theme';
 import type { DashboardFilters, TimePeriod } from '@/types/charts';
 
+interface SubtagOption {
+    id: string;
+    name: string;
+    slug: string;
+}
+
 interface SourceOption {
     name: string;
     icon: string;
+    subtags?: SubtagOption[];
 }
 
 interface DashboardFiltersBarProps {
@@ -142,15 +149,39 @@ export function DashboardFiltersBar({
         });
     };
 
+    // Helper to extract source name from either string or SourceFilter object
+    const getSourceName = (s: any): string => typeof s === 'string' ? s : s.source;
+    const getSourceSubtags = (s: any): string[] => typeof s === 'string' ? [] : (s.subtags || []);
+
     const handleSourceToggle = (sourceName: string) => {
         const currentSources = filters.sources || [];
-        const isSelected = currentSources.some(s => normalizeSourceName(s) === normalizeSourceName(sourceName));
+        const isSelected = currentSources.some(s => normalizeSourceName(getSourceName(s)) === normalizeSourceName(sourceName));
         onFiltersChange({
             sources: isSelected
-                ? currentSources.filter(s => normalizeSourceName(s) !== normalizeSourceName(sourceName))
-                : [...currentSources, sourceName]
+                ? currentSources.filter(s => normalizeSourceName(getSourceName(s)) !== normalizeSourceName(sourceName))
+                : [...currentSources, { source: sourceName, subtags: [] }]
         });
     };
+
+    const handleSubtagToggle = useCallback((sourceName: string, subtagName: string) => {
+        const currentSources = filters.sources || [];
+        const sourceIndex = currentSources.findIndex(s => normalizeSourceName(getSourceName(s)) === normalizeSourceName(sourceName));
+        if (sourceIndex === -1) return;
+
+        const sourceEntry = currentSources[sourceIndex];
+        const currentSubtags = getSourceSubtags(sourceEntry);
+        const hasSubtag = currentSubtags.includes(subtagName);
+
+        const updatedSources = [...currentSources];
+        updatedSources[sourceIndex] = {
+            source: sourceName,
+            subtags: hasSubtag
+                ? currentSubtags.filter((st: string) => st !== subtagName)
+                : [...currentSubtags, subtagName]
+        };
+
+        onFiltersChange({ sources: updatedSources });
+    }, [filters.sources, onFiltersChange]);
 
     const getCountriesDisplay = () => {
         const count = filters.countries?.length || 0;
@@ -159,8 +190,21 @@ export function DashboardFiltersBar({
 
     const getSourcesDisplay = () => {
         const count = filters.sources?.length || 0;
-        return count === 0 ? "All Sources" : `${count} ${count === 1 ? 'source' : 'sources'}`;
+        if (count === 0) return "All Sources";
+        // Count total subtags selected across all sources
+        const totalSubtags = (filters.sources || []).reduce((acc: number, s: any) => acc + (getSourceSubtags(s).length), 0);
+        if (totalSubtags > 0) return `${count} ${count === 1 ? 'source' : 'sources'} (${totalSubtags} subtag${totalSubtags === 1 ? '' : 's'})`;
+        return `${count} ${count === 1 ? 'source' : 'sources'}`;
     };
+
+    // Build subtags lookup from available sources
+    const availableSubtags = useMemo(() => {
+        const map: Record<string, SubtagOption[]> = {};
+        effectiveSources.forEach(s => {
+            map[s.name] = s.subtags || [];
+        });
+        return map;
+    }, [effectiveSources]);
 
     return (
         <div className={cn(
@@ -316,30 +360,63 @@ export function DashboardFiltersBar({
                         data-theme={isLightMode ? 'light' : 'dark'}
                     >
                         <div className={cn("flex items-center justify-between px-4 py-2 border-b border-[#555D50]/50 data-[theme=light]:border-[#CED9EF]/50")} data-theme={isLightMode ? 'light' : 'dark'}>
-                            <button onClick={() => onFiltersChange({ sources: effectiveSources.map(s => s.name) })} className="text-xs font-medium text-[#00FF85]">Select All</button>
+                            <button onClick={() => onFiltersChange({ sources: effectiveSources.map(s => ({ source: s.name, subtags: [] })) })} className="text-xs font-medium text-[#00FF85]">Select All</button>
                             <button onClick={() => onFiltersChange({ sources: [] })} className="text-xs font-medium text-[#9E9E9E] hover:text-[#E2DFD2] data-[theme=light]:text-[#6B6B7B] data-[theme=light]:hover:text-[#2E293A]">Clear</button>
                         </div>
                         <div className="py-1">
                             {effectiveSources.map((source) => {
-                                const isSelected = filters.sources?.some(s => normalizeSourceName(s) === normalizeSourceName(source.name));
+                                const isSelected = filters.sources?.some(s => normalizeSourceName(getSourceName(s)) === normalizeSourceName(source.name));
                                 const IconComponent = getIconComponent(source.icon);
+                                const sourceSubtags = availableSubtags[source.name] || [];
+                                const selectedSubtags = isSelected
+                                    ? getSourceSubtags(filters.sources?.find(s => normalizeSourceName(getSourceName(s)) === normalizeSourceName(source.name)))
+                                    : [];
                                 return (
-                                    <button
-                                        key={source.name}
-                                        onClick={() => handleSourceToggle(source.name)}
-                                        className={cn(
-                                            "w-full flex items-center justify-between px-4 py-3 text-sm text-left transition-colors",
-                                            "text-[#E2DFD2] data-[theme=light]:text-[#2E293A]",
-                                            isSelected ? "bg-[#5B4965]/50 data-[theme=light]:bg-[#CED9EF]/50" : "hover:bg-[#5B4965]/30 data-[theme=light]:hover:bg-[#EFC8DF]/30"
+                                    <div key={source.name}>
+                                        <button
+                                            onClick={() => handleSourceToggle(source.name)}
+                                            className={cn(
+                                                "w-full flex items-center justify-between px-4 py-3 text-sm text-left transition-colors",
+                                                "text-[#E2DFD2] data-[theme=light]:text-[#2E293A]",
+                                                isSelected ? "bg-[#5B4965]/50 data-[theme=light]:bg-[#CED9EF]/50" : "hover:bg-[#5B4965]/30 data-[theme=light]:hover:bg-[#EFC8DF]/30"
+                                            )}
+                                            data-theme={isLightMode ? 'light' : 'dark'}
+                                        >
+                                            <span className="flex items-center gap-3">
+                                                <IconComponent className="w-4 h-4 text-[#9E9E9E] data-[theme=light]:text-[#6B6B7B]" />
+                                                {source.name}
+                                            </span>
+                                            {isSelected && <Check className="w-4 h-4 text-[#00FF85]" />}
+                                        </button>
+                                        {/* Subtag toggles under selected source */}
+                                        {isSelected && sourceSubtags.length > 0 && (
+                                            <div className="ml-8 py-1 space-y-0.5">
+                                                {sourceSubtags.map(subtag => {
+                                                    const isSubtagSelected = selectedSubtags.includes(subtag.name);
+                                                    return (
+                                                        <button
+                                                            key={subtag.id}
+                                                            onClick={() => handleSubtagToggle(source.name, subtag.name)}
+                                                            className={cn(
+                                                                "w-full flex items-center justify-between px-3 py-2 text-xs text-left rounded-lg transition-colors",
+                                                                "text-[#9E9E9E] data-[theme=light]:text-[#6B6B7B]",
+                                                                isSubtagSelected
+                                                                    ? "bg-[#7A27FF]/20 text-[#C4A0FF] data-[theme=light]:bg-[#EFC8DF]/40 data-[theme=light]:text-[#7A27FF]"
+                                                                    : "hover:bg-[#5B4965]/20 data-[theme=light]:hover:bg-[#EFC8DF]/20"
+                                                            )}
+                                                            data-theme={isLightMode ? 'light' : 'dark'}
+                                                        >
+                                                            <span className="flex items-center gap-2">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-[#7A27FF]" />
+                                                                {subtag.name}
+                                                            </span>
+                                                            {isSubtagSelected && <Check className="w-3 h-3 text-[#7A27FF]" />}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
                                         )}
-                                        data-theme={isLightMode ? 'light' : 'dark'}
-                                    >
-                                        <span className="flex items-center gap-3">
-                                            <IconComponent className="w-4 h-4 text-[#9E9E9E] data-[theme=light]:text-[#6B6B7B]" />
-                                            {source.name}
-                                        </span>
-                                        {isSelected && <Check className="w-4 h-4 text-[#00FF85]" />}
-                                    </button>
+                                    </div>
                                 );
                             })}
                         </div>
