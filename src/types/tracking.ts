@@ -150,3 +150,24 @@ export interface TrackingLinkClick {
   country?: string;
   city?: string;
 }
+
+/**
+ * Per-tracking-link daily analytics
+ */
+export interface TrackingLinkDailyStats {
+  date: string;
+  clicks: number;
+  views: number;
+}
+
+export interface TrackingLinkAnalyticsSummary {
+  totalClicks: number;
+  totalViews: number;
+  avgClicksPerDay: number;
+  daysInRange: number;
+}
+
+export interface TrackingLinkAnalyticsResponse {
+  daily: TrackingLinkDailyStats[];
+  summary: TrackingLinkAnalyticsSummary;
+}

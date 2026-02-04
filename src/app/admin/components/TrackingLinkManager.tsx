@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
     X,
@@ -11,8 +11,11 @@ import {
     ExternalLink,
     Check,
     Loader2,
-    Link2
+    Link2,
+    BarChart3,
+    ChevronUp
 } from 'lucide-react';
+import { TrackingLinkAnalyticsPanel } from '@/components/admin/tracking-link-analytics-panel';
 import { cn } from '@/lib/utils';
 import { useAdminTheme } from '@/hooks/use-admin-theme';
 import { useMaterialFlux } from '@/hooks/use-material-flux';
@@ -70,6 +73,7 @@ export function TrackingLinkManager({
     const [editingLink, setEditingLink] = useState<TrackingLinkWithDetails | null>(null);
     const [showCustomSourceInput, setShowCustomSourceInput] = useState(false);
     const [showCustomSubtagInput, setShowCustomSubtagInput] = useState(false);
+    const [expandedLinkId, setExpandedLinkId] = useState<string | null>(null);
     const [formState, setFormState] = useState<FormState>(initialFormState);
 
     // Theme & effects - must be called before any conditional returns (Rules of Hooks)
@@ -470,79 +474,107 @@ export function TrackingLinkManager({
                                         </thead>
                                         <tbody className="divide-y divide-[#555D50]/20 data-[theme=light]:divide-[#CED9EF]/20" data-theme={isLightMode ? 'light' : 'dark'}>
                                             {links.map((link) => (
-                                                <tr
-                                                    key={link.id}
-                                                    className={cn(
-                                                        "transition-colors duration-150",
-                                                        "hover:bg-[#5B4965]/10",
-                                                        "data-[theme=light]:hover:bg-[#EFC8DF]/10"
+                                                <React.Fragment key={link.id}>
+                                                    <tr
+                                                        className={cn(
+                                                            "transition-colors duration-150",
+                                                            expandedLinkId === link.id
+                                                                ? "bg-[#5B4965]/15 data-[theme=light]:bg-[#EFC8DF]/15"
+                                                                : "hover:bg-[#5B4965]/10 data-[theme=light]:hover:bg-[#EFC8DF]/10"
+                                                        )}
+                                                        data-theme={isLightMode ? 'light' : 'dark'}
+                                                    >
+                                                        <td className="px-4 py-4">
+                                                            <code className="text-[#60A5FA] text-xs font-mono font-bold bg-[#60A5FA]/10 px-1.5 py-0.5 rounded">
+                                                                {link.slug}
+                                                            </code>
+                                                        </td>
+                                                        <td className={cn(
+                                                            "px-4 py-4 text-sm font-medium",
+                                                            "text-[#E2DFD2]",
+                                                            "data-[theme=light]:text-[#2E293A]"
+                                                        )} data-theme={isLightMode ? 'light' : 'dark'}>
+                                                            {link.source_name || '—'}
+                                                        </td>
+                                                        <td className={cn(
+                                                            "px-4 py-4 text-sm",
+                                                            "text-[#9E9E9E]",
+                                                            "data-[theme=light]:text-[#6B6B7B]"
+                                                        )} data-theme={isLightMode ? 'light' : 'dark'}>
+                                                            {link.subtag_name || '—'}
+                                                        </td>
+                                                        <td className="px-4 py-4">
+                                                            <span className="text-[#00FF85] font-bold tabular-nums">
+                                                                {link.click_count.toLocaleString()}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-4">
+                                                            <div className="flex items-center gap-1">
+                                                                <button
+                                                                    onClick={() => setExpandedLinkId(expandedLinkId === link.id ? null : link.id)}
+                                                                    className={cn(
+                                                                        "p-2 rounded-lg transition-all",
+                                                                        expandedLinkId === link.id
+                                                                            ? "bg-[#7A27FF]/20 text-[#C4A0FF]"
+                                                                            : "text-[#9E9E9E] hover:text-[#C4A0FF] hover:bg-[#7A27FF]/10 data-[theme=light]:text-[#6B6B7B] data-[theme=light]:hover:text-[#7A27FF] data-[theme=light]:hover:bg-[#7A27FF]/10"
+                                                                    )}
+                                                                    data-theme={isLightMode ? 'light' : 'dark'}
+                                                                    title="Analytics"
+                                                                >
+                                                                    {expandedLinkId === link.id ? <ChevronUp className="w-4 h-4" /> : <BarChart3 className="w-4 h-4" />}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => copyToClipboard(link)}
+                                                                    className={cn(
+                                                                        "p-2 rounded-lg transition-all",
+                                                                        copiedId === link.id
+                                                                            ? "bg-[#00FF85]/20 text-[#00FF85]"
+                                                                            : "text-[#9E9E9E] hover:text-[#E2DFD2] hover:bg-[#5B4965]/30 data-[theme=light]:text-[#6B6B7B] data-[theme=light]:hover:text-[#2E293A] data-[theme=light]:hover:bg-[#EFC8DF]/30"
+                                                                    )}
+                                                                    data-theme={isLightMode ? 'light' : 'dark'}
+                                                                    title="Copy Link"
+                                                                >
+                                                                    {copiedId === link.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => startEdit(link)}
+                                                                    className={cn(
+                                                                        "p-2 rounded-lg transition-all",
+                                                                        "text-[#9E9E9E] hover:text-[#60A5FA] hover:bg-[#60A5FA]/10",
+                                                                        "data-[theme=light]:text-[#6B6B7B] data-[theme=light]:hover:text-[#2E293A] data-[theme=light]:hover:bg-[#CED9EF]/30"
+                                                                    )}
+                                                                    data-theme={isLightMode ? 'light' : 'dark'}
+                                                                    title="Edit"
+                                                                >
+                                                                    <Pencil className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleArchive(link.id)}
+                                                                    className={cn(
+                                                                        "p-2 rounded-lg transition-all",
+                                                                        "text-[#9E9E9E] hover:text-red-400 hover:bg-red-400/10"
+                                                                    )}
+                                                                    title="Delete"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    {expandedLinkId === link.id && (
+                                                        <tr>
+                                                            <td colSpan={5} className="p-0">
+                                                                <TrackingLinkAnalyticsPanel
+                                                                    linkId={link.id}
+                                                                    linkSlug={link.slug}
+                                                                    adminKey={adminKey}
+                                                                    isLightMode={isLightMode}
+                                                                    onCollapse={() => setExpandedLinkId(null)}
+                                                                />
+                                                            </td>
+                                                        </tr>
                                                     )}
-                                                    data-theme={isLightMode ? 'light' : 'dark'}
-                                                >
-                                                    <td className="px-4 py-4">
-                                                        <code className="text-[#60A5FA] text-xs font-mono font-bold bg-[#60A5FA]/10 px-1.5 py-0.5 rounded">
-                                                            {link.slug}
-                                                        </code>
-                                                    </td>
-                                                    <td className={cn(
-                                                        "px-4 py-4 text-sm font-medium",
-                                                        "text-[#E2DFD2]",
-                                                        "data-[theme=light]:text-[#2E293A]"
-                                                    )} data-theme={isLightMode ? 'light' : 'dark'}>
-                                                        {link.source_name || '—'}
-                                                    </td>
-                                                    <td className={cn(
-                                                        "px-4 py-4 text-sm",
-                                                        "text-[#9E9E9E]",
-                                                        "data-[theme=light]:text-[#6B6B7B]"
-                                                    )} data-theme={isLightMode ? 'light' : 'dark'}>
-                                                        {link.subtag_name || '—'}
-                                                    </td>
-                                                    <td className="px-4 py-4">
-                                                        <span className="text-[#00FF85] font-bold tabular-nums">
-                                                            {link.click_count.toLocaleString()}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-4">
-                                                        <div className="flex items-center gap-1">
-                                                            <button
-                                                                onClick={() => copyToClipboard(link)}
-                                                                className={cn(
-                                                                    "p-2 rounded-lg transition-all",
-                                                                    copiedId === link.id
-                                                                        ? "bg-[#00FF85]/20 text-[#00FF85]"
-                                                                        : "text-[#9E9E9E] hover:text-[#E2DFD2] hover:bg-[#5B4965]/30 data-[theme=light]:text-[#6B6B7B] data-[theme=light]:hover:text-[#2E293A] data-[theme=light]:hover:bg-[#EFC8DF]/30"
-                                                                )}
-                                                                data-theme={isLightMode ? 'light' : 'dark'}
-                                                                title="Copy Link"
-                                                            >
-                                                                {copiedId === link.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                                                            </button>
-                                                            <button
-                                                                onClick={() => startEdit(link)}
-                                                                className={cn(
-                                                                    "p-2 rounded-lg transition-all",
-                                                                    "text-[#9E9E9E] hover:text-[#60A5FA] hover:bg-[#60A5FA]/10",
-                                                                    "data-[theme=light]:text-[#6B6B7B] data-[theme=light]:hover:text-[#2E293A] data-[theme=light]:hover:bg-[#CED9EF]/30"
-                                                                )}
-                                                                data-theme={isLightMode ? 'light' : 'dark'}
-                                                                title="Edit"
-                                                            >
-                                                                <Pencil className="w-4 h-4" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleArchive(link.id)}
-                                                                className={cn(
-                                                                    "p-2 rounded-lg transition-all",
-                                                                    "text-[#9E9E9E] hover:text-red-400 hover:bg-red-400/10"
-                                                                )}
-                                                                title="Delete"
-                                                            >
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
+                                                </React.Fragment>
                                             ))}
                                         </tbody>
                                     </table>
