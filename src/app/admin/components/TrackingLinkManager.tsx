@@ -72,6 +72,10 @@ export function TrackingLinkManager({
     const [showCustomSubtagInput, setShowCustomSubtagInput] = useState(false);
     const [formState, setFormState] = useState<FormState>(initialFormState);
 
+    // Theme & effects - must be called before any conditional returns (Rules of Hooks)
+    const { isLightMode } = useAdminTheme();
+    const fluxRef = useMaterialFlux<HTMLDivElement>();
+
     // Base URL for tracking links
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://transhere.vip';
 
@@ -323,11 +327,6 @@ export function TrackingLinkManager({
         });
         setViewMode('edit');
     };
-
-    if (!isOpen) return null;
-
-    const { isLightMode } = useAdminTheme();
-    const fluxRef = useMaterialFlux<HTMLDivElement>();
 
     if (!isOpen) return null;
 

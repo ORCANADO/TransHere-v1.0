@@ -21,7 +21,11 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const ADMIN_KEY = process.env.ADMIN_KEY;
+// Accept both ADMIN_KEY and ADMIN_SECRET_KEY for consistency with checkAdminPermission
+const ADMIN_KEYS = [
+  process.env.ADMIN_KEY,
+  process.env.ADMIN_SECRET_KEY
+].filter(Boolean) as string[];
 
 // Static available sources for filter dropdown
 const AVAILABLE_SOURCES: SourceOption[] = [
@@ -37,7 +41,8 @@ const AVAILABLE_SOURCES: SourceOption[] = [
 function verifyAdmin(request: NextRequest): boolean {
   const url = new URL(request.url);
   const key = url.searchParams.get('key');
-  return key === ADMIN_KEY;
+  if (!key) return false;
+  return ADMIN_KEYS.includes(key);
 }
 
 // Parse query parameters and calculate date ranges

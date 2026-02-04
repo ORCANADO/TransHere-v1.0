@@ -3,7 +3,11 @@ import { NextResponse } from 'next/server';
 
 export const runtime = 'edge';
 
-const ADMIN_KEY = process.env.ADMIN_KEY;
+// Accept both ADMIN_KEY and ADMIN_SECRET_KEY for consistency
+const ADMIN_KEYS = [
+    process.env.ADMIN_KEY,
+    process.env.ADMIN_SECRET_KEY
+].filter(Boolean) as string[];
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -12,7 +16,7 @@ export async function GET(request: Request) {
     let seconds = parseInt(searchParams.get('seconds') || '60', 10);
     if (isNaN(seconds) || seconds < 10) seconds = 60;
 
-    if (!key || key !== ADMIN_KEY) {
+    if (!key || !ADMIN_KEYS.includes(key)) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

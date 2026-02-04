@@ -9,12 +9,15 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const ADMIN_KEY = process.env.ADMIN_KEY;
+const ADMIN_KEYS = [
+    process.env.ADMIN_KEY,
+    process.env.ADMIN_SECRET_KEY
+].filter(Boolean) as string[];
 
 function verifyAdmin(request: NextRequest): boolean {
     const url = new URL(request.url);
     const key = url.searchParams.get('key');
-    return key === ADMIN_KEY;
+    return !!key && ADMIN_KEYS.includes(key);
 }
 
 interface RouteParams {

@@ -4,7 +4,10 @@ import { NextResponse } from "next/server";
 
 export const runtime = "edge";
 
-const ADMIN_KEY = process.env.ADMIN_KEY;
+const ADMIN_KEYS = [
+  process.env.ADMIN_KEY,
+  process.env.ADMIN_SECRET_KEY
+].filter(Boolean) as string[];
 
 // Initialize S3Client for Cloudflare R2 (only for presigned URLs)
 function getS3Client() {
@@ -31,7 +34,7 @@ export async function POST(request: Request) {
     const { searchParams } = new URL(request.url);
     const key = searchParams.get("key");
 
-    if (!key || key !== ADMIN_KEY) {
+    if (!key || !ADMIN_KEYS.includes(key)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

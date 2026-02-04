@@ -4,8 +4,11 @@ import { NextResponse } from 'next/server';
 // ✅ CRITICAL: This tells Cloudflare to run this on the Edge
 export const runtime = 'edge';
 
-// Admin key for authentication (matches frontend)
-const ADMIN_KEY = process.env.ADMIN_KEY;
+// Admin keys for authentication (accepts both ADMIN_KEY and ADMIN_SECRET_KEY)
+const ADMIN_KEYS = [
+  process.env.ADMIN_KEY,
+  process.env.ADMIN_SECRET_KEY
+].filter(Boolean) as string[];
 
 // Max retries for database insertions
 const MAX_RETRIES = 3;
@@ -151,7 +154,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const key = searchParams.get('key');
 
-    if (!key || key !== ADMIN_KEY) {
+    if (!key || !ADMIN_KEYS.includes(key)) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
