@@ -200,6 +200,7 @@ Phase 6.21  → Mobile Gallery Rendering Fix (Flex-Shrink Implementation)
 Phase 6.22  → Admin Brand Purge & Liquid Glass Sync
 Phase 7.0   → Lighthouse Performance Optimization (Model Profile: 71→89, Home: 53→94)
 Phase 7.1   → Subtag Management, Auth Unification & Per-Link Analytics
+Phase 7.2   → Tracking Link UX (Preview URL Button & Delete Confirmation)
 ```
 
 ### Active Constraints

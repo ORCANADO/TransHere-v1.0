@@ -203,6 +203,9 @@ Do not use `useRouter().push` for external links.
         - Each tracking link row has an expand button (BarChart3 icon) that opens an inline `TrackingLinkAnalyticsPanel`.
         - Panel includes: period buttons (7d/30d/90d/All), custom DatePicker range, summary cards (Total Clicks, Total Views, Avg/Day), and recharts AreaChart.
         - API: `/api/admin/tracking-links/[linkId]/analytics` queries `analytics_daily_stats` by `traffic_source = linkId`, falls back to `analytics_events`.
+    - **Action Buttons (per row):** Analytics (BarChart3), Copy Link (Copy), Edit (Pencil), Open Preview URL (ExternalLink, conditional on `preview_url`), Delete (Trash2).
+    - **Preview URL Button:** Only rendered when `link.preview_url` exists. Opens the original post URL in a new browser tab via `window.open`.
+    - **Delete Confirmation:** Delete button triggers an inline "Delete this link?" confirmation with Yes/Cancel buttons instead of deleting immediately.
 
 ### 2.13 Stories Logic
 - Story Viewer must use `nuqs` for state management (`?story=ID&si=INDEX`) to ensure shareability and resume playback.

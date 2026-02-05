@@ -4,6 +4,28 @@
 
 ---
 
+## [2026-02-05] - Phase 7.2: Tracking Link UX — Preview URL Button & Delete Confirmation
+**Status:** Complete
+
+### Preview URL Button:
+- [x] **New Action Button:** Added `ExternalLink` icon button to the actions column in `TrackingLinkManager`, positioned between Edit and Delete.
+- [x] **Conditional Rendering:** Button only appears when `link.preview_url` is set (not null/empty).
+- [x] **Behavior:** Opens the preview URL in a new browser tab via `window.open(url, '_blank')`.
+- [x] **Styling:** Green hover state (`#00FF85`) matching Electric Emerald accent, with light mode support.
+
+### Delete Confirmation:
+- [x] **Inline Confirmation:** Delete (Trash2) button no longer calls `handleArchive` directly. Instead sets `confirmDeleteId` state.
+- [x] **Confirmation UI:** When triggered, the action buttons are replaced with "Delete this link?" text + "Yes" (red) and "Cancel" (neutral) buttons.
+- [x] **Cancel:** Resets `confirmDeleteId` to null, restoring normal action buttons.
+- [x] **Confirm:** Calls `handleArchive(linkId)` and resets state.
+
+### Files Modified
+| File | Change |
+|------|--------|
+| `src/app/admin/components/TrackingLinkManager.tsx` | Added `confirmDeleteId` state, preview URL button, inline delete confirmation |
+
+---
+
 ## [2026-02-04] - Phase 7.1: Subtag Management, Auth Unification & Per-Link Analytics
 **Status:** Complete
 
