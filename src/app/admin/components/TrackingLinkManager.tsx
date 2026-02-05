@@ -74,6 +74,7 @@ export function TrackingLinkManager({
     const [showCustomSourceInput, setShowCustomSourceInput] = useState(false);
     const [showCustomSubtagInput, setShowCustomSubtagInput] = useState(false);
     const [expandedLinkId, setExpandedLinkId] = useState<string | null>(null);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const [formState, setFormState] = useState<FormState>(initialFormState);
 
     // Theme & effects - must be called before any conditional returns (Rules of Hooks)
@@ -509,6 +510,28 @@ export function TrackingLinkManager({
                                                             </span>
                                                         </td>
                                                         <td className="px-4 py-4">
+                                                            {confirmDeleteId === link.id ? (
+                                                                <div className="flex items-center gap-2 text-xs">
+                                                                    <span className="text-red-400 whitespace-nowrap">Delete this link?</span>
+                                                                    <button
+                                                                        onClick={() => { handleArchive(link.id); setConfirmDeleteId(null); }}
+                                                                        className="px-2 py-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors whitespace-nowrap"
+                                                                    >
+                                                                        Yes
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => setConfirmDeleteId(null)}
+                                                                        className={cn(
+                                                                            "px-2 py-1 rounded transition-colors whitespace-nowrap",
+                                                                            "bg-[#5B4965]/30 text-[#9E9E9E] hover:bg-[#5B4965]/50",
+                                                                            "data-[theme=light]:bg-[#CED9EF]/30 data-[theme=light]:text-[#6B6B7B] data-[theme=light]:hover:bg-[#CED9EF]/50"
+                                                                        )}
+                                                                        data-theme={isLightMode ? 'light' : 'dark'}
+                                                                    >
+                                                                        Cancel
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
                                                             <div className="flex items-center gap-1">
                                                                 <button
                                                                     onClick={() => setExpandedLinkId(expandedLinkId === link.id ? null : link.id)}
@@ -548,8 +571,22 @@ export function TrackingLinkManager({
                                                                 >
                                                                     <Pencil className="w-4 h-4" />
                                                                 </button>
+                                                                {link.preview_url && (
+                                                                    <button
+                                                                        onClick={() => window.open(link.preview_url!, '_blank')}
+                                                                        className={cn(
+                                                                            "p-2 rounded-lg transition-all",
+                                                                            "text-[#9E9E9E] hover:text-[#00FF85] hover:bg-[#00FF85]/10",
+                                                                            "data-[theme=light]:text-[#6B6B7B] data-[theme=light]:hover:text-[#2E293A] data-[theme=light]:hover:bg-[#CED9EF]/30"
+                                                                        )}
+                                                                        data-theme={isLightMode ? 'light' : 'dark'}
+                                                                        title="Open Preview URL"
+                                                                    >
+                                                                        <ExternalLink className="w-4 h-4" />
+                                                                    </button>
+                                                                )}
                                                                 <button
-                                                                    onClick={() => handleArchive(link.id)}
+                                                                    onClick={() => setConfirmDeleteId(link.id)}
                                                                     className={cn(
                                                                         "p-2 rounded-lg transition-all",
                                                                         "text-[#9E9E9E] hover:text-red-400 hover:bg-red-400/10"
@@ -559,6 +596,7 @@ export function TrackingLinkManager({
                                                                     <Trash2 className="w-4 h-4" />
                                                                 </button>
                                                             </div>
+                                                            )}
                                                         </td>
                                                     </tr>
                                                     {expandedLinkId === link.id && (
