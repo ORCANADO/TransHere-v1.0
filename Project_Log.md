@@ -4,6 +4,50 @@
 
 ---
 
+## [2026-02-04] - Phase 7.1: Subtag Management, Auth Unification & Per-Link Analytics
+**Status:** Complete
+
+### Subtag Creation & Filtering:
+- [x] **Subtag Creation UI:** Added inline subtag creation to admin `TrackingLinkManager` — "+ Add New" button, text input, Add/Cancel controls calling `handleCreateSubtag()`.
+- [x] **Dashboard Subtag Filtering:** Updated `DashboardFiltersBar` with `SubtagOption` interface, subtag toggles under each source, and `SourceFilter` objects (`{ source, subtags }`).
+- [x] **Analytics Dashboard Integration:** Updated `analytics-dashboard.tsx` to pass subtag data to admin filters.
+- [x] **Dashboard API Subtag Support:** Updated `/api/admin/dashboard` to parse subtag filters, fetch `tracking_subtags`, resolve subtag-specific link IDs, and return subtag data with `availableSources`.
+
+### Auth Unification (6 Routes):
+- [x] **Dual Key Support:** Changed 6 API routes from single `ADMIN_KEY` check to `ADMIN_KEYS` array accepting both `ADMIN_KEY` and `ADMIN_SECRET_KEY` env vars.
+- [x] **Routes Fixed:** `/api/admin/dashboard`, `/api/admin/live-pulse`, `/api/admin/tracking-sources/[sourceId]`, `/api/analytics`, `/api/upload`, `/api/upload/proxy`.
+
+### React Hooks Fix:
+- [x] **Hooks Ordering:** Moved `useAdminTheme()` and `useMaterialFlux()` above conditional `if (!isOpen) return null` in `TrackingLinkManager` to fix "Rendered fewer hooks than expected" runtime error.
+
+### Per-Tracking-Link Analytics:
+- [x] **New API:** Created `/api/admin/tracking-links/[linkId]/analytics` — Edge-compatible endpoint querying `analytics_daily_stats` by `traffic_source = linkId` with date range, fallback to `analytics_events`.
+- [x] **New Component:** Created `TrackingLinkAnalyticsPanel` — inline panel with period buttons (7d/30d/90d/All), custom DatePicker range, 3 summary stat cards, recharts AreaChart with gradient fills.
+- [x] **Integration:** Added expand button (BarChart3/ChevronUp toggle) to each tracking link row in `TrackingLinkManager`, using `React.Fragment` pattern for dual-row rendering.
+- [x] **Types:** Added `TrackingLinkDailyStats`, `TrackingLinkAnalyticsSummary`, `TrackingLinkAnalyticsResponse` to `src/types/tracking.ts`.
+
+### Files Created
+| File | Purpose |
+|------|---------|
+| `src/app/api/admin/tracking-links/[linkId]/analytics/route.ts` | Per-link daily analytics API |
+| `src/components/admin/tracking-link-analytics-panel.tsx` | Inline analytics panel with chart |
+
+### Files Modified
+| File | Change |
+|------|--------|
+| `src/app/admin/components/TrackingLinkManager.tsx` | Subtag UI, hooks fix, expand button + analytics panel |
+| `src/components/admin/dashboard-filters-bar.tsx` | Subtag filtering support |
+| `src/components/admin/analytics-dashboard.tsx` | Pass subtags to admin filters |
+| `src/app/api/admin/dashboard/route.ts` | Subtag filter parsing, auth unification |
+| `src/app/api/admin/live-pulse/route.ts` | Auth unification |
+| `src/app/api/admin/tracking-sources/[sourceId]/route.ts` | Auth unification |
+| `src/app/api/analytics/route.ts` | Auth unification |
+| `src/app/api/upload/route.ts` | Auth unification |
+| `src/app/api/upload/proxy/route.ts` | Auth unification |
+| `src/types/tracking.ts` | Analytics response types |
+
+---
+
 ## [2026-02-02] - Phase 7.0: Lighthouse Performance Optimization
 **Status:** Complete
 

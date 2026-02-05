@@ -176,6 +176,7 @@ Do not use `useRouter().push` for external links.
         - **Dashboard Synchronization:** Derive ALL breakdowns (Sources, Countries, Models) from the exact same filtered dataset in a single-pass aggregation in the API. NEVER perform independent summary queries that could lead to data drift or mismatched totals.
         - **Bucket Consistency:** When querying time-bucketed data (Materialized Views), truncate filter start times to the bucket boundary (e.g., set minutes to 0 for hourly views) to prevent data loss.
         - **Real-Time Pulse:** Use `/api/admin/live-pulse` for raw session counts (60s window). This query MUST include `.lte(now())` to exclude future-dated mock data.
+        - **Auth Unification:** ALL admin API routes MUST accept both `ADMIN_KEY` and `ADMIN_SECRET_KEY` env vars using `ADMIN_KEYS` array pattern: `const ADMIN_KEYS = [process.env.ADMIN_KEY, process.env.ADMIN_SECRET_KEY].filter(Boolean)`.
         - **Analytics Mapping:** When filtering by source name, the API must map human-readable names (e.g., "Instagram") to their underlying tracking link UUIDs using a `sourceMap`.
         - **Debug Bypass:** Telemetry ingestion respects `?th_debug=human` parameter if `ALLOW_DEBUG_TRACKING=true`. This bypasses BOT DETECTION and ensures events are recorded from developer browsers.
         - **Parameter Robustness:** API routes must support both singular and plural parameter names for filters (e.g., `country` and `countries`) to accommodate different frontend calling patterns.
@@ -194,6 +195,14 @@ Do not use `useRouter().push` for external links.
         - `/api/admin/tracking-links`: Fetch/Create links for a model.
         - `/api/admin/tracking-sources`: Manage traffic sources (global and custom).
     - **Hydration:** Admin components must handle hydration carefully using `mounted` state checks.
+    - **Subtag Management:**
+        - Subtags can be created inline from `TrackingLinkManager` via "+ Add New" button and text input.
+        - Admin dashboard `DashboardFiltersBar` supports subtag filtering under each source toggle.
+        - Source filters use `SourceFilter` objects: `{ source: string; subtags: string[] }`.
+    - **Per-Link Analytics:**
+        - Each tracking link row has an expand button (BarChart3 icon) that opens an inline `TrackingLinkAnalyticsPanel`.
+        - Panel includes: period buttons (7d/30d/90d/All), custom DatePicker range, summary cards (Total Clicks, Total Views, Avg/Day), and recharts AreaChart.
+        - API: `/api/admin/tracking-links/[linkId]/analytics` queries `analytics_daily_stats` by `traffic_source = linkId`, falls back to `analytics_events`.
 
 ### 2.13 Stories Logic
 - Story Viewer must use `nuqs` for state management (`?story=ID&si=INDEX`) to ensure shareability and resume playback.
@@ -319,6 +328,7 @@ Do not use `useRouter().push` for external links.
     - Cards MUST use `liquid-glass-elevated` or equivalent overrides in light mode.
     - Text MUST prioritize accessibility with dark primary/secondary contrast ratios.
 - **Persistence:** Always use `useAdminTheme` hook in the main layout to ensure theme state is synchronized with `localStorage`.
+- **React Hooks Ordering:** In portal/modal components like `TrackingLinkManager`, ALL hooks (`useAdminTheme`, `useMaterialFlux`, etc.) MUST be called BEFORE any conditional `return null` guards. Violating this causes "Rendered fewer hooks than expected" errors.
 - **Date Handling:**
     - ALWAYS use local date parsing (`new Date(year, month - 1, day)`) for UI display labels to prevent "one-day-off" UTC bugs.
     - Standardize all database/API communications to YYYY-MM-DD (ISO strings) in UTC where possible, but convert to local on the client.

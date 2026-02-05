@@ -37,7 +37,10 @@ version_1.0/
 │   │   │   │   └── live-pulse/     # Real-time event inspector
 │   │   ├── api/                    # API routes
 │   │   │   ├── admin/
-│   │   │   │   └── live-pulse/     # Real-time session counter API
+│   │   │   │   ├── live-pulse/     # Real-time session counter API
+│   │   │   │   └── tracking-links/
+│   │   │   │       └── [linkId]/
+│   │   │   │           └── analytics/  # Per-link daily analytics API
 │   │   ├── go/                     # Tracking redirects
 │   │   ├── model/                  # Model profile pages
 │   │   ├── org/                    # Organization dashboard
@@ -46,7 +49,8 @@ version_1.0/
 │   │   └── page.tsx                # Home page
 │   ├── components/                 # React components
 │   │   ├── admin/                  # Admin components
-│   │   │   └── live-pulse-indicator.tsx # Real-time session UI
+│   │   │   ├── live-pulse-indicator.tsx # Real-time session UI
+│   │   │   └── tracking-link-analytics-panel.tsx # Per-link analytics panel
 │   │   ├── features/               # Feature components
 │   │   ├── layout/                 # Layout components
 │   │   ├── org/                    # Org dashboard components
@@ -103,6 +107,7 @@ version_1.0/
 4. **Debug Bypass:** Secure human-simulation via `?th_debug=human` (bypasses bot detection for verification).
 5. **Stories:** 7-day decay filter, chain snapshot navigation, story-level view tracking
 6. **Visual Memory:** localStorage-based viewed state with cross-tab sync via custom events
+7. **Per-Link Analytics:** TrackingLinkManager expand → `/api/admin/tracking-links/[linkId]/analytics` → `analytics_daily_stats` by traffic_source → recharts AreaChart
 
 ### Authentication Boundaries
 - **Public:** No auth required for model/story viewing
@@ -194,6 +199,7 @@ Phase 6.20  → Safari Popup Blocker Fix (Direct Link Protocol)
 Phase 6.21  → Mobile Gallery Rendering Fix (Flex-Shrink Implementation)
 Phase 6.22  → Admin Brand Purge & Liquid Glass Sync
 Phase 7.0   → Lighthouse Performance Optimization (Model Profile: 71→89, Home: 53→94)
+Phase 7.1   → Subtag Management, Auth Unification & Per-Link Analytics
 ```
 
 ### Active Constraints
