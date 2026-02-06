@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     return {
         title: `${profile.name} | Social Hub`,
-        description: 'Exclusive Content & Verified Links. Age-restricted content.',
+        description: 'View exclusive content from verified creators.',
         robots: {
             index: false,
             follow: false,

@@ -4,6 +4,32 @@
 
 ---
 
+## [2026-02-05] - Phase 7.3: Reddit Compliance — OG Tags, Bot Detection & Content Filter Safety
+**Status:** Complete
+
+### Model Profile OG Metadata:
+- [x] **`generateMetadata()` Export:** Added full Open Graph + Twitter Card metadata to `src/app/model/[slug]/page.tsx`.
+- [x] **Dynamic Tags:** Title (`model.name | TransHere`), description (first 160 chars of bio), profile image with width/height.
+- [x] **Twitter Card:** `summary_large_image` for rich previews on Reddit and other platforms.
+- [x] **Fallback:** Returns `'Profile Not Found'` title for invalid slugs.
+
+### Reddit Bot Detection:
+- [x] **Crawler Patterns:** Added `redditbot` and `redditmedia` to social media crawler regex in `src/lib/bot-detection.ts`.
+- [x] **Analytics Accuracy:** Reddit crawler traffic now excluded from human view counts.
+
+### Bridge Page Content Filter Safety:
+- [x] **OG Description:** Changed from `'Exclusive Content & Verified Links. Age-restricted content.'` to `'View exclusive content from verified creators.'` in `src/app/[slug]/page.tsx`.
+- [x] **Rationale:** "Age-restricted" wording could trigger Reddit's content filters if bridge URL is shared.
+
+### Files Modified
+| File | Change |
+|------|--------|
+| `src/app/model/[slug]/page.tsx` | Added `generateMetadata()` with OG + Twitter Card tags |
+| `src/lib/bot-detection.ts` | Added `redditbot`, `redditmedia` to crawler patterns |
+| `src/app/[slug]/page.tsx` | Removed "age-restricted" from OG description |
+
+---
+
 ## [2026-02-05] - Phase 7.2: Tracking Link UX — Preview URL Button & Delete Confirmation
 **Status:** Complete
 

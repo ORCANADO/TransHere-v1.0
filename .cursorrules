@@ -157,6 +157,11 @@ Do not use `useRouter().push` for external links.
   - Static UI text MUST be added to `DICTIONARY` in `i18n.ts`.
 - Database content (Models) should support optional `_es` columns for key text fields (Bio), falling back to English if null.
 - **API Limits & Scaling:** Supabase PostgREST has a 1000 row default limit. 
+- **Reddit Compliance Protocol:**
+    - **Model Profile OG Tags:** `src/app/model/[slug]/page.tsx` MUST export `generateMetadata()` with Open Graph (`og:title`, `og:description`, `og:image` with width/height) and Twitter Card (`summary_large_image`) tags for Reddit/social preview cards.
+    - **Bot Detection:** `src/lib/bot-detection.ts` MUST include `redditbot` and `redditmedia` in the social media crawler patterns to prevent false human analytics.
+    - **Bridge Page Safety:** OG descriptions on `src/app/[slug]/page.tsx` MUST NOT contain "age-restricted" or similar wording that triggers Reddit content filters.
+    - **Tracking Link Flow:** `/go/[slug]` redirects directly to `/model/[slug]` (real content page) — NOT through the bridge/airlock page. This is the safest pattern for Reddit profile links.
 - **Safari Compatibility Protocol:**
     - **CRITICAL:** ALL high-intent conversion buttons (CTAs) MUST use direct `<a>` tags for external redirects.
     - **ITP Mitigation:** Safari's Intelligent Tracking Prevention blocks `window.open` or `window.location.href` redirects within `onClick` handlers if they target external domains from "gateway" pages.

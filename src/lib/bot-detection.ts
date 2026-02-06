@@ -40,6 +40,8 @@ const BOT_PATTERNS: RegExp[] = [
   /telegrambot/i,
   /whatsapp/i,
   /discordbot/i,
+  /redditbot/i,
+  /redditmedia/i,
 
   // SEO and monitoring tools
   /semrushbot/i,

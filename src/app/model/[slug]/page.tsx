@@ -11,7 +11,9 @@ import { encodeDestination } from '@/lib/url-obfuscation';
 import { BridgeProtector } from '@/components/features/bridge-protector';
 import Link from "next/link";
 import type { GalleryItem } from "@/types";
+import type { Metadata } from "next";
 import { VerifiedBadge } from "@/components/ui/verified-badge";
+import { getImageUrl } from "@/lib/utils";
 
 // Lazy load ProfileGallery - client component for interactive carousel
 const ProfileGallery = dynamic(() => import("@/components/features/profile-gallery").then(mod => ({ default: mod.ProfileGallery })), {
@@ -23,6 +25,46 @@ export const runtime = 'edge';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+}
+
+// Open Graph metadata for Reddit/social media link previews
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = await createClient();
+  const { data: model } = await supabase
+    .from('models')
+    .select('name, image_url, bio')
+    .eq('slug', slug)
+    .single();
+
+  if (!model) {
+    return { title: 'Profile Not Found' };
+  }
+
+  const imageUrl = model.image_url ? getImageUrl(model.image_url) : undefined;
+  const description = model.bio?.substring(0, 160) || `View ${model.name}'s exclusive content and verified links.`;
+
+  return {
+    title: `${model.name} | TransHere`,
+    description,
+    openGraph: {
+      title: model.name,
+      description,
+      type: 'profile',
+      images: imageUrl ? [{
+        url: imageUrl,
+        width: 400,
+        height: 400,
+        alt: model.name,
+      }] : [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: model.name,
+      description,
+      images: imageUrl ? [imageUrl] : [],
+    },
+  };
 }
 
 export default async function ModelPage({ params }: PageProps) {
