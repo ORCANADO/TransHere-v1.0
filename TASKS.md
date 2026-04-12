@@ -33,7 +33,7 @@ All phases through 7.3 are complete. See `Project_log.md` and `version_1,1.md` f
 **Acceptance:** Admin can upload content from production, dashboard shows both views AND clicks, layout bugs resolved.
 **SPEC ref:** Section 2 (Admin Content Upload flow), Section 5 (Admin API routes)
 
-- [ ] **8.1** — Diagnose R2 upload failure in production. The upload flow (`/api/upload` and `/api/upload/proxy`) uses AWS SDK which requires DOMParser — unavailable in Cloudflare Edge Runtime. Investigate alternatives: (a) Cloudflare Workers R2 binding API instead of AWS SDK, (b) Cloudflare R2 direct upload with presigned URLs generated differently, (c) a dedicated upload worker outside of Next.js. Document findings in DECISION_LOG.md before implementing.
+- [x] **8.1** — Diagnose R2 upload failure in production. The upload flow (`/api/upload` and `/api/upload/proxy`) uses AWS SDK which requires DOMParser — unavailable in Cloudflare Edge Runtime. Investigate alternatives: (a) Cloudflare Workers R2 binding API instead of AWS SDK, (b) Cloudflare R2 direct upload with presigned URLs generated differently, (c) a dedicated upload worker outside of Next.js. Document findings in DECISION_LOG.md before implementing.
   - **Files:** `src/app/api/upload/route.ts`, `src/app/api/upload/proxy/route.ts`, `src/lib/r2-utils.ts`
   - **Verify:** Upload an image from production admin dashboard (not localhost)
 

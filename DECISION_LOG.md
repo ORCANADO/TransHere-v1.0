@@ -108,4 +108,19 @@
 
 ---
 
+## DL-011: Edge-Compatible R2 Upload Signer (Task 8.1 Fix)
+
+**Date:** 2026-04-12
+**Decision:** Replace `@aws-sdk/s3-request-presigner` and `@aws-sdk/client-s3` in upload routes with a custom S3 Signature V4 signer (`src/lib/r2-signer.ts`) using Web Crypto API (`crypto.subtle`).
+**Context:** DL-010 identified that AWS SDK depends on `DOMParser`, unavailable in Cloudflare Edge Runtime. Upload routes (`/api/upload` and `/api/upload/proxy`) worked on localhost (Node.js) but crashed in production. This blocked all content uploads from the hosted admin dashboard.
+**Alternatives considered:**
+
+1. **Cloudflare Workers R2 binding API** — Requires a separate Cloudflare Worker deployment outside Next.js. Adds infrastructure complexity and a second deployment target.
+2. **Separate upload Worker** — Same infrastructure complexity. Would also need CORS configuration between the admin UI and the Worker.
+3. **Client-side direct-to-R2** — Requires exposing R2 credentials or a token endpoint. CORS on R2 buckets is finicky and hard to debug.
+4. **(Chosen) Custom S3 Sig V4 signer** — ~200 lines of pure Web Crypto code. Zero new dependencies. Drop-in replacement for the two AWS SDK functions we actually used (`getSignedUrl` and S3 `PutObject`). Works in any runtime with `crypto.subtle`.
+   **Outcome:** Both upload routes now use `r2-signer.ts`. AWS SDK packages (`@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`) are still in `package.json` for delete operations in `r2-utils.ts` — those can be migrated separately if they also fail in Edge Runtime.
+
+---
+
 _Add new entries below. Use DL-XXX format with incrementing numbers._
