@@ -72,7 +72,7 @@ export async function POST(request: Request) {
 
     if (!result.success) {
       throw new Error(
-        `R2 upload failed: ${result.status} ${result.statusText}`,
+        `R2 upload failed: ${result.status} ${result.statusText} — ${result.errorBody?.substring(0, 200) || "no body"}`,
       );
     }
 

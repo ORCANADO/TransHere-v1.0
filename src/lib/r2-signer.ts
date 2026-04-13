@@ -15,17 +15,12 @@ const UNSIGNED_PAYLOAD = "UNSIGNED-PAYLOAD";
 
 /** HMAC-SHA256 using Web Crypto API */
 async function hmacSha256(
-  key: ArrayBuffer | Uint8Array,
+  key: ArrayBuffer,
   message: string,
 ): Promise<ArrayBuffer> {
-  // Copy into a fresh ArrayBuffer to satisfy strict TypeScript (Uint8Array.buffer may be SharedArrayBuffer)
-  const rawKey =
-    key instanceof Uint8Array
-      ? (new Uint8Array(key).buffer as ArrayBuffer)
-      : key;
   const cryptoKey = await crypto.subtle.importKey(
     "raw",
-    rawKey,
+    key,
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"],
@@ -65,26 +60,27 @@ function toAmzDate(date: Date): string {
     .replace(/\.\d{3}/, "");
 }
 
-/** URI-encode per AWS spec (encodes everything except unreserved chars) */
+/**
+ * URI-encode per AWS S3 Signature V4 spec.
+ * Uses encodeURIComponent for proper UTF-8 handling, then adjusts for AWS conventions.
+ */
 function uriEncode(str: string, encodeSlash = true): string {
-  return str
-    .split("")
-    .map((ch) => {
-      if (
-        (ch >= "A" && ch <= "Z") ||
-        (ch >= "a" && ch <= "z") ||
-        (ch >= "0" && ch <= "9") ||
-        ch === "_" ||
-        ch === "-" ||
-        ch === "~" ||
-        ch === "."
-      ) {
-        return ch;
-      }
-      if (ch === "/" && !encodeSlash) return ch;
-      return "%" + ch.charCodeAt(0).toString(16).toUpperCase().padStart(2, "0");
-    })
-    .join("");
+  // encodeURIComponent encodes everything except: A-Z a-z 0-9 - _ . ! ~ * ' ( )
+  // AWS S3 unreserved chars: A-Z a-z 0-9 - _ . ~
+  // So we need to additionally encode: ! * ' ( )
+  let encoded = encodeURIComponent(str)
+    .replace(/!/g, "%21")
+    .replace(/\*/g, "%2A")
+    .replace(/'/g, "%27")
+    .replace(/\(/g, "%28")
+    .replace(/\)/g, "%29");
+
+  // If we should NOT encode slashes, decode them back
+  if (!encodeSlash) {
+    encoded = encoded.replace(/%2F/gi, "/");
+  }
+
+  return encoded;
 }
 
 /** Derive the signing key: AWS4 + secret → date → region → service → aws4_request */
@@ -95,7 +91,7 @@ async function getSigningKey(
   service: string,
 ): Promise<ArrayBuffer> {
   const kDate = await hmacSha256(
-    new TextEncoder().encode("AWS4" + secretKey),
+    new TextEncoder().encode("AWS4" + secretKey).buffer as ArrayBuffer,
     dateStamp,
   );
   const kRegion = await hmacSha256(kDate, region);
@@ -208,7 +204,12 @@ export async function uploadToR2(params: {
   body: ArrayBuffer | Uint8Array;
   contentType: string;
   cacheControl?: string;
-}): Promise<{ success: boolean; status: number; statusText: string }> {
+}): Promise<{
+  success: boolean;
+  status: number;
+  statusText: string;
+  errorBody?: string;
+}> {
   const { bucket, key, body, contentType, cacheControl } = params;
   const config = getR2Config();
   const endpoint = getEndpoint(config);
@@ -220,7 +221,8 @@ export async function uploadToR2(params: {
   // For direct upload we use UNSIGNED-PAYLOAD (body is opaque to signing)
   const payloadHash = UNSIGNED_PAYLOAD;
 
-  // Build headers to sign
+  // Build headers to sign — must include host for canonical request,
+  // but we also explicitly send it so it matches what we signed.
   const headerEntries: [string, string][] = [
     ["content-type", contentType],
     ["host", host],
@@ -270,8 +272,10 @@ export async function uploadToR2(params: {
   const credential = `${config.accessKeyId}/${scope}`;
   const authorization = `${ALGORITHM} Credential=${credential}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
 
-  // Build fetch headers
+  // Build fetch headers — include Host explicitly to match signed value.
+  // Cloudflare Workers allow setting Host on outbound fetch.
   const fetchHeaders: Record<string, string> = {
+    Host: host,
     "Content-Type": contentType,
     "x-amz-content-sha256": payloadHash,
     "x-amz-date": amzDate,
@@ -282,14 +286,45 @@ export async function uploadToR2(params: {
   }
 
   const url = `${endpoint}/${bucket}/${uriEncode(key, false)}`;
+
+  // Log for debugging
+  console.log("[R2 Signer] Upload request:", {
+    url,
+    host,
+    contentType,
+    amzDate,
+    signedHeaders,
+    authPrefix: authorization.substring(0, 80) + "...",
+    bodySize: body instanceof Uint8Array ? body.length : body.byteLength,
+  });
+
+  // Convert to ArrayBuffer — new Uint8Array(source) copies data, guaranteeing a plain ArrayBuffer
+  const bodyBuffer =
+    body instanceof Uint8Array ? new Uint8Array(body).buffer : body;
+
   const response = await fetch(url, {
     method: "PUT",
     headers: fetchHeaders,
-    body: body instanceof Uint8Array ? (body as unknown as BodyInit) : body,
+    body: bodyBuffer as BodyInit,
   });
 
+  if (!response.ok) {
+    const errorBody = await response.text().catch(() => "");
+    console.error("[R2 Signer] Upload failed:", {
+      status: response.status,
+      statusText: response.statusText,
+      errorBody: errorBody.substring(0, 500),
+    });
+    return {
+      success: false,
+      status: response.status,
+      statusText: response.statusText,
+      errorBody,
+    };
+  }
+
   return {
-    success: response.ok,
+    success: true,
     status: response.status,
     statusText: response.statusText,
   };
