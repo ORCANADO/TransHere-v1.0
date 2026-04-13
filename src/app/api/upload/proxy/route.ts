@@ -44,9 +44,11 @@ export async function POST(request: Request) {
 
     // Determine bucket name
     if (targetBucket === "models" || targetBucket === "trans-image-directory") {
-      bucketName = process.env.R2_BUCKET_NAME || "trans-image-directory";
+      bucketName = (
+        process.env.R2_BUCKET_NAME || "trans-image-directory"
+      ).trim();
     } else {
-      bucketName = process.env.R2_STORIES_BUCKET_NAME || "stories";
+      bucketName = (process.env.R2_STORIES_BUCKET_NAME || "stories").trim();
     }
 
     // Convert File to ArrayBuffer (Edge runtime compatible)

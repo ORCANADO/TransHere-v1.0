@@ -109,10 +109,10 @@ interface R2Config {
 
 function getR2Config(): R2Config {
   return {
-    accountId: process.env.R2_ACCOUNT_ID!,
-    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
-    endpoint: process.env.R2_ENDPOINT,
+    accountId: (process.env.R2_ACCOUNT_ID || "").trim(),
+    accessKeyId: (process.env.R2_ACCESS_KEY_ID || "").trim(),
+    secretAccessKey: (process.env.R2_SECRET_ACCESS_KEY || "").trim(),
+    endpoint: process.env.R2_ENDPOINT?.trim(),
   };
 }
 
