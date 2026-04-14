@@ -112,6 +112,7 @@ _Claude Code populates this as tasks are completed. Each row links a TASKS.md en
 
 | Task | Description                             | Test File(s)                                          | Type        | Status |
 | ---- | --------------------------------------- | ----------------------------------------------------- | ----------- | ------ |
+| 8.1  | R2 upload from production               | Manual: upload image from production admin dashboard  | Manual      | [x]    |
 | 10.1 | Vitest configuration + placeholder test | `src/__tests__/placeholder.test.ts`                   | Unit        | [ ]    |
 | 10.2 | Bot detection tests                     | `src/lib/__tests__/bot-detection.test.ts`             | Unit        | [ ]    |
 | 10.3 | URL obfuscation tests                   | `src/lib/__tests__/url-obfuscation.test.ts`           | Unit        | [ ]    |

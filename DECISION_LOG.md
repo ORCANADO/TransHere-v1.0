@@ -104,7 +104,7 @@
 **Decision:** Accept that R2 uploads only work from localhost until a proper fix is implemented.
 **Context:** AWS SDK's S3 client uses `DOMParser` internally, which is unavailable in Cloudflare Pages Edge Runtime. Upload routes work in local development (Node.js runtime) but fail in production.
 **Alternatives under evaluation:** (1) Cloudflare Workers R2 binding API (native, no AWS SDK needed), (2) Presigned URLs generated via a separate Cloudflare Worker, (3) Client-side direct-to-R2 upload.
-**Outcome:** Blocking bug. Tracked as Task 8.1 in TASKS.md.
+**Outcome:** ~~Blocking bug. Tracked as Task 8.1 in TASKS.md.~~ **Resolved** in DL-011 (2026-04-12). Custom S3 Sig V4 signer replaced AWS SDK. Also discovered trailing newlines in Cloudflare env vars — added `.trim()` safety net to all env var reads in `r2-signer.ts`.
 
 ---
 
@@ -119,7 +119,8 @@
 2. **Separate upload Worker** — Same infrastructure complexity. Would also need CORS configuration between the admin UI and the Worker.
 3. **Client-side direct-to-R2** — Requires exposing R2 credentials or a token endpoint. CORS on R2 buckets is finicky and hard to debug.
 4. **(Chosen) Custom S3 Sig V4 signer** — ~200 lines of pure Web Crypto code. Zero new dependencies. Drop-in replacement for the two AWS SDK functions we actually used (`getSignedUrl` and S3 `PutObject`). Works in any runtime with `crypto.subtle`.
-   **Outcome:** Both upload routes now use `r2-signer.ts`. AWS SDK packages (`@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`) are still in `package.json` for delete operations in `r2-utils.ts` — those can be migrated separately if they also fail in Edge Runtime.
+   **Outcome:** Both upload routes now use `r2-signer.ts`. Verified working in production 2026-04-13. AWS SDK packages (`@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`) are still in `package.json` for delete operations in `r2-utils.ts` — those can be migrated separately if they also fail in Edge Runtime.
+   **Lesson learned:** Cloudflare Pages env vars had trailing `\n` characters from copy-paste, causing "Invalid header value" errors. Added `.trim()` to all env var reads in `r2-signer.ts` as a safety net. Always trim env vars when used in HTTP headers or URLs.
 
 ---
 

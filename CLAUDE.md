@@ -147,7 +147,7 @@ npm run test:integration  # Integration tests only (when configured)
 | Bot detection   | `src/lib/bot-detection.ts`, `src/middleware.ts`                                                                           |
 | Admin analytics | `src/components/admin/analytics-dashboard.tsx`, `src/app/api/admin/dashboard/route.ts`                                    |
 | Admin content   | `src/components/admin/gallery-manager.tsx`, `src/components/admin/story-manager.tsx`                                      |
-| Uploads         | `src/app/api/upload/route.ts`, `src/lib/r2-utils.ts`                                                                      |
+| Uploads         | `src/app/api/upload/route.ts`, `src/app/api/upload/proxy/route.ts`, `src/lib/r2-signer.ts`, `src/lib/r2-utils.ts`         |
 | Org auth        | `src/lib/organization-auth.ts`, `src/middleware-org.ts`                                                                   |
 | Image loader    | `src/lib/cloudflare-image-loader.ts`, `next.config.ts`                                                                    |
 | Design tokens   | `src/app/globals.css`                                                                                                     |
